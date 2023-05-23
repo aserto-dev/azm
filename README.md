@@ -1,2 +1,3 @@
-# go-azm
+# azm
+
 Authorization Model
