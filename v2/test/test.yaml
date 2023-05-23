@@ -1,0 +1,135 @@
+user:
+
+identity:
+  identifier:
+
+account:
+  member:
+
+  owner:
+    union:
+      - contributor
+      - can_delete
+
+  contributor:
+    union:
+      - reader
+      - can_update
+
+  reader:
+    union:
+      - can_read
+
+  can_read:
+    permissions:
+      - read
+
+  can_update:
+    permissions:
+      - update
+
+  can_delete:
+    permissions:
+      - delete
+
+resource_group:
+  parent:
+
+  owner:
+    union:
+      - contributor
+      - can_delete
+
+  contributor:
+    union:
+      - reader
+      - can_update
+
+  reader:
+    union:
+      - can_read
+
+  can_read:
+    permissions:
+      - read
+
+  can_update:
+    permissions:
+      - update
+
+  can_delete:
+    permissions:
+      - delete
+
+database:
+  parent:
+
+  owner:
+    union:
+      - contributor
+      - can_delete
+
+  contributor:
+    union:
+      - reader
+      - can_update
+      - can_create_write_transaction
+
+  reader:
+    unions:
+      - can_read
+      - can_create_read_transaction
+      - can_list_transactions
+
+  can_read:
+    permissions:
+      - read
+
+  can_create_read_transaction:
+    permissions:
+      - create_read_transaction
+
+  can_list_transactions:
+    permissions:
+      - list_transactions
+
+  can_update:
+    permissions:
+      - update
+
+  can_create_write_transaction:
+    permissions:
+      - create_write_transaction
+
+  can_delete:
+    permissions:
+      - delete
+
+engine:
+  parent:
+
+  owner:
+    union:
+      - contributor
+      - can_delete
+
+  contributor:
+    union:
+      - reader
+      - can_update
+
+  reader:
+    union:
+      - can_read
+
+  can_read:
+    permissions:
+      - read
+
+  can_update:
+    permissions:
+      - update
+
+  can_delete:
+    permissions:
+      - delete
