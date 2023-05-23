@@ -9,26 +9,26 @@ account:
   owner:
     union:
       - contributor
-      - can_delete
+      - delete
 
   contributor:
     union:
       - reader
-      - can_update
+      - update
 
   reader:
     union:
-      - can_read
+      - read
 
-  can_read:
+  read:
     permissions:
       - read
 
-  can_update:
+  update:
     permissions:
       - update
 
-  can_delete:
+  delete:
     permissions:
       - delete
 
@@ -38,26 +38,26 @@ resource_group:
   owner:
     union:
       - contributor
-      - can_delete
+      - delete
 
   contributor:
     union:
       - reader
-      - can_update
+      - update
 
   reader:
     union:
-      - can_read
+      - read
 
-  can_read:
+  read:
     permissions:
       - read
 
-  can_update:
+  update:
     permissions:
       - update
 
-  can_delete:
+  delete:
     permissions:
       - delete
 
@@ -67,41 +67,41 @@ database:
   owner:
     union:
       - contributor
-      - can_delete
+      - delete
 
   contributor:
     union:
       - reader
-      - can_update
-      - can_create_write_transaction
+      - update
+      - create_write_transaction
 
   reader:
     unions:
-      - can_read
-      - can_create_read_transaction
-      - can_list_transactions
+      - read
+      - create_read_transaction
+      - list_transactions
 
-  can_read:
+  read:
     permissions:
       - read
 
-  can_create_read_transaction:
+  create_read_transaction:
     permissions:
       - create_read_transaction
 
-  can_list_transactions:
+  list_transactions:
     permissions:
       - list_transactions
 
-  can_update:
+  update:
     permissions:
       - update
 
-  can_create_write_transaction:
+  create_write_transaction:
     permissions:
       - create_write_transaction
 
-  can_delete:
+  delete:
     permissions:
       - delete
 
@@ -111,25 +111,25 @@ engine:
   owner:
     union:
       - contributor
-      - can_delete
+      - delete
 
   contributor:
     union:
       - reader
-      - can_update
+      - update
 
   reader:
     union:
-      - can_read
+      - read
 
-  can_read:
+  read:
     permissions:
       - read
 
-  can_update:
+  update:
     permissions:
       - update
 
-  can_delete:
+  delete:
     permissions:
       - delete
