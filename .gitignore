@@ -1,24 +1,16 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+.DS_Store
 
-# Test binary, built with `go test -c`
-*.test
+.dev/
+.ext/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+bin/
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# https://github.com/golang/go/issues/53502
+# go.work.sum is machine specific and should not be checked in
+go.work.sum
 
-# Go workspace file
-go.work
-
-# serialized test model file
+# model and manifest test files
 model_test.json
+model_test.yaml
+manifest_test.json
+manifest_test.yaml
