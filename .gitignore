@@ -19,3 +19,6 @@
 
 # Go workspace file
 go.work
+
+# serialized test model file
+model_test.json
