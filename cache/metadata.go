@@ -69,15 +69,15 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	otn := model.ObjectName(objectType)
-	rtn := model.RelationName(relation)
+	on := model.ObjectName(objectType)
+	rn := model.RelationName(relation)
 
-	ot, ok := c.model.Objects[otn]
+	o, ok := c.model.Objects[on]
 	if !ok {
 		return &dsc2.RelationType{}, derr.ErrObjectTypeNotFound.Msg(objectType)
 	}
 
-	if _, ok := ot.Relations[rtn]; !ok {
+	if _, ok := o.Relations[rn]; !ok {
 		return &dsc2.RelationType{}, derr.ErrRelationNotFound.Msg(objectType + ":" + relation)
 	}
 
@@ -87,30 +87,30 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 		DisplayName: objectType + ":" + relation,
 		Ordinal:     0,
 		Status:      0,
-		Unions:      c.getRelationUnions(ot, otn, rtn),
-		Permissions: c.getRelationPermissions(ot, rtn),
+		Unions:      c.getRelationUnions(o, on, rn),
+		Permissions: c.getRelationPermissions(o, rn),
 		CreatedAt:   timestamppb.Now(),
 		UpdatedAt:   timestamppb.Now(),
 		Hash:        "",
 	}, nil
 }
 
-func (*Cache) getRelationPermissions(ot *model.Object, rtn model.RelationName) []string {
+func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []string {
 	permissions := []string{}
-	for pn, p := range ot.Permissions {
-		if lo.Contains(p.Union, string(rtn)) {
+	for pn, p := range o.Permissions {
+		if lo.Contains(p.Union, string(rn)) {
 			permissions = append(permissions, string(pn))
 		}
 	}
 	return permissions
 }
 
-func (*Cache) getRelationUnions(ot *model.Object, otn model.ObjectName, rtn model.RelationName) []string {
+func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.RelationName) []string {
 	unions := []string{}
-	for rn, rs := range ot.Relations {
+	for name, rs := range o.Relations {
 		for _, r := range rs {
-			if r.Subject != nil && r.Subject.Object == otn && r.Subject.Relation == rtn {
-				unions = append(unions, string(rn))
+			if r.Subject != nil && r.Subject.Object == on && r.Subject.Relation == rn {
+				unions = append(unions, string(name))
 			}
 		}
 	}
@@ -126,26 +126,26 @@ func (c *Cache) GetRelationTypes(objectType string) ([]*dsc2.RelationType, error
 
 	objectTypes := c.model.Objects
 	if objectType != "" {
-		if ot, ok := c.model.Objects[model.ObjectName(objectType)]; !ok {
+		if o, ok := c.model.Objects[model.ObjectName(objectType)]; !ok {
 			return results, derr.ErrObjectTypeNotFound.Msg(objectType)
 		} else {
 			objectTypes = map[model.ObjectName]*model.Object{
-				model.ObjectName(objectType): ot,
+				model.ObjectName(objectType): o,
 			}
 		}
 	}
 
-	for otn, ot := range objectTypes {
-		for rn := range ot.Relations {
+	for on, o := range objectTypes {
+		for rn := range o.Relations {
 
 			results = append(results, &dsc2.RelationType{
-				ObjectType:  string(otn),
+				ObjectType:  string(on),
 				Name:        string(rn),
-				DisplayName: string(otn) + ":" + string(rn),
+				DisplayName: string(on) + ":" + string(rn),
 				Ordinal:     0,
 				Status:      0,
-				Unions:      c.getRelationUnions(ot, otn, rn),
-				Permissions: c.getRelationPermissions(ot, rn),
+				Unions:      c.getRelationUnions(o, on, rn),
+				Permissions: c.getRelationPermissions(o, rn),
 				CreatedAt:   timestamppb.Now(),
 				UpdatedAt:   timestamppb.Now(),
 				Hash:        "",

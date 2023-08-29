@@ -8,28 +8,28 @@ import (
 
 // ExpandRelation, returns list of relations which are a union of the given relation.
 // For example, when a writer relation inherits reader, the expansion of a reader = reader + writer.
-func (c *Cache) ExpandRelation(otn model.ObjectName, rtn model.RelationName) []model.RelationName {
+func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []model.RelationName {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
 	results := []model.RelationName{}
 
 	// starting object type and relation must exist in order to be expanded.
-	if ot, ok := c.model.Objects[otn]; !ok {
+	if o, ok := c.model.Objects[on]; !ok {
 		return results
-	} else if _, ok := ot.Relations[rtn]; !ok {
+	} else if _, ok := o.Relations[rn]; !ok {
 		return results
 	}
 
 	// get relation set for given object:relation.
-	rs := c.model.Objects[otn].Relations[rtn]
+	rs := c.model.Objects[on].Relations[rn]
 
 	// include given permission in result set
-	results = append(results, rtn)
+	results = append(results, rn)
 
 	// iterate through relation set, determine if it "unions" with the given relation.
 	for _, r := range rs {
-		if r.Subject != nil && r.Subject.Object == otn {
+		if r.Subject != nil && r.Subject.Object == on {
 			results = append(results, r.Subject.Relation)
 		}
 	}
@@ -47,9 +47,9 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 	results := []model.RelationName{}
 
 	// starting object type and permission must exist in order to be expanded.
-	if ot, ok := c.model.Objects[on]; !ok {
+	if o, ok := c.model.Objects[on]; !ok {
 		return results
-	} else if _, ok := ot.Permissions[pn]; !ok {
+	} else if _, ok := o.Permissions[pn]; !ok {
 		return results
 	}
 

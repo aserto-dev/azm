@@ -22,11 +22,11 @@ func Load(r io.Reader) (*model.Model, error) {
 		Objects: map[model.ObjectName]*model.Object{},
 	}
 
-	for otn, ot := range manifest.ObjectTypes {
+	for on, o := range manifest.ObjectTypes {
 
 		relations := map[model.RelationName][]*model.Relation{}
 
-		for rn, rd := range ot.Relations {
+		for rn, rd := range o.Relations {
 
 			for _, v := range rd.Definition {
 				if _, ok := relations[model.RelationName(rn)]; !ok {
@@ -57,7 +57,7 @@ func Load(r io.Reader) (*model.Model, error) {
 
 		permissions := map[model.PermissionName]*model.Permission{}
 
-		for pn, pd := range ot.Permissions {
+		for pn, pd := range o.Permissions {
 			if _, ok := permissions[model.PermissionName(pn)]; !ok {
 				permissions[model.PermissionName(pn)] = &model.Permission{}
 			}
@@ -87,7 +87,7 @@ func Load(r io.Reader) (*model.Model, error) {
 			permissions[model.PermissionName(pn)] = p
 		}
 
-		m.Objects[model.ObjectName(otn)] = &model.Object{
+		m.Objects[model.ObjectName(on)] = &model.Object{
 			Relations:   relations,
 			Permissions: permissions,
 		}

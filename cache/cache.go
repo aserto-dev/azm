@@ -28,11 +28,11 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
-func (c *Cache) ObjectExists(otn model.ObjectName) bool {
+func (c *Cache) ObjectExists(on model.ObjectName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	_, ok := c.model.Objects[otn]
+	_, ok := c.model.Objects[on]
 	return ok
 }
 
@@ -49,11 +49,11 @@ func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(otn model.ObjectName, pn model.PermissionName) bool {
+func (c *Cache) PermissionExists(on model.ObjectName, pn model.PermissionName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	if obj, ok := c.model.Objects[otn]; ok {
+	if obj, ok := c.model.Objects[on]; ok {
 		_, ok := obj.Permissions[pn]
 		return ok
 	}
