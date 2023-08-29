@@ -1,0 +1,2706 @@
+{
+  "version": 1,
+  "types": {
+    "application": {
+      "relations": {
+        "user": []
+      }
+    },
+    "group": {
+      "relations": {
+        "member": []
+      }
+    },
+    "identity": {
+      "relations": {
+        "identifier": []
+      }
+    },
+    "machine": {},
+    "resource": {},
+    "service": {},
+    "system": {
+      "relations": {
+        "admin": [],
+        "directory-reader": [
+          {
+            "subject": {
+              "object": "system",
+              "relation": "directory-writer"
+            }
+          }
+        ],
+        "directory-store-reader": [
+          {
+            "subject": {
+              "object": "system",
+              "relation": "directory-store-writer"
+            }
+          }
+        ],
+        "directory-store-writer": [],
+        "directory-writer": [],
+        "task-handler": [],
+        "task-manager": [],
+        "user": []
+      },
+      "permissions": {
+        "aserto_authorizer_authorizer_v1_authorizer_decisiontree": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_authorizer_v1_authorizer_is": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_authorizer_v1_authorizer_query": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_createtenant": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_createuser": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplpermission": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplproperty": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplrole": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteresource": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deletetenant": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuser": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserapplication": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserpermission": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserproperty": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserrole": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplpermissions": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplproperties": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplroles": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getidentity": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getresource": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuser": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserpermissions": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserproperties": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserroles": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getvalue": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listresources": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listtenants": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listuserapplications": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listusers": {
+          "union": [
+            "admin",
+            "directory-reader"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_loadusers": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplpermission": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplpermissions": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplproperties": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplproperty": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplrole": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplroles": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setresource": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserpermission": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserpermissions": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserproperties": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserproperty": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserrole": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserroles": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_updateuser": {
+          "union": [
+            "admin",
+            "directory-writer"
+          ]
+        },
+        "aserto_authorizer_policy_v1_policy_getmodule": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_policy_v1_policy_getpolicies": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_policy_v1_policy_listpolicies": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_getruntime": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_setloglevel": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_setupruntime": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_tenantconfig": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_unloadruntime": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_common_info_v1_config_get": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_common_info_v1_info_info": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_executequery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getdecisionlog": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getdecisions": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getuser": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_listdecisionlogs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_listusers": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_executequery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getdecisionlog": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getdecisions": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getuser": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_listdecisionlogs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_listusers": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_directory_exporter_v2_exporter_export": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_importer_v2_importer_import": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_checkpermission": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_checkrelation": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getgraph": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobject": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjectmany": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjects": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjecttype": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjecttypes": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getpermission": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getpermissions": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelation": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelations": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelationtype": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelationtypes": {
+          "union": [
+            "directory-reader"
+          ]
+        },
+        "aserto_directory_store_v2_store_createtenant": {
+          "union": [
+            "directory-store-writer"
+          ]
+        },
+        "aserto_directory_store_v2_store_deletetenant": {
+          "union": [
+            "directory-store-writer"
+          ]
+        },
+        "aserto_directory_store_v2_store_gettenant": {
+          "union": [
+            "directory-store-reader"
+          ]
+        },
+        "aserto_directory_store_v2_store_info": {
+          "union": [
+            "directory-store-writer"
+          ]
+        },
+        "aserto_directory_store_v2_store_listtenants": {
+          "union": [
+            "directory-store-reader"
+          ]
+        },
+        "aserto_directory_store_v2_store_migrateschema": {
+          "union": [
+            "directory-store-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleteobject": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleteobjecttype": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deletepermission": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleterelation": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleterelationtype": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setobject": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setobjecttype": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setpermission": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setrelation": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setrelationtype": {
+          "union": [
+            "directory-writer"
+          ]
+        },
+        "aserto_discovery_policy_v1_discovery_opadiscovery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_discovery_policy_v2_discovery_opainstancediscovery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_funnel_v1_funnel_runworkflow": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_funnel_v1_funnel_startworkflow": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_funnel_v1_funnel_stopworkflow": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_system_aonadeleteorg": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_system_authorizerdeleteorg": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_system_harddeleteorg": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_system_tenantdeleteorg": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_getpolicystate": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_policy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_testwf": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_management_v2_controller_commandstream": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_management_v2_controlplane_execcommand": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_management_v2_controlplane_listinstanceregistrations": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_createpolicyimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_deletepolicyimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_getpolicyimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_listpolicyimages": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_listpublicpolicyimages": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_updatepolicyimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_createpolicyrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_deletepolicyrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_getpolicyrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_listpolicyrepos": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_listpublicpolicyrepos": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_updatepolicyrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_tenant_listpublictenants": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_tenant_listtenants": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_createimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_getreadaccesstoken": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_getwriteaccesstoken": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listdigests": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listimages": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listorgs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listpublicimages": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listpublicorgs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listtagswithdetails": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_removeimage": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_repoavailable": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_setimagevisibility": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_system_v2_tenantcache_invalidatesecretskey": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_task_handler_v1_handler_handlejob": {
+          "union": [
+            "task-handler"
+          ]
+        },
+        "aserto_task_handler_v1_handler_handletask": {
+          "union": [
+            "task-handler"
+          ]
+        },
+        "aserto_task_manager_v1_manager_createjob": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_createtask": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_deletejob": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_deletetask": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_execjob": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_exectask": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_getjob": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_task_manager_v1_manager_gettask": {
+          "union": [
+            "task-manager"
+          ]
+        },
+        "aserto_tenant_account_v1_account_getaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_listinvites": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_signupaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_updateaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_connectionavailable": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_createconnection": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_deleteconnection": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_getconnection": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_listconnections": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_rotatesecret": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_updateconnection": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_verifyconnection": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_claimtenant": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_inviteuser": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_tenantavailable": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_createpolicybuilder": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_deletepolicybuilder": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_listpolicybuilders": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_createpolicyref": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_deletepolicyref": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_listpolicyrefs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_opadiscovery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_opainstancediscovery": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_updatepolicyref": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_getinvites": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_getprofile": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_inviteuser": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_removemember": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_respondtoinvite": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_getprovider": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_listproviderkinds": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_listproviders": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_clonerepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_createregistryrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_deleteregistryrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_getregistryrepotag": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listorgs": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepodigests": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepos": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepotags": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_registryrepoavailable": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_validpolicyregistryrepotag": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_createrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_getprofile": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_getrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_isrepoconnected": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listorg": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listrepo": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listtemplates": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_deleteaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_deletetenant": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_getaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_getmachineaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_listaccounts": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_listdeletedtenants": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_listtenants": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_restoredeletedtenant": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_setaccountdeleted": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_setloglevel": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_system_v1_system_settenantdeleted": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_account_deleteaccount": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_createinstance": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_deleteinstance": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_listinstance": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_updateinstance": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_createpolicy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_deletepolicy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_getpolicy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_listpolicy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_policynameavailable": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_updatepolicy": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policystate_getpolicystate": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policystate_setpolicystate": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_createrepository": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_deleterepository": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_getrepository": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_updaterepository": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_createsource": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_deletesource": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_getsource": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_updatesource": {
+          "union": [
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_tenant_deletetenant": {
+          "union": [
+            "admin"
+          ]
+        },
+        "grpc_reflection_v1alpha_serverreflection_serverreflectioninfo": {
+          "union": [
+            "admin"
+          ]
+        }
+      }
+    },
+    "tenant": {
+      "relations": {
+        "account": [],
+        "admin": [
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "owner"
+            }
+          }
+        ],
+        "decision-log-reader": [],
+        "directory-client-reader": [
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "directory-client-writer"
+            }
+          }
+        ],
+        "directory-client-writer": [],
+        "discovery-client": [],
+        "edge-authorizer": [],
+        "member": [
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "owner"
+            }
+          },
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "admin"
+            }
+          }
+        ],
+        "owner": [],
+        "viewer": [
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "member"
+            }
+          },
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "owner"
+            }
+          },
+          {
+            "subject": {
+              "object": "tenant",
+              "relation": "admin"
+            }
+          }
+        ]
+      },
+      "permissions": {
+        "aserto_authorizer_authorizer_v1_authorizer_decisiontree": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_authorizer_v1_authorizer_is": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_authorizer_v1_authorizer_query": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_createtenant": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_createuser": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplpermission": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplproperty": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteapplrole": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteresource": {
+          "union": [
+            "directory-client-writer",
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deletetenant": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuser": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserapplication": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserpermission": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserproperty": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_deleteuserrole": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplpermissions": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplproperties": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getapplroles": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getidentity": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getresource": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuser": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserpermissions": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserproperties": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getuserroles": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_getvalue": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listresources": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listtenants": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listuserapplications": {
+          "union": [
+            "directory-client-reader",
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_listusers": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_loadusers": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplpermission": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplpermissions": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplproperties": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplproperty": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplrole": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setapplroles": {
+          "union": [
+            "directory-client-writer",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setresource": {
+          "union": [
+            "directory-client-writer",
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserpermission": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserpermissions": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserproperties": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserproperty": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserrole": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_setuserroles": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_directory_v1_directory_updateuser": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_authorizer_system_v1_system_unloadruntime": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_common_info_v1_info_info": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_executequery": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getdecisionlog": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getdecisions": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_getuser": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_listdecisionlogs": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v1_decisionlogs_listusers": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_executequery": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getdecisionlog": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getdecisions": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_getuser": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_listdecisionlogs": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_decision_logs_v2_decisionlogs_listusers": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "decision-log-reader"
+          ]
+        },
+        "aserto_directory_exporter_v2_exporter_export": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_importer_v2_importer_import": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_checkpermission": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_checkrelation": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getgraph": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobject": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjectmany": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjects": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjecttype": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getobjecttypes": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getpermission": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getpermissions": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelation": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelations": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelationtype": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_reader_v2_reader_getrelationtypes": {
+          "union": [
+            "directory-client-reader",
+            "viewer"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleteobject": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleteobjecttype": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deletepermission": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleterelation": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_deleterelationtype": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setobject": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setobjecttype": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setpermission": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setrelation": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_directory_writer_v2_writer_setrelationtype": {
+          "union": [
+            "directory-client-writer",
+            "admin"
+          ]
+        },
+        "aserto_discovery_policy_v1_discovery_opadiscovery": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "discovery-client"
+          ]
+        },
+        "aserto_discovery_policy_v2_discovery_opainstancediscovery": {
+          "union": [
+            "member",
+            "owner",
+            "admin",
+            "discovery-client"
+          ]
+        },
+        "aserto_funnel_v1_funnel_runworkflow": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_funnel_v1_funnel_startworkflow": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_funnel_v1_funnel_stopworkflow": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_getpolicystate": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_policy": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_maestro_user_testwf": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_management_v2_controller_commandstream": {
+          "union": [
+            "edge-authorizer"
+          ]
+        },
+        "aserto_management_v2_controlplane_execcommand": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_management_v2_controlplane_listinstanceregistrations": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_createpolicyimage": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_deletepolicyimage": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_getpolicyimage": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_listpolicyimages": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_listpublicpolicyimages": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policy_updatepolicyimage": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_createpolicyrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_deletepolicyrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_getpolicyrepo": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_listpolicyrepos": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_policyrepo_updatepolicyrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_tenant_listpublictenants": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_tenant_v1_tenant_listtenants": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_createimage": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_getreadaccesstoken": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_getwriteaccesstoken": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listdigests": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listimages": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listorgs": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listpublicimages": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listpublicorgs": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_listtagswithdetails": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_removeimage": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_repoavailable": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_registry_v1_registry_setimagevisibility": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_getaccount": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_listinvites": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_signupaccount": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_account_v1_account_updateaccount": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_connectionavailable": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_createconnection": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_deleteconnection": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_getconnection": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_listconnections": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_rotatesecret": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_updateconnection": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_connection_v1_connection_verifyconnection": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_claimtenant": {
+          "union": [
+            "owner"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_inviteuser": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_onboarding_v1_onboarding_tenantavailable": {
+          "union": [
+            "owner"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_createpolicybuilder": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_deletepolicybuilder": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_builder_v1_policybuilder_listpolicybuilders": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_createpolicyref": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_deletepolicyref": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_listpolicyrefs": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_opadiscovery": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin",
+            "discovery-client"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_opainstancediscovery": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_policy_v1_policy_updatepolicyref": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_getinvites": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_getprofile": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_inviteuser": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_removemember": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_profile_v1_profile_respondtoinvite": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_getprovider": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_listproviderkinds": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_provider_v1_provider_listproviders": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_clonerepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_createregistryrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_deleteregistryrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_getregistryrepotag": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listorgs": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepodigests": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepos": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_listregistryrepotags": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_registryrepoavailable": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_registry_v1_registry_validpolicyregistryrepotag": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_createrepo": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_getprofile": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_getrepo": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_isrepoconnected": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listorg": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listrepo": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_scc_v1_sourcecodectl_listtemplates": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_account_deleteaccount": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_createinstance": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_deleteinstance": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_listinstance": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_instance_updateinstance": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_createpolicy": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_deletepolicy": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_getpolicy": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_listpolicy": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_policynameavailable": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policy_updatepolicy": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policystate_getpolicystate": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_policystate_setpolicystate": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_createrepository": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_deleterepository": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_getrepository": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_repository_updaterepository": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_createsource": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_deletesource": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_getsource": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_source_updatesource": {
+          "union": [
+            "member",
+            "owner",
+            "admin"
+          ]
+        },
+        "aserto_tenant_v2_tenant_deletetenant": {
+          "union": [
+            "owner",
+            "admin"
+          ]
+        },
+        "grpc_reflection_v1alpha_serverreflection_serverreflectioninfo": {
+          "union": [
+            "member",
+            "owner",
+            "viewer",
+            "admin"
+          ]
+        }
+      }
+    },
+    "tenant-name": {
+      "relations": {
+        "tenant": []
+      }
+    },
+    "user": {
+      "relations": {
+        "manager": []
+      }
+    },
+    "user-v1": {}
+  }
+}
