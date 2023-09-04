@@ -10,6 +10,15 @@ import (
 
 const SupportedSchemaVersion int = 3
 
+const (
+	unionIdentifier        string = "|"
+	intersectionIdentifier string = "&"
+	exclusionIdentifier    string = "-"
+	relationIdentifier     string = "#"
+	wildcardIdentifier     string = ":*"
+	arrowIdentifier        string = "->"
+)
+
 type Manifest struct {
 	ModelInfo   *ModelInfo                     `yaml:"model"`
 	ObjectTypes map[ObjectTypeName]*ObjectType `yaml:"types"`
@@ -105,19 +114,19 @@ func (v *SchemaVersion) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func (r *RelationDefinition) UnmarshalYAML(value *yaml.Node) error {
-	s := strings.Split(value.Value, "|")
+	s := strings.Split(value.Value, unionIdentifier)
 	for _, v := range s {
 		switch {
 		// subject relation
-		case strings.Contains(v, "#"):
-			sr := strings.Split(v, "#")
+		case strings.Contains(v, relationIdentifier):
+			sr := strings.Split(v, relationIdentifier)
 			r.Definition = append(r.Definition, &SubjectRelation{
 				ObjectType: strings.TrimSpace(sr[0]),
 				Relation:   strings.TrimSpace(sr[1]),
 			})
 		// wildcard relation
-		case strings.Contains(v, ":*"):
-			wc := strings.Split(v, ":*")
+		case strings.Contains(v, wildcardIdentifier):
+			wc := strings.Split(v, wildcardIdentifier)
 			r.Definition = append(r.Definition, &WildcardRelation{
 				ObjectType: strings.TrimSpace(wc[0]),
 			})
@@ -135,8 +144,8 @@ func (r *RelationDefinition) UnmarshalYAML(value *yaml.Node) error {
 func (p *PermissionOperator) UnmarshalYAML(value *yaml.Node) error {
 	switch {
 	// union (OR)
-	case strings.Contains(value.Value, "|"):
-		s := strings.Split(value.Value, "|")
+	case strings.Contains(value.Value, unionIdentifier):
+		s := strings.Split(value.Value, unionIdentifier)
 		union := []string{}
 		for _, v := range s {
 			union = append(union, strings.TrimSpace(v))
@@ -147,8 +156,8 @@ func (p *PermissionOperator) UnmarshalYAML(value *yaml.Node) error {
 			},
 		}
 	// intersection (AND)
-	case strings.Contains(value.Value, "&"):
-		s := strings.Split(value.Value, "&")
+	case strings.Contains(value.Value, intersectionIdentifier):
+		s := strings.Split(value.Value, intersectionIdentifier)
 		intersect := []string{}
 		for _, v := range s {
 			intersect = append(intersect, strings.TrimSpace(v))
@@ -159,8 +168,8 @@ func (p *PermissionOperator) UnmarshalYAML(value *yaml.Node) error {
 			},
 		}
 	// arrow
-	case strings.Contains(value.Value, "->"):
-		s := strings.Split(value.Value, "->")
+	case strings.Contains(value.Value, arrowIdentifier):
+		s := strings.Split(value.Value, arrowIdentifier)
 		*p = PermissionOperator{
 			Operator: &ArrowOperator{
 				Relation:   strings.TrimSpace(s[0]),
@@ -168,8 +177,8 @@ func (p *PermissionOperator) UnmarshalYAML(value *yaml.Node) error {
 			},
 		}
 	// exclusion (NOT)
-	case strings.Contains(value.Value, "-"):
-		s := strings.Split(value.Value, "-")
+	case strings.Contains(value.Value, exclusionIdentifier):
+		s := strings.Split(value.Value, exclusionIdentifier)
 		*p = PermissionOperator{
 			Operator: &ExclusionOperator{
 				Base:     strings.TrimSpace(s[0]),
