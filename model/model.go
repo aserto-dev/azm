@@ -1,5 +1,11 @@
 package model
 
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+)
+
 const ModelVersion int = 1
 
 type Model struct {
@@ -42,4 +48,23 @@ type ExclusionPermission struct {
 type ArrowPermission struct {
 	Relation   string `json:"relation,omitempty"`
 	Permission string `json:"permission,omitempty"`
+}
+
+func New(r io.Reader) (*Model, error) {
+	m := Model{}
+	dec := json.NewDecoder(r)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&m); err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+func (m *Model) Reader() (io.Reader, error) {
+	b := bytes.Buffer{}
+	enc := json.NewEncoder(&b)
+	if err := enc.Encode(m); err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(b.Bytes()), nil
 }
