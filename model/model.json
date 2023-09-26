@@ -1,5 +1,6 @@
 {
     "version": 1,
+    "metadata": null,
     "types": {
         "user": {},
         "group": {

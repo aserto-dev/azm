@@ -2,7 +2,6 @@ package v3_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -50,7 +49,6 @@ func TestLoadModel(t *testing.T) {
 
 	opts := jsondiff.DefaultJSONOptions()
 	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
-		require.Equal(t, jsondiff.FullMatch, diff)
-		fmt.Fprintf(os.Stdout, "differences %s", str)
+		require.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 }
