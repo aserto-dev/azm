@@ -37,7 +37,7 @@ func (c *Cache) GetObjectType(objectType string) (*dsc2.ObjectType, error) {
 }
 
 // GetObjectTypes, v2 backwards-compatibility accessor function, returns list of v2.ObjectType instances.
-func (c *Cache) GetObjectTypes() ([]*dsc2.ObjectType, error) {
+func (c *Cache) GetObjectTypes() (ObjectTypeSlice, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -118,7 +118,7 @@ func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.R
 }
 
 // GetRelationTypes, v2 backwards-compatibility accessor function, returns list of v2 RelationType instances, optionally filtered by by object type.
-func (c *Cache) GetRelationTypes(objectType string) ([]*dsc2.RelationType, error) {
+func (c *Cache) GetRelationTypes(objectType string) (RelationTypeSlice, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -189,7 +189,7 @@ func (c *Cache) GetPermission(permission string) (*dsc2.Permission, error) {
 }
 
 // GetPermissions, v2 backwards-compatibility accessor function, returns list of v2 Permission instances.
-func (c *Cache) GetPermissions() ([]*dsc2.Permission, error) {
+func (c *Cache) GetPermissions() (PermissionSlice, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

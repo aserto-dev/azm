@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"time"
 )
 
 const ModelVersion int = 1
 
 type Model struct {
-	Version int                    `json:"version"`
-	Objects map[ObjectName]*Object `json:"types"`
+	Version  int                    `json:"version"`
+	Objects  map[ObjectName]*Object `json:"types"`
+	Metadata *Metadata              `json:"metadata"`
 }
 
 type ObjectName string
@@ -50,6 +52,11 @@ type ArrowPermission struct {
 	Permission string `json:"permission,omitempty"`
 }
 
+type Metadata struct {
+	UpdatedAt time.Time `json:"updated_at"`
+	ETag      string    `json:"etag"`
+}
+
 func New(r io.Reader) (*Model, error) {
 	m := Model{}
 	dec := json.NewDecoder(r)
@@ -67,4 +74,9 @@ func (m *Model) Reader() (io.Reader, error) {
 		return nil, err
 	}
 	return bytes.NewReader(b.Bytes()), nil
+}
+
+func (m *Model) Write(w io.Writer) error {
+	enc := json.NewEncoder(w)
+	return enc.Encode(m)
 }

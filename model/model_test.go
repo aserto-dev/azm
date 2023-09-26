@@ -2,7 +2,6 @@ package model_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -103,8 +102,7 @@ func TestProgrammaticModel(t *testing.T) {
 
 	opts := jsondiff.DefaultJSONOptions()
 	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
-		require.Equal(t, jsondiff.FullMatch, diff)
-		fmt.Fprintf(os.Stdout, "differences %s", str)
+		require.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 }
 
@@ -129,15 +127,15 @@ func TestModel(t *testing.T) {
 	require.NoError(t, err)
 
 	opts := jsondiff.DefaultConsoleOptions()
-	if diff, _ := jsondiff.Compare(buf, b1, &opts); diff != jsondiff.FullMatch {
-		require.Equal(t, diff, jsondiff.FullMatch)
+	if diff, str := jsondiff.Compare(buf, b1, &opts); diff != jsondiff.FullMatch {
+		require.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
 	}
 
-	if diff, _ := jsondiff.Compare(buf, b2, &opts); diff != jsondiff.FullMatch {
-		require.Equal(t, diff, jsondiff.FullMatch)
+	if diff, str := jsondiff.Compare(buf, b2, &opts); diff != jsondiff.FullMatch {
+		require.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
 	}
 
-	if diff, _ := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
-		require.Equal(t, diff, jsondiff.FullMatch)
+	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
+		require.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
 	}
 }
