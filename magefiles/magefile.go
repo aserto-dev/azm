@@ -15,6 +15,17 @@ func init() {
 	os.Setenv("GOPRIVATE", "github.com/aserto-dev")
 }
 
+// Build builds all binaries in ./cmd.
+func Build() error {
+	return common.BuildReleaser()
+}
+
+// BuildAll builds all binaries in ./cmd for
+// all configured operating systems and architectures.
+func BuildAll() error {
+	return common.BuildAllReleaser("--clean", "--snapshot")
+}
+
 // Lint runs linting for the entire project.
 func Lint() error {
 	return common.Lint()

@@ -4,6 +4,7 @@
 .ext/
 
 bin/
+dist/
 
 cover.out
 
