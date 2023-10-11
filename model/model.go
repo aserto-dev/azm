@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"time"
+
+	"github.com/aserto-dev/azm/graph"
 )
 
 const ModelVersion int = 1
@@ -75,6 +77,26 @@ func New(r io.Reader) (*Model, error) {
 		return nil, err
 	}
 	return &m, nil
+}
+
+func (m *Model) GetGraph() *graph.Graph {
+	grph := graph.NewGraph()
+	for objectName := range m.Objects {
+		grph.AddNode(string(objectName))
+	}
+	for objectName, obj := range m.Objects {
+		for relName, rel := range obj.Relations {
+			for _, rl := range rel {
+				if string(rl.Direct) != "" {
+					grph.AddEdge(string(objectName), string(rl.Direct), string(relName))
+				} else if rl.Subject != nil {
+					grph.AddEdge(string(objectName), string(rl.Subject.Object), string(relName))
+				}
+			}
+		}
+	}
+
+	return grph
 }
 
 func (m *Model) Reader() (io.Reader, error) {

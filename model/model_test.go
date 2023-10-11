@@ -226,3 +226,13 @@ func TestDiff(t *testing.T) {
 	stretch.Equal(t, len(diffM1WithM3.Removed.Relations), 1)
 	stretch.Equal(t, diffM1WithM3.Removed.Relations["document"], []model.RelationName{"parent_folder"})
 }
+
+func TestGraph(t *testing.T) {
+	graph := m1.GetGraph()
+
+	traversal := graph.TraverseGraph("document")
+	require.Equal(t, len(traversal), 5)
+	traversal = graph.TraverseGraph("group")
+	require.Equal(t, len(traversal), 3)
+	require.Equal(t, traversal, []string{"group", "member", "user"})
+}
