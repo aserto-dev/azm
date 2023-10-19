@@ -7,6 +7,7 @@ require (
 	github.com/aserto-dev/errors v0.0.6
 	github.com/aserto-dev/go-aserto v0.20.4
 	github.com/aserto-dev/go-directory v0.30.0
+	github.com/golang/mock v1.1.1
 	github.com/magefile/mage v1.15.0
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/pkg/errors v0.9.1

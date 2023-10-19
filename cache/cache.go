@@ -27,6 +27,14 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 	return nil
 }
 
+// Returns a copy of the current model.
+func (c *Cache) GetModel() model.Model {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	m := *c.model
+	return m
+}
+
 // ObjectExists, checks if given object type name exists in the model cache.
 func (c *Cache) ObjectExists(on model.ObjectName) bool {
 	c.mtx.RLock()

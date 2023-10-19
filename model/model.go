@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/model/diff"
 )
 
 const ModelVersion int = 1
@@ -59,16 +60,6 @@ type Metadata struct {
 	ETag      string    `json:"etag"`
 }
 
-type Diff struct {
-	Added   Changes
-	Removed Changes
-}
-
-type Changes struct {
-	Objects   []ObjectName
-	Relations map[ObjectName][]RelationName
-}
-
 func New(r io.Reader) (*Model, error) {
 	m := Model{}
 	dec := json.NewDecoder(r)
@@ -113,43 +104,43 @@ func (m *Model) Write(w io.Writer) error {
 	return enc.Encode(m)
 }
 
-func (m *Model) Diff(newModel *Model) *Diff {
-	// newModel - m => additions
+func (m *Model) Diff(newModel *Model) *diff.Diff {
+	// newmodel - m => additions
 	added := newModel.subtract(m)
 	// m - newModel => deletions
 	deleted := m.subtract(newModel)
 
-	return &Diff{Added: *added, Removed: *deleted}
+	return &diff.Diff{Added: *added, Removed: *deleted}
 }
 
-func (m *Model) subtract(newModel *Model) *Changes {
-	changes := &Changes{
-		Objects:   make([]ObjectName, 0),
-		Relations: make(map[ObjectName][]RelationName),
+func (m *Model) subtract(newModel *Model) *diff.Changes {
+	chgs := &diff.Changes{
+		Objects:   make([]string, 0),
+		Relations: make(map[string][]string),
 	}
 
 	if m == nil {
-		return changes
+		return chgs
 	}
 
 	if newModel == nil {
 		for objName := range m.Objects {
-			changes.Objects = append(changes.Objects, objName)
+			chgs.Objects = append(chgs.Objects, string(objName))
 		}
-		return changes
+		return chgs
 	}
 
 	for objName, obj := range m.Objects {
 		if newModel.Objects[objName] == nil {
-			changes.Objects = append(changes.Objects, objName)
+			chgs.Objects = append(chgs.Objects, string(objName))
 		} else {
-			for relName := range obj.Relations {
-				if newModel.Objects[objName].Relations[relName] == nil {
-					changes.Relations[objName] = append(changes.Relations[objName], relName)
+			for relname := range obj.Relations {
+				if newModel.Objects[objName].Relations[relname] == nil {
+					chgs.Relations[string(objName)] = append(chgs.Relations[string(objName)], string(relname))
 				}
 			}
 		}
 	}
 
-	return changes
+	return chgs
 }
