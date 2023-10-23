@@ -41,7 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           distribution: goreleaser
-          version: env.GO_RELEASER_VERSION
+          version: ${{ env.GO_RELEASER_VERSION }}
           args: build --clean --snapshot
       -
         name: Lint
