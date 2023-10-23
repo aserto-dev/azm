@@ -139,7 +139,11 @@ func TestNormalizeIdentifier(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			normalized, err := model.NormalizeIdentifier(tc.Input)
 			t.Logf("[%s] -> [%s]", tc.Input, normalized)
-			assert.NoError(t, err)
+			if tc.Valid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }
