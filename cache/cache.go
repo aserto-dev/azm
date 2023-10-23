@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/model/diff"
 )
 
 type Cache struct {
@@ -27,12 +28,11 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 	return nil
 }
 
-// Returns a copy of the current model.
-func (c *Cache) GetModel() model.Model {
+// Returns a diff struct resulted between the old and the new model.
+func (c *Cache) Diff(other *model.Model) *diff.Diff {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	m := *c.model
-	return m
+	return c.model.Diff(other)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
