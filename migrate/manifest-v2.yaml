@@ -16,6 +16,7 @@ types:
       ### display_name: user:manager ###
       ### ordinal: 300 ###
       manager: user
+
   ### display_name: Group ###
   ### ordinal: 200 ###
   group:
@@ -23,6 +24,7 @@ types:
       ### display_name: group:member ###
       ### ordinal: 100 ###
       member: user
+
   ### display_name: Identity ###
   ### ordinal: 300 ###
   identity:
@@ -30,6 +32,7 @@ types:
       ### display_name: identity:identifier ###
       ### ordinal: 200 ###
       identifier: user
+
   ### display_name: Application ###
   ### ordinal: 400 ###
   application:
@@ -37,9 +40,11 @@ types:
       ### display_name: application:user ###
       ### ordinal: 400 ###
       application-user: user
+
   ### display_name: Resource ###
   ### ordinal: 500 ###
   resource: {}
+
   ### display_name: System ###
   ### ordinal: 900 ###
   system:

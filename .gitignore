@@ -2,8 +2,10 @@
 
 .dev/
 .ext/
+.vscode/launch.json
 
 bin/
+dist/
 
 cover.out
 

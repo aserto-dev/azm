@@ -15,9 +15,9 @@ type Model struct {
 	Metadata *Metadata              `json:"metadata"`
 }
 
-type ObjectName string
-type RelationName string
-type PermissionName string
+type ObjectName Identifier
+type RelationName Identifier
+type PermissionName Identifier
 
 type Object struct {
 	Relations   map[RelationName][]*Relation   `json:"relations,omitempty"`
@@ -92,42 +92,42 @@ func (m *Model) Write(w io.Writer) error {
 }
 
 func (m *Model) Diff(newModel *Model) *Diff {
-	// newmodel - m => additions
+	// newModel - m => additions
 	added := newModel.subtract(m)
-	// m - newmodel => deletions
+	// m - newModel => deletions
 	deleted := m.subtract(newModel)
 
 	return &Diff{Added: *added, Removed: *deleted}
 }
 
 func (m *Model) subtract(newModel *Model) *Changes {
-	chgs := &Changes{
+	changes := &Changes{
 		Objects:   make([]ObjectName, 0),
 		Relations: make(map[ObjectName][]RelationName),
 	}
 
 	if m == nil {
-		return chgs
+		return changes
 	}
 
 	if newModel == nil {
 		for objName := range m.Objects {
-			chgs.Objects = append(chgs.Objects, objName)
+			changes.Objects = append(changes.Objects, objName)
 		}
-		return chgs
+		return changes
 	}
 
 	for objName, obj := range m.Objects {
 		if newModel.Objects[objName] == nil {
-			chgs.Objects = append(chgs.Objects, objName)
+			changes.Objects = append(changes.Objects, objName)
 		} else {
-			for relname := range obj.Relations {
-				if newModel.Objects[objName].Relations[relname] == nil {
-					chgs.Relations[objName] = append(chgs.Relations[objName], relname)
+			for relName := range obj.Relations {
+				if newModel.Objects[objName].Relations[relName] == nil {
+					changes.Relations[objName] = append(changes.Relations[objName], relName)
 				}
 			}
 		}
 	}
 
-	return chgs
+	return changes
 }
