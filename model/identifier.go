@@ -16,7 +16,7 @@ import (
 // - have a maximum length of 64 characters
 // - start with a character (a-z)
 // - end with a character of a digit (a-z0-9)
-// - can contain dots, underscores and dashes, between the first and last position
+// - can contain dots, underscores and dashes, between the first and last position.
 type Identifier string
 
 var ErrInvalidIdentifier = errors.New("invalid identifier")
