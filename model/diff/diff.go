@@ -1,8 +1,6 @@
 package diff
 
 import (
-	"context"
-
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -21,27 +19,27 @@ type Changes struct {
 }
 
 type Instances interface {
-	ObjectsExist(ctx context.Context, objectType string) (bool, error)
-	RelationsExist(ctx context.Context, objectType, relationName string) (bool, error)
+	ObjectsExist(objectType string) (bool, error)
+	RelationsExist(objectType, relationName string) (bool, error)
 }
 
-func (d *Diff) Validate(ctx context.Context, dv Instances) error {
+func (d *Diff) Validate(dv Instances) error {
 	var errs error
-	if err := d.validateObjectTypes(ctx, dv); err != nil {
+	if err := d.validateObjectTypes(dv); err != nil {
 		errs = multierror.Append(errs, err)
 	}
 
-	if err := d.validateRelationsTypes(ctx, dv); err != nil {
+	if err := d.validateRelationsTypes(dv); err != nil {
 		errs = multierror.Append(errs, err)
 	}
 
 	return errs
 }
 
-func (d *Diff) validateObjectTypes(ctx context.Context, dv Instances) error {
+func (d *Diff) validateObjectTypes(dv Instances) error {
 	var errs error
 	for _, objType := range d.Removed.Objects {
-		hasInstance, err := dv.ObjectsExist(ctx, objType)
+		hasInstance, err := dv.ObjectsExist(objType)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 			continue
@@ -53,11 +51,11 @@ func (d *Diff) validateObjectTypes(ctx context.Context, dv Instances) error {
 	return errs
 }
 
-func (d *Diff) validateRelationsTypes(ctx context.Context, dv Instances) error {
+func (d *Diff) validateRelationsTypes(dv Instances) error {
 	var errs error
 	for objType, rels := range d.Removed.Relations {
 		for _, rel := range rels {
-			hasInstance, err := dv.RelationsExist(ctx, objType, rel)
+			hasInstance, err := dv.RelationsExist(objType, rel)
 			if err != nil {
 				errs = multierror.Append(errs, err)
 				continue

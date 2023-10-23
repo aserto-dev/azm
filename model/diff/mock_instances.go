@@ -5,7 +5,6 @@
 package diff
 
 import (
-	context "context"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -34,31 +33,31 @@ func (m *MockInstances) EXPECT() *MockInstancesMockRecorder {
 }
 
 // ObjectsExist mocks base method
-func (m *MockInstances) ObjectsExist(arg0 context.Context, arg1 string) (bool, error) {
+func (m *MockInstances) ObjectsExist(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ObjectsExist", arg0, arg1)
+	ret := m.ctrl.Call(m, "ObjectsExist", arg0)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ObjectsExist indicates an expected call of ObjectsExist
-func (mr *MockInstancesMockRecorder) ObjectsExist(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockInstancesMockRecorder) ObjectsExist(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectsExist", reflect.TypeOf((*MockInstances)(nil).ObjectsExist), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectsExist", reflect.TypeOf((*MockInstances)(nil).ObjectsExist), arg0)
 }
 
 // RelationsExist mocks base method
-func (m *MockInstances) RelationsExist(arg0 context.Context, arg1, arg2 string) (bool, error) {
+func (m *MockInstances) RelationsExist(arg0, arg1 string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RelationsExist", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "RelationsExist", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RelationsExist indicates an expected call of RelationsExist
-func (mr *MockInstancesMockRecorder) RelationsExist(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockInstancesMockRecorder) RelationsExist(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RelationsExist", reflect.TypeOf((*MockInstances)(nil).RelationsExist), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RelationsExist", reflect.TypeOf((*MockInstances)(nil).RelationsExist), arg0, arg1)
 }
