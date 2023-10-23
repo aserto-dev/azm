@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,10 +24,16 @@ func Load(r io.Reader) (*model.Model, error) {
 	}
 
 	for on, o := range manifest.ObjectTypes {
+		log.Debug().Str("object", string(on)).Msg("loading object")
 
 		relations := map[model.RelationName][]*model.Relation{}
 
+		if o.Relations == nil {
+			o.Relations = map[RelationName]RelationDefinition{}
+		}
+
 		for rn, rd := range o.Relations {
+			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
 
 			for _, v := range rd.Definition {
 				if _, ok := relations[model.RelationName(rn)]; !ok {
@@ -57,7 +64,13 @@ func Load(r io.Reader) (*model.Model, error) {
 
 		permissions := map[model.PermissionName]*model.Permission{}
 
+		if o.Permissions == nil {
+			o.Permissions = map[PermissionName]PermissionOperator{}
+		}
+
 		for pn, pd := range o.Permissions {
+			log.Debug().Str("object", string(on)).Str("permission", string(pn)).Msg("loading permission")
+
 			if _, ok := permissions[model.PermissionName(pn)]; !ok {
 				permissions[model.PermissionName(pn)] = &model.Permission{}
 			}
