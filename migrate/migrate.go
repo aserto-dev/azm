@@ -64,9 +64,13 @@ func (m *Migrator) Process() error {
 
 	m.trueUpRelations()
 
-	m.normalize()
+	if err := m.normalize(); err != nil {
+		return err
+	}
 
-	m.validate()
+	if err := m.validate(); err != nil {
+		return err
+	}
 
 	return nil
 }
