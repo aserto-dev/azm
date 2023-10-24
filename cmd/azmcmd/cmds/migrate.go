@@ -28,15 +28,11 @@ func (a *MigrateCmd) Run(c *Common) error {
 
 	m := migrate.NewMigrator()
 
-	if err := m.Process(clnt.Conn); err != nil {
+	if err := m.Load(clnt.Conn); err != nil {
 		return err
 	}
 
-	if err := m.Normalize(); err != nil {
-		return err
-	}
-
-	if err := m.Validate(); err != nil {
+	if err := m.Process(); err != nil {
 		return err
 	}
 

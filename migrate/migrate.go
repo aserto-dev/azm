@@ -37,7 +37,8 @@ func NewMigrator() *Migrator {
 	}
 }
 
-func (m *Migrator) Process(conn grpc.ClientConnInterface) error {
+// Load hydrates the migrator from given gRPC connection.
+func (m *Migrator) Load(conn grpc.ClientConnInterface) error {
 	e2 := dse2.NewExporterClient(conn)
 	r2 := dsr2.NewReaderClient(conn)
 
@@ -47,6 +48,10 @@ func (m *Migrator) Process(conn grpc.ClientConnInterface) error {
 
 	m.RelationMap = m.getObjectRelationSubject(context.Background(), e2)
 
+	return nil
+}
+
+func (m *Migrator) Process() error {
 	m.removeObsoleteObjectTypes()
 	m.removeObsoleteRelationTypes()
 
@@ -59,10 +64,14 @@ func (m *Migrator) Process(conn grpc.ClientConnInterface) error {
 
 	m.trueUpRelations()
 
+	m.normalize()
+
+	m.validate()
+
 	return nil
 }
 
-func (m *Migrator) Normalize() error {
+func (m *Migrator) normalize() error {
 	for i := 0; i < len(m.Metadata.ObjectTypes); i++ {
 		if !model.IsValidIdentifier(m.Metadata.ObjectTypes[i].Name) {
 			if normalized, err := model.NormalizeIdentifier(m.Metadata.ObjectTypes[i].Name); err == nil {
@@ -98,7 +107,7 @@ func (m *Migrator) Normalize() error {
 	return nil
 }
 
-func (m *Migrator) Validate() error {
+func (m *Migrator) validate() error {
 	for _, ot := range m.Metadata.ObjectTypes {
 		if !model.IsValidIdentifier(ot.Name) {
 			fmt.Fprintf(os.Stderr, "ot %s is not a valid identifier\n", ot.Name)
