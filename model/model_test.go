@@ -228,11 +228,62 @@ func TestDiff(t *testing.T) {
 }
 
 func TestGraph(t *testing.T) {
-	graph := m1.GetGraph()
+	m := model.Model{
+		Version: 1,
+		Objects: map[model.ObjectName]*model.Object{
+			model.ObjectName("user"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("rel_name"): {
+						&model.Relation{Direct: model.ObjectName("ext_obj")},
+					},
+				},
+			},
+			model.ObjectName("group"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("member"): {
+						&model.Relation{Direct: model.ObjectName("user")},
+						&model.Relation{Subject: &model.SubjectRelation{
+							Object:   model.ObjectName("group"),
+							Relation: model.RelationName("member"),
+						}},
+					},
+				},
+			},
+			model.ObjectName("folder"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("owner"): {
+						&model.Relation{Direct: model.ObjectName("user")},
+					},
+				},
+			},
+			model.ObjectName("document"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("parent_folder"): {
+						{Direct: model.ObjectName("folder")},
+					},
+					model.RelationName("writer"): {
+						{Direct: model.ObjectName("user")},
+					},
+					model.RelationName("reader"): {
+						{Direct: model.ObjectName("user")},
+						{Wildcard: model.ObjectName("user")},
+					},
+				},
+			},
+		},
+	}
+	graph := m.GetGraph()
+
+	search := graph.SearchGraph("document", "ext_obj")
+	stretch.Equal(t, len(search), 1)
+
+	search = graph.SearchGraph("document", "user")
+	stretch.Equal(t, len(search), 2)
 
 	traversal := graph.TraverseGraph("document")
-	require.Equal(t, len(traversal), 5)
+	stretch.Equal(t, len(traversal), 3)
 	traversal = graph.TraverseGraph("group")
-	require.Equal(t, len(traversal), 3)
-	require.Equal(t, traversal, []string{"group", "member", "user"})
+	stretch.Equal(t, len(traversal), 2)
+	stretch.Contains(t, traversal, []string{"group", "member", "user", "rel_name", "ext_obj"})
+	stretch.Contains(t, traversal, []string{"group", "member", "group"})
 }
