@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 
-	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 )
 
@@ -71,11 +70,4 @@ func (c *Cursor) Encode() (string, error) {
 	}
 
 	return base64.RawStdEncoding.EncodeToString(buf.Bytes()), nil
-}
-
-func IsCountOnly(p *dsc2.PaginationRequest) bool {
-	if p == nil {
-		return false
-	}
-	return p.Size == TotalsOnlyResultSet
 }

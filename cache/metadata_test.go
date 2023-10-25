@@ -130,8 +130,8 @@ func testPagination[T Named, S PagingSlice[T]](t *testing.T, slice S) {
 				current++
 			}
 
-			if result.PageInfo.NextToken != "" {
-				page.Token = result.PageInfo.NextToken
+			if result.NextToken != "" {
+				page.Token = result.NextToken
 			} else {
 				break
 			}
