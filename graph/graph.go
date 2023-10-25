@@ -57,15 +57,17 @@ func (g *Graph) dFS(source int, visited []map[int]bool, traversal [][]string, in
 				visited[i] = make(map[int]bool, len(g.adjMatrix[source][i]))
 			}
 			for j := 0; j < len(g.adjMatrix[source][i]); j++ {
-				if !visited[i][j] {
-					visited[i][j] = true
-					if len(traversal) < index+1 {
-						traversal = append(traversal, make([]string, 0))
-					}
-					traversal[index] = append(traversal[index], g.adjMatrix[source][i][j])
-					traversal = g.dFS(i, visited, traversal, index)
-					index = index + 1
+				if visited[i][j] {
+					continue
 				}
+				visited[i][j] = true
+				if len(traversal) < index+1 {
+					traversal = append(traversal, make([]string, 0))
+				}
+				traversal[index] = append(traversal[index], g.adjMatrix[source][i][j])
+				traversal = g.dFS(i, visited, traversal, index)
+				index++
+
 			}
 		}
 	}
