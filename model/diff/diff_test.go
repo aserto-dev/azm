@@ -29,7 +29,8 @@ func TestValidateDiffWithObjectTypeDeletion(t *testing.T) {
 
 	dif := diff.Diff{Removed: diff.Changes{Objects: []string{objType}}, Added: diff.Changes{}}
 
-	mockInstances.EXPECT().ObjectsExist(objType).Return(false, nil)
+	mockInstances.EXPECT().ObjectTypes().Return([]string{}, nil)
+	mockInstances.EXPECT().RelationTypes().Return([]*diff.RelationKind{}, nil)
 	err := dif.Validate(mockInstances)
 
 	require.NoError(t, err)
@@ -42,8 +43,8 @@ func TestValidateDiffWith2ObjectTypeDeletion(t *testing.T) {
 
 	dif := diff.Diff{Removed: diff.Changes{Objects: objTypes}, Added: diff.Changes{}}
 
-	mockInstances.EXPECT().ObjectsExist(objTypes[0]).Return(false, nil)
-	mockInstances.EXPECT().ObjectsExist(objTypes[1]).Return(true, nil)
+	mockInstances.EXPECT().ObjectTypes().Return([]string{"user"}, nil)
+	mockInstances.EXPECT().RelationTypes().Return([]*diff.RelationKind{}, nil)
 	err := dif.Validate(mockInstances)
 
 	require.Error(t, err)
@@ -58,9 +59,8 @@ func TestValidateDiffWithRelationTypeDeletion(t *testing.T) {
 
 	dif := diff.Diff{Removed: diff.Changes{Objects: objTypes, Relations: relationTypes}, Added: diff.Changes{}}
 
-	mockInstances.EXPECT().ObjectsExist(objTypes[0]).Return(false, nil)
-	mockInstances.EXPECT().ObjectsExist(objTypes[1]).Return(false, nil)
-	mockInstances.EXPECT().RelationsExist("folder", relationTypes["folder"][0]).Return(true, nil)
+	mockInstances.EXPECT().ObjectTypes().Return([]string{}, nil)
+	mockInstances.EXPECT().RelationTypes().Return([]*diff.RelationKind{{Object: "folder", Relation: "parent_folder"}}, nil)
 	err := dif.Validate(mockInstances)
 
 	require.Error(t, err)
@@ -75,13 +75,9 @@ func TestValidateDiffWithObjectInstances(t *testing.T) {
 
 	dif := diff.Diff{Removed: diff.Changes{Objects: objTypes, Relations: relationTypes}, Added: diff.Changes{}}
 
-	mockInstances.EXPECT().ObjectsExist(objTypes[0]).Return(false, ErrBoom)
-	mockInstances.EXPECT().ObjectsExist(objTypes[1]).Return(true, nil)
-	mockInstances.EXPECT().RelationsExist("folder", relationTypes["folder"][0]).Return(true, nil)
+	mockInstances.EXPECT().ObjectTypes().Return([]string{}, ErrBoom)
 	err := dif.Validate(mockInstances)
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), derr.ErrRelationTypeInUse.Message)
-	require.Contains(t, err.Error(), derr.ErrObjectTypeInUse.Message)
 	require.Contains(t, err.Error(), ErrBoom.Error())
 }

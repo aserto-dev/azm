@@ -32,32 +32,32 @@ func (m *MockInstances) EXPECT() *MockInstancesMockRecorder {
 	return m.recorder
 }
 
-// ObjectsExist mocks base method
-func (m *MockInstances) ObjectsExist(arg0 string) (bool, error) {
+// ObjectTypes mocks base method
+func (m *MockInstances) ObjectTypes() ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ObjectsExist", arg0)
-	ret0, _ := ret[0].(bool)
+	ret := m.ctrl.Call(m, "ObjectTypes")
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ObjectsExist indicates an expected call of ObjectsExist
-func (mr *MockInstancesMockRecorder) ObjectsExist(arg0 interface{}) *gomock.Call {
+// ObjectTypes indicates an expected call of ObjectTypes
+func (mr *MockInstancesMockRecorder) ObjectTypes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectsExist", reflect.TypeOf((*MockInstances)(nil).ObjectsExist), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObjectTypes", reflect.TypeOf((*MockInstances)(nil).ObjectTypes))
 }
 
-// RelationsExist mocks base method
-func (m *MockInstances) RelationsExist(arg0, arg1 string) (bool, error) {
+// RelationTypes mocks base method
+func (m *MockInstances) RelationTypes() ([]*RelationKind, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RelationsExist", arg0, arg1)
-	ret0, _ := ret[0].(bool)
+	ret := m.ctrl.Call(m, "RelationTypes")
+	ret0, _ := ret[0].([]*RelationKind)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RelationsExist indicates an expected call of RelationsExist
-func (mr *MockInstancesMockRecorder) RelationsExist(arg0, arg1 interface{}) *gomock.Call {
+// RelationTypes indicates an expected call of RelationTypes
+func (mr *MockInstancesMockRecorder) RelationTypes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RelationsExist", reflect.TypeOf((*MockInstances)(nil).RelationsExist), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RelationTypes", reflect.TypeOf((*MockInstances)(nil).RelationTypes))
 }
