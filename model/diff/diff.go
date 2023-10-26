@@ -75,11 +75,11 @@ func (d *Diff) validateObjectTypes(objs []string, rels []*RelationKind) error {
 	for _, objType := range d.Removed.Objects {
 		_, found := lo.Find(objs, func(obj string) bool { return obj == objType })
 		if found {
-			errs = multierror.Append(errs, errors.Wrapf(derr.ErrObjectTypeInUse, "object type: %s", objType))
+			errs = multierror.Append(errs, errors.Wrapf(derr.ErrObjectTypeInUse, "object type [%s]", objType))
 		}
-		_, found = lo.Find(rels, func(rel *RelationKind) bool { return rel.Object == objType || rel.Subject == objType })
+		rel, found := lo.Find(rels, func(rel *RelationKind) bool { return rel.Object == objType || rel.Subject == objType })
 		if found {
-			errs = multierror.Append(errs, errors.Wrapf(derr.ErrObjectTypeInUse, "object type: %s", objType))
+			errs = multierror.Append(errs, errors.Wrapf(derr.ErrRelationTypeInUse, "object type [%s], relation type [%s]", objType, rel.Relation))
 		}
 	}
 	return errs
@@ -93,7 +93,7 @@ func (d *Diff) validateRelationsTypes(relations []*RelationKind) error {
 				return rl.Object == objType && rl.Relation == rel
 			})
 			if found {
-				errs = multierror.Append(errs, errors.Wrapf(derr.ErrRelationTypeInUse, "object type: %s", objType))
+				errs = multierror.Append(errs, errors.Wrapf(derr.ErrRelationTypeInUse, "object type [%s], relation type [%s]", objType, rel))
 			}
 		}
 	}
