@@ -85,5 +85,5 @@ func Load(r io.Reader) (*model.Model, error) {
 func NormalizePermission(p string) string {
 	// normalize permission name
 	// NOTE: does not enforce max length to 64 characters.
-	return strings.ToLower(strings.ReplaceAll(p, ".", "_"))
+	return strings.ToLower(p)
 }
