@@ -90,7 +90,7 @@ func (d *Diff) validateRelationsTypes(relations []*RelationKind) error {
 	for objType, rels := range d.Removed.Relations {
 		for _, rel := range rels {
 			_, found := lo.Find(relations, func(rl *RelationKind) bool {
-				return rl.Object == objType && rl.Relation == rel
+				return (rl.Object == objType && rl.Relation == rel) || (rl.Subject == objType && rl.SubjectRelation == rel)
 			})
 			if found {
 				errs = multierror.Append(errs, errors.Wrapf(derr.ErrRelationTypeInUse, "object type [%s], relation type [%s]", objType, rel))
