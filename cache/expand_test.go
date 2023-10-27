@@ -29,6 +29,7 @@ func loadModelCache(t *testing.T, path string) *cache.Cache {
 	return cache.New(&mc)
 }
 
+// helper to regenerate the serialized cache from a manifest.
 func loadFromManifest(t *testing.T, path string) *cache.Cache {
 	r, err := os.Open(path)
 	require.NoError(t, err)

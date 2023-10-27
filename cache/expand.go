@@ -28,8 +28,11 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 
 	// iterate through relation set, determine if it "unions" with the given relation.
 	for _, r := range rs {
-		if r.Subject != nil && r.Subject.Object == on {
+		switch {
+		case r.Subject != nil && r.Subject.Object == on:
 			results = append(results, r.Subject.Relation)
+		case r.Direct != "":
+			results = append(results, c.ExpandRelation(on, model.RelationName(r.Direct))...)
 		}
 	}
 
@@ -47,15 +50,17 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 	results := []model.RelationName{}
 
 	// starting object type and permission must exist in order to be expanded.
-	if o, ok := c.model.Objects[on]; !ok {
+	o, ok := c.model.Objects[on]
+	if !ok {
 		return results
-	} else if _, ok := o.Permissions[pn]; !ok {
+	}
+	if _, ok := o.Permissions[pn]; !ok {
 		return results
 	}
 
 	p := c.model.Objects[on].Permissions[pn]
 
-	results = append(results, expandUnion(p.Union)...)
+	results = append(results, c.expandUnion(o, p.Union...)...)
 
 	for _, rn := range results {
 		results = append(results, c.ExpandRelation(on, rn)...)
@@ -65,10 +70,21 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 }
 
 // convert union []string to []model.RelationName.
-func expandUnion(u []string) []model.RelationName {
+func (c *Cache) expandUnion(o *model.Object, u ...string) []model.RelationName {
 	result := []model.RelationName{}
 	for _, v := range u {
-		result = append(result, model.RelationName(v))
+		rn := model.RelationName(v)
+		result = append(result, rn)
+
+		exp := lo.FilterMap(o.Relations[rn], func(r *model.Relation, _ int) (string, bool) {
+			if r.Direct == "" {
+				return "", false
+			}
+			_, ok := o.Relations[model.RelationName(r.Direct)]
+			return string(r.Direct), ok
+
+		})
+		result = append(result, c.expandUnion(o, exp...)...)
 	}
 	return result
 }
