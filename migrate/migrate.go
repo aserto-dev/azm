@@ -60,6 +60,7 @@ func (m *Migrator) Process() error {
 	m.fixupObjectTypes()
 	m.sortObjectTypes()
 
+	m.invertUnions()
 	m.fixupRelationTypes()
 
 	m.trueUpRelations()
@@ -326,6 +327,32 @@ func (m *Migrator) removeObsoleteRelationTypes() {
 		}
 		return true
 	})
+}
+
+func (m *Migrator) invertUnions() {
+	for i := 0; i < len(m.Metadata.ObjectTypes); i++ {
+		obj := m.Metadata.ObjectTypes[i]
+
+		rels := lo.Filter(m.Metadata.RelationTypes, func(rel *dsc2.RelationType, _ int) bool {
+			return rel.ObjectType == obj.Name
+		})
+
+		inverted := lo.Associate(rels, func(rel *dsc2.RelationType) (string, []string) {
+			return rel.Name, []string{}
+		})
+
+		for _, rel := range rels {
+			for _, union := range rel.Unions {
+				if _, ok := inverted[union]; ok {
+					inverted[union] = append(inverted[union], rel.Name)
+				}
+			}
+		}
+
+		for _, rel := range rels {
+			rel.Unions = inverted[rel.Name]
+		}
+	}
 }
 
 func (m *Migrator) fixupRelationTypes() {
