@@ -41,11 +41,7 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	norm, err := model.NormalizeIdentifier(string(pn))
-	if err != nil {
-		return []model.RelationName{}
-	}
-
+	norm, _ := model.NormalizeIdentifier(string(pn))
 	pn = model.PermissionName(norm)
 
 	results := []model.RelationName{}

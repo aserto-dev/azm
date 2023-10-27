@@ -93,7 +93,7 @@ func TestGetPermissionV2(t *testing.T) {
 
 	permission, err = mc.GetPermission("aserto.discovery.policy.v2.Discovery.OPAInstanceDiscovery")
 	assert.NoError(err)
-	assert.Equal(permission.Name, "aserto_discovery_policy_v2_discovery_opainstancediscovery")
+	assert.Equal(permission.Name, "aserto.discovery.policy.v2.discovery.opainstancediscovery")
 }
 
 func TestGetPermissionsV2(t *testing.T) {

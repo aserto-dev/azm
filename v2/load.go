@@ -2,7 +2,6 @@ package v2
 
 import (
 	"io"
-	"strings"
 
 	"github.com/aserto-dev/azm"
 	"github.com/aserto-dev/azm/model"
@@ -63,7 +62,8 @@ func Load(r io.Reader) (*model.Model, error) {
 
 			for _, v := range rel.Perms {
 
-				pn := model.PermissionName(NormalizePermission(v))
+				norm, _ := model.NormalizeIdentifier(v)
+				pn := model.PermissionName(norm)
 
 				// if permission does not exist, create permission definition.
 				if pd, ok := o.Permissions[pn]; !ok {
@@ -80,10 +80,4 @@ func Load(r io.Reader) (*model.Model, error) {
 	}
 
 	return &m, nil
-}
-
-func NormalizePermission(p string) string {
-	// normalize permission name
-	// NOTE: does not enforce max length to 64 characters.
-	return strings.ToLower(p)
 }

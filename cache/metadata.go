@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/aserto-dev/azm/model"
-	v2 "github.com/aserto-dev/azm/v2"
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/samber/lo"
@@ -171,7 +170,8 @@ func (c *Cache) GetPermission(permission string) (*dsc2.Permission, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	pn := model.PermissionName(v2.NormalizePermission(permission))
+	norm, _ := model.NormalizeIdentifier(permission)
+	pn := model.PermissionName(norm)
 
 	for _, o := range c.model.Objects {
 		if _, ok := o.Permissions[pn]; ok {
