@@ -2,7 +2,6 @@ package cache
 
 import (
 	"github.com/aserto-dev/azm/model"
-	v2 "github.com/aserto-dev/azm/v2"
 	"github.com/samber/lo"
 )
 
@@ -42,7 +41,8 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	pn = model.PermissionName(v2.NormalizePermission(string(pn)))
+	norm, _ := model.NormalizeIdentifier(string(pn))
+	pn = model.PermissionName(norm)
 
 	results := []model.RelationName{}
 
