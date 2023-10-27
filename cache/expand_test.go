@@ -30,7 +30,7 @@ func loadModelCache(t *testing.T, path string) *cache.Cache {
 }
 
 // helper to regenerate the serialized cache from a manifest.
-func loadFromManifest(t *testing.T, path string) *cache.Cache {
+func loadFromManifest(t *testing.T, path string) *cache.Cache { // nolint:unused
 	r, err := os.Open(path)
 	require.NoError(t, err)
 	defer r.Close()
@@ -50,7 +50,6 @@ func loadFromManifest(t *testing.T, path string) *cache.Cache {
 
 func TestExpandRelation(t *testing.T) {
 	mc := loadModelCache(t, "./expand_test.json")
-	// mc := loadFromManifest(t, "./expand_test.yaml")
 
 	// tenant:directory-reader does not exist, results should be an empty array.
 	relations := mc.ExpandRelation("tenant", "directory-reader")
