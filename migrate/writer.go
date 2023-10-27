@@ -14,7 +14,7 @@ import (
 func WriteManifest(w io.Writer, md *Metadata, pts *ObjPermRelContainer) {
 
 	writeManifestHeader(w)
-	writeManifestInfo(w, "manifest-v2-gen.yaml", "automatic migration of v2 model to annotated v3 manifest")
+	writeManifestInfo(w, "manifest.yaml", "automatic migration of v2 model to annotated v3 manifest")
 	writeManifestModel(w, 2, 3)
 	writeManifestTypes(w)
 
