@@ -238,6 +238,7 @@ func TestGraph(t *testing.T) {
 					},
 				},
 			},
+			model.ObjectName("ext_obj"): {},
 			model.ObjectName("group"): {
 				Relations: map[model.RelationName][]*model.Relation{
 					model.RelationName("member"): {
@@ -272,18 +273,41 @@ func TestGraph(t *testing.T) {
 			},
 		},
 	}
+
+	docExtObjResults := [][]string{
+		{"document", "writer", "user", "rel_name", "ext_obj"},
+		{"document", "reader", "user", "rel_name", "ext_obj"},
+		{"document", "parent_folder", "folder", "owner", "user", "rel_name", "ext_obj"},
+	}
+
+	docUserResults := [][]string{
+		{"document", "writer", "user"},
+		{"document", "reader", "user"},
+		{"document", "parent_folder", "folder", "owner", "user"},
+	}
+
+	groupExtObjResults := [][]string{
+		{"group", "member", "group", "member", "user", "rel_name", "ext_obj"},
+		{"group", "member", "user", "rel_name", "ext_obj"},
+	}
+
 	graph := m.GetGraph()
 
-	search := graph.SearchGraph("document", "ext_obj")
-	// stretch.Equal(t, len(search), 1)
+	search := graph.FindPaths("document", "ext_obj")
+	stretch.Equal(t, len(search), 3)
+	for _, expected := range docExtObjResults {
+		stretch.Contains(t, search, expected)
+	}
 
-	search = graph.SearchGraph("document", "user")
+	search = graph.FindPaths("document", "user")
+	stretch.Equal(t, len(search), 3)
+	for _, expected := range docUserResults {
+		stretch.Contains(t, search, expected)
+	}
+
+	search = graph.FindPaths("group", "ext_obj")
 	stretch.Equal(t, len(search), 2)
-
-	traversal := graph.TraverseGraph("document")
-	stretch.Equal(t, len(traversal), 3)
-	traversal = graph.TraverseGraph("group")
-	stretch.Equal(t, len(traversal), 2)
-	stretch.Contains(t, traversal, []string{"group", "member", "user", "rel_name", "ext_obj"})
-	stretch.Contains(t, traversal, []string{"group", "member", "group"})
+	for _, expected := range groupExtObjResults {
+		stretch.Contains(t, search, expected)
+	}
 }
