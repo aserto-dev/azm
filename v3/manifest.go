@@ -13,7 +13,7 @@ const SupportedSchemaVersion int = 3
 const (
 	unionIdentifier        string = "|"
 	intersectionIdentifier string = "&"
-	exclusionIdentifier    string = "-"
+	exclusionIdentifier    string = " - "
 	relationIdentifier     string = "#"
 	wildcardIdentifier     string = ":*"
 	arrowIdentifier        string = "->"
