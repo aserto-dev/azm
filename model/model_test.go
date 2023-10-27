@@ -226,3 +226,88 @@ func TestDiff(t *testing.T) {
 	stretch.Equal(t, len(diffM1WithM3.Removed.Relations), 1)
 	stretch.Equal(t, diffM1WithM3.Removed.Relations["document"], []model.RelationName{"parent_folder"})
 }
+
+func TestGraph(t *testing.T) {
+	m := model.Model{
+		Version: 1,
+		Objects: map[model.ObjectName]*model.Object{
+			model.ObjectName("user"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("rel_name"): {
+						&model.Relation{Direct: model.ObjectName("ext_obj")},
+					},
+				},
+			},
+			model.ObjectName("ext_obj"): {},
+			model.ObjectName("group"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("member"): {
+						&model.Relation{Direct: model.ObjectName("user")},
+						&model.Relation{Subject: &model.SubjectRelation{
+							Object:   model.ObjectName("group"),
+							Relation: model.RelationName("member"),
+						}},
+					},
+				},
+			},
+			model.ObjectName("folder"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("owner"): {
+						&model.Relation{Direct: model.ObjectName("user")},
+					},
+				},
+			},
+			model.ObjectName("document"): {
+				Relations: map[model.RelationName][]*model.Relation{
+					model.RelationName("parent_folder"): {
+						{Direct: model.ObjectName("folder")},
+					},
+					model.RelationName("writer"): {
+						{Direct: model.ObjectName("user")},
+					},
+					model.RelationName("reader"): {
+						{Direct: model.ObjectName("user")},
+						{Wildcard: model.ObjectName("user")},
+					},
+				},
+			},
+		},
+	}
+
+	docExtObjResults := [][]string{
+		{"document", "writer", "user", "rel_name", "ext_obj"},
+		{"document", "reader", "user", "rel_name", "ext_obj"},
+		{"document", "parent_folder", "folder", "owner", "user", "rel_name", "ext_obj"},
+	}
+
+	docUserResults := [][]string{
+		{"document", "writer", "user"},
+		{"document", "reader", "user"},
+		{"document", "parent_folder", "folder", "owner", "user"},
+	}
+
+	groupExtObjResults := [][]string{
+		{"group", "member", "group", "member", "user", "rel_name", "ext_obj"},
+		{"group", "member", "user", "rel_name", "ext_obj"},
+	}
+
+	graph := m.GetGraph()
+
+	search := graph.FindPaths("document", "ext_obj")
+	stretch.Equal(t, len(search), 3)
+	for _, expected := range docExtObjResults {
+		stretch.Contains(t, search, expected)
+	}
+
+	search = graph.FindPaths("document", "user")
+	stretch.Equal(t, len(search), 3)
+	for _, expected := range docUserResults {
+		stretch.Contains(t, search, expected)
+	}
+
+	search = graph.FindPaths("group", "ext_obj")
+	stretch.Equal(t, len(search), 2)
+	for _, expected := range groupExtObjResults {
+		stretch.Contains(t, search, expected)
+	}
+}
