@@ -12,9 +12,15 @@ import (
 )
 
 func WriteManifest(w io.Writer, md *Metadata, pts *ObjPermRelContainer) {
+	writerArgs := &WriterArgs{
+		filename:    "manifest.yaml",
+		description: "automatic migration of v2 model to annotated v3 manifest",
+		header:      true,
+		timestamp:   true,
+	}
 
 	writeManifestHeader(w)
-	writeManifestInfo(w, "manifest.yaml", "automatic migration of v2 model to annotated v3 manifest")
+	writeManifestInfo(w, writerArgs)
 	writeManifestModel(w, 2, 3)
 	writeManifestTypes(w)
 
@@ -55,10 +61,16 @@ func writeManifestHeader(w io.Writer) {
 	fmt.Fprintln(w)
 }
 
-func writeManifestInfo(w io.Writer, filename, description string) {
-	fmt.Fprintf(w, "### filename: %s ###\n", filename)
-	fmt.Fprintf(w, "### datetime: %s ###\n", time.Now().Format(time.RFC3339))
-	fmt.Fprintf(w, "### description: %s ###\n", description)
+func writeManifestInfo(w io.Writer, args *WriterArgs) {
+	if args.filename != "" {
+		fmt.Fprintf(w, "### filename: %s ###\n", args.filename)
+	}
+	if args.timestamp {
+		fmt.Fprintf(w, "### datetime: %s ###\n", time.Now().Format(time.RFC3339))
+	}
+	if args.description != "" {
+		fmt.Fprintf(w, "### description: %s ###\n", args.description)
+	}
 	fmt.Fprintln(w)
 }
 

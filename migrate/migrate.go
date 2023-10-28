@@ -138,10 +138,17 @@ func (m *Migrator) validate() error {
 	return nil
 }
 
-func (m *Migrator) Write(w io.Writer) error {
+func (m *Migrator) Write(w io.Writer, opts ...WriterOption) error {
+	args := &WriterArgs{header: true, filename: "", description: "", timestamp: false}
+	for _, opt := range opts {
+		opt(args)
+	}
 
-	writeManifestHeader(w)
-	writeManifestInfo(w, "manifest-v2-gen.yaml", "automatic migration of v2 model to annotated v3 manifest")
+	if args.header {
+		writeManifestHeader(w)
+	}
+
+	writeManifestInfo(w, args)
 	writeManifestModel(w, 2, 3)
 	writeManifestTypes(w)
 
@@ -398,5 +405,42 @@ func (m *Migrator) consolidatePermissions() {
 				Relation:   m.Metadata.RelationTypes[i].Name,
 			})
 		}
+	}
+}
+
+type WriterOption func(*WriterArgs)
+
+type WriterArgs struct {
+	header      bool
+	filename    string
+	description string
+	timestamp   bool
+}
+
+// Filename label.
+func WithFilename(filename string) WriterOption {
+	return func(a *WriterArgs) {
+		a.filename = filename
+	}
+}
+
+// Description label.
+func WithDescription(description string) WriterOption {
+	return func(a *WriterArgs) {
+		a.description = description
+	}
+}
+
+// Include schema header.
+func WithHeader(header bool) WriterOption {
+	return func(a *WriterArgs) {
+		a.header = header
+	}
+}
+
+// Include timestamp.
+func WithTimestamp(timestamp bool) WriterOption {
+	return func(a *WriterArgs) {
+		a.timestamp = timestamp
 	}
 }

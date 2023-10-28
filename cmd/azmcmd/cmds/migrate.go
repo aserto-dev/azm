@@ -9,9 +9,13 @@ import (
 )
 
 type MigrateCmd struct {
+	Filename      string `flag:"" name:"file" default:"manifest.yaml"`
+	Description   string `flag:"" name:"desc" default:"automatic migration of v2 model to annotated v3 manifest"`
+	InclHeader    bool   `flag:"" name:"hdr" default:"false" help:"incl header"`
+	InclTimestamp bool   `flag:"" name:"ts" default:"false" help:"incl timestamp"`
 }
 
-func (a *MigrateCmd) Run(c *Common) error {
+func (cmd *MigrateCmd) Run(c *Common) error {
 	ctx := context.Background()
 
 	opts := []client.ConnectionOption{
@@ -36,7 +40,14 @@ func (a *MigrateCmd) Run(c *Common) error {
 		return err
 	}
 
-	if err := m.Write(os.Stdout); err != nil {
+	writerOpts := []migrate.WriterOption{
+		migrate.WithFilename(cmd.Filename),
+		migrate.WithDescription(cmd.Description),
+		migrate.WithHeader(cmd.InclHeader),
+		migrate.WithTimestamp(cmd.InclTimestamp),
+	}
+
+	if err := m.Write(os.Stdout, writerOpts...); err != nil {
 		return err
 	}
 
