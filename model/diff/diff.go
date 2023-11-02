@@ -73,8 +73,7 @@ func (d *Diff) Validate(dv Instances) error {
 func (d *Diff) validateObjectTypes(objs []string, rels []*RelationKind) error {
 	var errs error
 	for _, objType := range d.Removed.Objects {
-		_, found := lo.Find(objs, func(obj string) bool { return obj == objType })
-		if found {
+		if lo.Contains(objs, objType) {
 			errs = multierror.Append(errs, errors.Wrapf(derr.ErrObjectTypeInUse, "object type [%s]", objType))
 		}
 		rel, found := lo.Find(rels, func(rel *RelationKind) bool { return rel.Object == objType || rel.Subject == objType })
