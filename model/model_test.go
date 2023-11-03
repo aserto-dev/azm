@@ -215,16 +215,16 @@ func TestDiff(t *testing.T) {
 	stretch.Equal(t, len(diffNilWithNil.Added.Relations), 0)
 	stretch.Equal(t, len(diffNilWithNil.Removed.Relations), 0)
 
-	diffM1WithM3 := m1.Diff(&m3)
-	stretch.Equal(t, len(diffM1WithM3.Added.Objects), 1)
-	stretch.Equal(t, diffM1WithM3.Added.Objects[0], model.ObjectName("new_user"))
-	stretch.Equal(t, len(diffM1WithM3.Removed.Objects), 1)
-	stretch.Equal(t, diffM1WithM3.Removed.Objects[0], model.ObjectName("user"))
+	diffm1m3 := m1.Diff(&m3)
+	stretch.Equal(t, len(diffm1m3.Added.Objects), 1)
+	stretch.Equal(t, diffm1m3.Added.Objects[0], "new_user")
+	stretch.Equal(t, len(diffm1m3.Removed.Objects), 1)
+	stretch.Equal(t, diffm1m3.Removed.Objects[0], "user")
 
-	stretch.Equal(t, len(diffM1WithM3.Added.Relations), 1)
-	stretch.Equal(t, diffM1WithM3.Added.Relations["folder"], []model.RelationName{"viewer"})
-	stretch.Equal(t, len(diffM1WithM3.Removed.Relations), 1)
-	stretch.Equal(t, diffM1WithM3.Removed.Relations["document"], []model.RelationName{"parent_folder"})
+	stretch.Equal(t, len(diffm1m3.Added.Relations), 1)
+	stretch.Equal(t, diffm1m3.Added.Relations["folder"], []string{"viewer"})
+	stretch.Equal(t, len(diffm1m3.Removed.Relations), 1)
+	stretch.Equal(t, diffm1m3.Removed.Relations["document"], []string{"parent_folder"})
 }
 
 func TestGraph(t *testing.T) {

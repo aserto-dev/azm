@@ -39,3 +39,8 @@ func Test() error {
 func Deps() {
 	deps.GetAllDeps()
 }
+
+// Generate generates all code.
+func Generate() error {
+	return common.Generate()
+}
