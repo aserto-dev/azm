@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"time"
 
@@ -22,6 +23,22 @@ type ObjectName Identifier
 type RelationName Identifier
 type PermissionName Identifier
 
+func (on ObjectName) String() string {
+	return string(on)
+}
+
+func (rn RelationName) String() string {
+	return string(rn)
+}
+
+func (pn PermissionName) String() string {
+	return string(pn)
+}
+
+func (pn PermissionName) RN() RelationName {
+	return RelationName(pn)
+}
+
 type Object struct {
 	Relations   map[RelationName][]*Relation   `json:"relations,omitempty"`
 	Permissions map[PermissionName]*Permission `json:"permissions,omitempty"`
@@ -31,6 +48,15 @@ type Relation struct {
 	Direct   ObjectName       `json:"direct,omitempty"`
 	Subject  *SubjectRelation `json:"subject,omitempty"`
 	Wildcard ObjectName       `json:"wildcard,omitempty"`
+}
+
+type ObjectRelation struct {
+	Object   ObjectName   `json:"object"`
+	Relation RelationName `json:"relation,omitempty"`
+}
+
+func (or ObjectRelation) String() string {
+	return fmt.Sprintf("%s:%s", or.Object, or.Relation)
 }
 
 type SubjectRelation struct {
