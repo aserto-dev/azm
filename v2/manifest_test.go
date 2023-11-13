@@ -1,6 +1,7 @@
 package v2_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -42,4 +43,16 @@ func TestLoadModel(t *testing.T) {
 	if err := enc.Encode(model); err != nil {
 		require.NoError(t, err)
 	}
+}
+
+func TestLoadEmptyManifest(t *testing.T) {
+	r := bytes.NewReader([]byte{})
+
+	m1, err := v2.Load(r)
+	require.NoError(t, err)
+	require.NotNil(t, m1)
+
+	b1, err := json.Marshal(m1)
+	require.NoError(t, err)
+	require.NotNil(t, b1)
 }

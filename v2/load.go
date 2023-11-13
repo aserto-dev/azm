@@ -14,13 +14,16 @@ func Load(r io.Reader) (*model.Model, error) {
 	dec := yaml.NewDecoder(r)
 	dec.KnownFields(true)
 
-	if err := dec.Decode(&manifest); err != nil {
-		return nil, err
-	}
-
 	m := model.Model{
 		Version: model.ModelVersion,
 		Objects: map[model.ObjectName]*model.Object{},
+	}
+
+	if err := dec.Decode(&manifest); err != nil {
+		if err == io.EOF {
+			return &m, nil
+		}
+		return nil, err
 	}
 
 	for objName, obj := range manifest {

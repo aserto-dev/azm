@@ -1,6 +1,7 @@
 package v3_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -51,4 +52,17 @@ func TestLoadModel(t *testing.T) {
 	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
 		require.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
+}
+
+func TestLoadEmptyManifest(t *testing.T) {
+	r := bytes.NewReader([]byte{})
+
+	m1, err := v3.Load(r)
+	require.NoError(t, err)
+	require.NotNil(t, m1)
+
+	b1, err := json.Marshal(m1)
+	require.NoError(t, err)
+	require.NotNil(t, b1)
+
 }
