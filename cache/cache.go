@@ -67,3 +67,9 @@ func (c *Cache) PermissionExists(on model.ObjectName, pn model.PermissionName) b
 	}
 	return false
 }
+
+func (c *Cache) Metadata() *model.Metadata {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	return c.model.Metadata
+}
