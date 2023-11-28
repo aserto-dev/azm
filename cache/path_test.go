@@ -1,8 +1,8 @@
 package cache_test
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -45,19 +45,27 @@ func TestPathMap(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, pm)
 
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetEscapeHTML(false)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(pm); err != nil {
-		_ = err
-	}
-
-	paths := pm.GetPath(model.ObjectName("doc"), model.RelationName("can_write"))
-	for i, p := range paths {
-		fmt.Printf("%d %s:%s\n", i, p.Object, p.Relation)
-		for k, v := range pm.GetPath(p.Object, p.Relation) {
-			fmt.Println(k, v.String())
+	// plot all paths for all roots.
+	for on, rns := range *pm {
+		for rn := range rns {
+			pm.plotPaths(os.Stderr, on, rn)
 		}
+	}
+}
+
+func (pm PathMap) plotPaths(w io.Writer, on model.ObjectName, rn model.RelationName) {
+	paths := pm.GetPath(on, rn)
+
+	for _, p := range paths {
+		fmt.Fprintf(w, "%s:%s ", on, rn)
+
+		fmt.Fprintf(w, "-> %s:%s ", p.Object, p.Relation)
+
+		for _, v := range pm.GetPath(p.Object, p.Relation) {
+			fmt.Fprintf(w, "-> %s:%s ", v.Object, v.Relation)
+		}
+
+		fmt.Fprintf(w, "\n")
 	}
 }
 
