@@ -1,0 +1,4 @@
+user
+user | group
+user | user:* | group#member
+user | user:* | group#member | parent->viewer

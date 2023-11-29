@@ -12,7 +12,9 @@ model:
 ### object type definitions ###
 types:
   ### display_name: User ###
-  user: {}
+  user:
+    relations:
+      manager: user
 
   ### display_name: Identity ###
   identity:
