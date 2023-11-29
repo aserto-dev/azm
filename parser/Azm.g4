@@ -54,7 +54,7 @@ COLON:
 ASTERISK:
     '*';
 
-ID: [a-zA-Z_][a-zA-Z_0-9]*;
+ID: [a-z][a-z0-9._-]*[a-z0-9] ;
 
 NEWLINE:
     '\r'? '\n' ;
