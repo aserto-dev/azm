@@ -20,7 +20,8 @@ exclusionRel
     :   rel '-' rel
     ;
 
-rel:    singleRel
+rel
+    :   singleRel
     |   wildcardRel
     |   subjectRel
     |   arrowRel
