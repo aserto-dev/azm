@@ -15,13 +15,17 @@ import (
 
 type PathMap map[model.ObjectName]map[model.RelationName][]*model.ObjectRelation
 
-func (pm PathMap) GetPath(on model.ObjectName, rn model.RelationName) []*model.ObjectRelation {
-	p1, ok := pm[on]
+func (pm PathMap) GetPath(or *model.ObjectRelation) []*model.ObjectRelation {
+	if or == nil {
+		return []*model.ObjectRelation{}
+	}
+
+	p1, ok := pm[or.Object]
 	if !ok {
 		return []*model.ObjectRelation{}
 	}
 
-	p2, ok := p1[rn]
+	p2, ok := p1[or.Relation]
 	if !ok {
 		return []*model.ObjectRelation{}
 	}
@@ -46,22 +50,37 @@ func TestPathMap(t *testing.T) {
 	require.NotNil(t, pm)
 
 	// plot all paths for all roots.
+	roots := []*model.ObjectRelation{}
 	for on, rns := range *pm {
 		for rn := range rns {
-			pm.plotPaths(os.Stderr, on, rn)
+			roots = append(roots, model.NewObjectRelation(on, rn))
 		}
+	}
+
+	for i := 0; i < len(roots); i++ {
+		path := pm.WalkPath(roots[i], []string{})
+		fmt.Println(strings.Join(path, " -> "))
 	}
 }
 
-func (pm PathMap) plotPaths(w io.Writer, on model.ObjectName, rn model.RelationName) {
-	paths := pm.GetPath(on, rn)
+func (pm PathMap) WalkPath(or *model.ObjectRelation, path []string) []string {
+	paths := pm.GetPath(or)
+	for i := 0; i < len(paths); i++ {
+		path = append(path, paths[i].String())
+		pm.WalkPath(paths[i], path)
+	}
+	return path
+}
+
+func (pm PathMap) plotPaths(w io.Writer, or *model.ObjectRelation) {
+	paths := pm.GetPath(or)
 
 	for _, p := range paths {
-		fmt.Fprintf(w, "%s:%s ", on, rn)
+		fmt.Fprintf(w, "%s:%s ", or.Object, or.Relation)
 
 		fmt.Fprintf(w, "-> %s:%s ", p.Object, p.Relation)
 
-		for _, v := range pm.GetPath(p.Object, p.Relation) {
+		for _, v := range pm.GetPath(p) {
 			fmt.Fprintf(w, "-> %s:%s ", v.Object, v.Relation)
 		}
 

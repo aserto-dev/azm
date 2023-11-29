@@ -55,6 +55,10 @@ type ObjectRelation struct {
 	Relation RelationName `json:"relation,omitempty"`
 }
 
+func NewObjectRelation(on ObjectName, rn RelationName) *ObjectRelation {
+	return &ObjectRelation{Object: on, Relation: rn}
+}
+
 func (or ObjectRelation) String() string {
 	return fmt.Sprintf("%s:%s", or.Object, or.Relation)
 }
