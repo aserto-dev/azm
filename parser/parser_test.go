@@ -2,7 +2,6 @@ package parser_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -129,14 +128,12 @@ var (
 
 type RelationVisitor struct {
 	parser.BaseAzmVisitor
-	relations []*model.Relation
 }
 
 func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
-	fmt.Println("Visit", tree.GetText())
 	switch t := tree.(type) {
 	case *parser.PermissionContext:
-		return nil
+		panic("RelationVisitor cannot visit permissions")
 	case *parser.RelationContext:
 		return t.Accept(v)
 	}
@@ -145,39 +142,23 @@ func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
 }
 
 func (v *RelationVisitor) VisitRelation(c *parser.RelationContext) interface{} {
-	return c.UnionRel().Accept(v)
-}
-
-func (v *RelationVisitor) VisitUnionRel(c *parser.UnionRelContext) interface{} {
 	return lo.Map(c.AllRel(), func(rel parser.IRelContext, _ int) *model.Relation {
 		return rel.Accept(v).(*model.Relation)
 	})
 }
 
-func (v *RelationVisitor) VisitToSingleRel(c *parser.ToSingleRelContext) interface{} {
-	return &model.Relation{Direct: model.ObjectName(c.SingleRel().Accept(v).(string))}
-}
-
 func (v *RelationVisitor) VisitSingleRel(c *parser.SingleRelContext) interface{} {
-	return c.GetText()
-}
-
-func (v *RelationVisitor) VisitToWildcardRel(c *parser.ToWildcardRelContext) interface{} {
-	return c.WildcardRel().Accept(v)
+	return &model.Relation{Direct: model.ObjectName(c.Single().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitWildcardRel(c *parser.WildcardRelContext) interface{} {
-	return &model.Relation{Wildcard: model.ObjectName(c.ID().GetText())}
-}
-
-func (v *RelationVisitor) VisitToSubjectRel(c *parser.ToSubjectRelContext) interface{} {
-	return c.SubjectRel().Accept(v)
+	return &model.Relation{Wildcard: model.ObjectName(c.Wildcard().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitSubjectRel(c *parser.SubjectRelContext) interface{} {
 	return &model.Relation{Subject: &model.SubjectRelation{
-		Object:   model.ObjectName(c.ID(0).GetText()),
-		Relation: model.RelationName(c.ID(1).GetText()),
+		Object:   model.ObjectName(c.Subject().ID(0).GetText()),
+		Relation: model.RelationName(c.Subject().ID(1).GetText()),
 	}}
 }
 
@@ -202,13 +183,13 @@ func TestRelationParser(t *testing.T) {
 	// fmt.Printf("%v\n", rel)
 
 	var v RelationVisitor
-	r := v.Visit(rTree).([]*model.Relation)
-	assert.Len(t, r, 4)
-	assert.Equal(t, model.ObjectName("user"), r[0].Direct)
-	assert.Equal(t, model.ObjectName("group"), r[1].Direct)
-	assert.Equal(t, model.ObjectName("user"), r[2].Wildcard)
-	assert.Equal(t, model.ObjectName("group"), r[3].Subject.Object)
-	assert.Equal(t, model.RelationName("member"), r[3].Subject.Relation)
+	rel := v.Visit(rTree).([]*model.Relation)
+	assert.Len(t, rel, 4)
+	assert.Equal(t, model.ObjectName("user"), rel[0].Direct)
+	assert.Equal(t, model.ObjectName("group"), rel[1].Direct)
+	assert.Equal(t, model.ObjectName("user"), rel[2].Wildcard)
+	assert.Equal(t, model.ObjectName("group"), rel[3].Subject.Object)
+	assert.Equal(t, model.RelationName("member"), rel[3].Subject.Relation)
 
 	// pTree := p.Permission()
 	// antlr.ParseTreeWalkerDefault.Walk(listener, pTree)

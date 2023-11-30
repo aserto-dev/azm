@@ -26,29 +26,11 @@ func (s *BaseAzmListener) EnterRelation(ctx *RelationContext) {}
 // ExitRelation is called when production relation is exited.
 func (s *BaseAzmListener) ExitRelation(ctx *RelationContext) {}
 
-// EnterToUnionPerm is called when production ToUnionPerm is entered.
-func (s *BaseAzmListener) EnterToUnionPerm(ctx *ToUnionPermContext) {}
+// EnterPermission is called when production permission is entered.
+func (s *BaseAzmListener) EnterPermission(ctx *PermissionContext) {}
 
-// ExitToUnionPerm is called when production ToUnionPerm is exited.
-func (s *BaseAzmListener) ExitToUnionPerm(ctx *ToUnionPermContext) {}
-
-// EnterToIntersectionPerm is called when production ToIntersectionPerm is entered.
-func (s *BaseAzmListener) EnterToIntersectionPerm(ctx *ToIntersectionPermContext) {}
-
-// ExitToIntersectionPerm is called when production ToIntersectionPerm is exited.
-func (s *BaseAzmListener) ExitToIntersectionPerm(ctx *ToIntersectionPermContext) {}
-
-// EnterToExclusionPerm is called when production ToExclusionPerm is entered.
-func (s *BaseAzmListener) EnterToExclusionPerm(ctx *ToExclusionPermContext) {}
-
-// ExitToExclusionPerm is called when production ToExclusionPerm is exited.
-func (s *BaseAzmListener) ExitToExclusionPerm(ctx *ToExclusionPermContext) {}
-
-// EnterUnionRel is called when production unionRel is entered.
-func (s *BaseAzmListener) EnterUnionRel(ctx *UnionRelContext) {}
-
-// ExitUnionRel is called when production unionRel is exited.
-func (s *BaseAzmListener) ExitUnionRel(ctx *UnionRelContext) {}
+// ExitPermission is called when production permission is exited.
+func (s *BaseAzmListener) ExitPermission(ctx *PermissionContext) {}
 
 // EnterUnionPerm is called when production unionPerm is entered.
 func (s *BaseAzmListener) EnterUnionPerm(ctx *UnionPermContext) {}
@@ -68,62 +50,62 @@ func (s *BaseAzmListener) EnterExclusionPerm(ctx *ExclusionPermContext) {}
 // ExitExclusionPerm is called when production exclusionPerm is exited.
 func (s *BaseAzmListener) ExitExclusionPerm(ctx *ExclusionPermContext) {}
 
-// EnterToSingleRel is called when production ToSingleRel is entered.
-func (s *BaseAzmListener) EnterToSingleRel(ctx *ToSingleRelContext) {}
-
-// ExitToSingleRel is called when production ToSingleRel is exited.
-func (s *BaseAzmListener) ExitToSingleRel(ctx *ToSingleRelContext) {}
-
-// EnterToWildcardRel is called when production ToWildcardRel is entered.
-func (s *BaseAzmListener) EnterToWildcardRel(ctx *ToWildcardRelContext) {}
-
-// ExitToWildcardRel is called when production ToWildcardRel is exited.
-func (s *BaseAzmListener) ExitToWildcardRel(ctx *ToWildcardRelContext) {}
-
-// EnterToSubjectRel is called when production ToSubjectRel is entered.
-func (s *BaseAzmListener) EnterToSubjectRel(ctx *ToSubjectRelContext) {}
-
-// ExitToSubjectRel is called when production ToSubjectRel is exited.
-func (s *BaseAzmListener) ExitToSubjectRel(ctx *ToSubjectRelContext) {}
-
-// EnterToArrowRel is called when production ToArrowRel is entered.
-func (s *BaseAzmListener) EnterToArrowRel(ctx *ToArrowRelContext) {}
-
-// ExitToArrowRel is called when production ToArrowRel is exited.
-func (s *BaseAzmListener) ExitToArrowRel(ctx *ToArrowRelContext) {}
-
-// EnterToSinglePerm is called when production ToSinglePerm is entered.
-func (s *BaseAzmListener) EnterToSinglePerm(ctx *ToSinglePermContext) {}
-
-// ExitToSinglePerm is called when production ToSinglePerm is exited.
-func (s *BaseAzmListener) ExitToSinglePerm(ctx *ToSinglePermContext) {}
-
-// EnterToArrowPerm is called when production ToArrowPerm is entered.
-func (s *BaseAzmListener) EnterToArrowPerm(ctx *ToArrowPermContext) {}
-
-// ExitToArrowPerm is called when production ToArrowPerm is exited.
-func (s *BaseAzmListener) ExitToArrowPerm(ctx *ToArrowPermContext) {}
-
-// EnterSingleRel is called when production singleRel is entered.
+// EnterSingleRel is called when production SingleRel is entered.
 func (s *BaseAzmListener) EnterSingleRel(ctx *SingleRelContext) {}
 
-// ExitSingleRel is called when production singleRel is exited.
+// ExitSingleRel is called when production SingleRel is exited.
 func (s *BaseAzmListener) ExitSingleRel(ctx *SingleRelContext) {}
 
-// EnterSubjectRel is called when production subjectRel is entered.
-func (s *BaseAzmListener) EnterSubjectRel(ctx *SubjectRelContext) {}
-
-// ExitSubjectRel is called when production subjectRel is exited.
-func (s *BaseAzmListener) ExitSubjectRel(ctx *SubjectRelContext) {}
-
-// EnterWildcardRel is called when production wildcardRel is entered.
+// EnterWildcardRel is called when production WildcardRel is entered.
 func (s *BaseAzmListener) EnterWildcardRel(ctx *WildcardRelContext) {}
 
-// ExitWildcardRel is called when production wildcardRel is exited.
+// ExitWildcardRel is called when production WildcardRel is exited.
 func (s *BaseAzmListener) ExitWildcardRel(ctx *WildcardRelContext) {}
 
-// EnterArrowRel is called when production arrowRel is entered.
+// EnterSubjectRel is called when production SubjectRel is entered.
+func (s *BaseAzmListener) EnterSubjectRel(ctx *SubjectRelContext) {}
+
+// ExitSubjectRel is called when production SubjectRel is exited.
+func (s *BaseAzmListener) ExitSubjectRel(ctx *SubjectRelContext) {}
+
+// EnterArrowRel is called when production ArrowRel is entered.
 func (s *BaseAzmListener) EnterArrowRel(ctx *ArrowRelContext) {}
 
-// ExitArrowRel is called when production arrowRel is exited.
+// ExitArrowRel is called when production ArrowRel is exited.
 func (s *BaseAzmListener) ExitArrowRel(ctx *ArrowRelContext) {}
+
+// EnterSinglePerm is called when production SinglePerm is entered.
+func (s *BaseAzmListener) EnterSinglePerm(ctx *SinglePermContext) {}
+
+// ExitSinglePerm is called when production SinglePerm is exited.
+func (s *BaseAzmListener) ExitSinglePerm(ctx *SinglePermContext) {}
+
+// EnterArrowPerm is called when production ArrowPerm is entered.
+func (s *BaseAzmListener) EnterArrowPerm(ctx *ArrowPermContext) {}
+
+// ExitArrowPerm is called when production ArrowPerm is exited.
+func (s *BaseAzmListener) ExitArrowPerm(ctx *ArrowPermContext) {}
+
+// EnterSingle is called when production single is entered.
+func (s *BaseAzmListener) EnterSingle(ctx *SingleContext) {}
+
+// ExitSingle is called when production single is exited.
+func (s *BaseAzmListener) ExitSingle(ctx *SingleContext) {}
+
+// EnterSubject is called when production subject is entered.
+func (s *BaseAzmListener) EnterSubject(ctx *SubjectContext) {}
+
+// ExitSubject is called when production subject is exited.
+func (s *BaseAzmListener) ExitSubject(ctx *SubjectContext) {}
+
+// EnterWildcard is called when production wildcard is entered.
+func (s *BaseAzmListener) EnterWildcard(ctx *WildcardContext) {}
+
+// ExitWildcard is called when production wildcard is exited.
+func (s *BaseAzmListener) ExitWildcard(ctx *WildcardContext) {}
+
+// EnterArrow is called when production arrow is entered.
+func (s *BaseAzmListener) EnterArrow(ctx *ArrowContext) {}
+
+// ExitArrow is called when production arrow is exited.
+func (s *BaseAzmListener) ExitArrow(ctx *ArrowContext) {}

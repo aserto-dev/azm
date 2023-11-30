@@ -1,17 +1,13 @@
 grammar Azm;
 
 relation
-    :   unionRel EOF
+    :   rel ('|' rel)*  EOF
     ;
 
 permission
-    :   unionPerm EOF           # ToUnionPerm
-    |   intersectionPerm EOF    # ToIntersectionPerm
-    |   exclusionPerm EOF       # ToExclusionPerm
-    ;
-
-unionRel
-    :   rel ('|' rel)*
+    :   unionPerm EOF
+    |   intersectionPerm EOF
+    |   exclusionPerm EOF
     ;
 
 unionPerm
@@ -27,30 +23,30 @@ exclusionPerm
     ;
 
 rel
-    :   singleRel       # ToSingleRel
-    |   wildcardRel     # ToWildcardRel
-    |   subjectRel      # ToSubjectRel
-    |   arrowRel        # ToArrowRel
+    :   single      #SingleRel
+    |   wildcard    #WildcardRel
+    |   subject     #SubjectRel
+    |   arrow       #ArrowRel
     ;
 
 perm
-    :   singleRel       # ToSinglePerm
-    |   arrowRel        # ToArrowPerm
+    :   single      #SinglePerm
+    |   arrow       #ArrowPerm
     ;
 
-singleRel
+single
     :   ID
     ;
 
-subjectRel
+subject
     :   ID HASH ID
     ;
 
-wildcardRel
+wildcard
     :   ID COLON ASTERISK
     ;
 
-arrowRel
+arrow
     :   ID ARROW ID
     ;
 
