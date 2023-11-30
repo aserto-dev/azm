@@ -35,45 +35,42 @@ func azmParserInit() {
 		"", "'|'", "'&'", "'-'", "", "'#'", "':'", "'*'",
 	}
 	staticData.SymbolicNames = []string{
-		"", "", "", "", "ARROW", "HASH", "COLON", "ASTERISK", "ID", "NEWLINE",
-		"WS",
+		"", "", "", "", "ARROW", "HASH", "COLON", "ASTERISK", "ID", "WS",
 	}
 	staticData.RuleNames = []string{
-		"prog", "stat", "unionRel", "intersectRel", "exclusionRel", "rel", "singleRel",
-		"subjectRel", "wildcardRel", "arrowRel",
+		"relation", "permission", "union", "intersection", "exclusion", "rel",
+		"singleRel", "subjectRel", "wildcardRel", "arrowRel",
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 10, 78, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
-		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 1, 0, 4,
-		0, 22, 8, 0, 11, 0, 12, 0, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 3, 1, 36, 8, 1, 1, 2, 1, 2, 1, 2, 5, 2, 41, 8, 2, 10,
-		2, 12, 2, 44, 9, 2, 1, 3, 1, 3, 1, 3, 5, 3, 49, 8, 3, 10, 3, 12, 3, 52,
-		9, 3, 1, 4, 1, 4, 1, 4, 1, 4, 1, 5, 1, 5, 1, 5, 1, 5, 3, 5, 62, 8, 5, 1,
-		6, 1, 6, 1, 7, 1, 7, 1, 7, 1, 7, 1, 8, 1, 8, 1, 8, 1, 8, 1, 9, 1, 9, 1,
-		9, 1, 9, 1, 9, 0, 0, 10, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 0, 0, 76, 0,
-		21, 1, 0, 0, 0, 2, 35, 1, 0, 0, 0, 4, 37, 1, 0, 0, 0, 6, 45, 1, 0, 0, 0,
-		8, 53, 1, 0, 0, 0, 10, 61, 1, 0, 0, 0, 12, 63, 1, 0, 0, 0, 14, 65, 1, 0,
-		0, 0, 16, 69, 1, 0, 0, 0, 18, 73, 1, 0, 0, 0, 20, 22, 3, 2, 1, 0, 21, 20,
-		1, 0, 0, 0, 22, 23, 1, 0, 0, 0, 23, 21, 1, 0, 0, 0, 23, 24, 1, 0, 0, 0,
-		24, 1, 1, 0, 0, 0, 25, 26, 3, 4, 2, 0, 26, 27, 5, 9, 0, 0, 27, 36, 1, 0,
-		0, 0, 28, 29, 3, 6, 3, 0, 29, 30, 5, 9, 0, 0, 30, 36, 1, 0, 0, 0, 31, 32,
-		3, 8, 4, 0, 32, 33, 5, 9, 0, 0, 33, 36, 1, 0, 0, 0, 34, 36, 5, 9, 0, 0,
-		35, 25, 1, 0, 0, 0, 35, 28, 1, 0, 0, 0, 35, 31, 1, 0, 0, 0, 35, 34, 1,
-		0, 0, 0, 36, 3, 1, 0, 0, 0, 37, 42, 3, 10, 5, 0, 38, 39, 5, 1, 0, 0, 39,
-		41, 3, 10, 5, 0, 40, 38, 1, 0, 0, 0, 41, 44, 1, 0, 0, 0, 42, 40, 1, 0,
-		0, 0, 42, 43, 1, 0, 0, 0, 43, 5, 1, 0, 0, 0, 44, 42, 1, 0, 0, 0, 45, 50,
-		3, 10, 5, 0, 46, 47, 5, 2, 0, 0, 47, 49, 3, 10, 5, 0, 48, 46, 1, 0, 0,
-		0, 49, 52, 1, 0, 0, 0, 50, 48, 1, 0, 0, 0, 50, 51, 1, 0, 0, 0, 51, 7, 1,
-		0, 0, 0, 52, 50, 1, 0, 0, 0, 53, 54, 3, 10, 5, 0, 54, 55, 5, 3, 0, 0, 55,
-		56, 3, 10, 5, 0, 56, 9, 1, 0, 0, 0, 57, 62, 3, 12, 6, 0, 58, 62, 3, 16,
-		8, 0, 59, 62, 3, 14, 7, 0, 60, 62, 3, 18, 9, 0, 61, 57, 1, 0, 0, 0, 61,
-		58, 1, 0, 0, 0, 61, 59, 1, 0, 0, 0, 61, 60, 1, 0, 0, 0, 62, 11, 1, 0, 0,
-		0, 63, 64, 5, 8, 0, 0, 64, 13, 1, 0, 0, 0, 65, 66, 5, 8, 0, 0, 66, 67,
-		5, 5, 0, 0, 67, 68, 5, 8, 0, 0, 68, 15, 1, 0, 0, 0, 69, 70, 5, 8, 0, 0,
-		70, 71, 5, 6, 0, 0, 71, 72, 5, 7, 0, 0, 72, 17, 1, 0, 0, 0, 73, 74, 5,
-		8, 0, 0, 74, 75, 5, 4, 0, 0, 75, 76, 5, 8, 0, 0, 76, 19, 1, 0, 0, 0, 5,
-		23, 35, 42, 50, 61,
+		4, 1, 9, 75, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
+		2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 1, 0, 1, 0,
+		1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 33, 8,
+		1, 1, 2, 1, 2, 1, 2, 5, 2, 38, 8, 2, 10, 2, 12, 2, 41, 9, 2, 1, 3, 1, 3,
+		1, 3, 5, 3, 46, 8, 3, 10, 3, 12, 3, 49, 9, 3, 1, 4, 1, 4, 1, 4, 1, 4, 1,
+		5, 1, 5, 1, 5, 1, 5, 3, 5, 59, 8, 5, 1, 6, 1, 6, 1, 7, 1, 7, 1, 7, 1, 7,
+		1, 8, 1, 8, 1, 8, 1, 8, 1, 9, 1, 9, 1, 9, 1, 9, 1, 9, 0, 0, 10, 0, 2, 4,
+		6, 8, 10, 12, 14, 16, 18, 0, 0, 71, 0, 20, 1, 0, 0, 0, 2, 32, 1, 0, 0,
+		0, 4, 34, 1, 0, 0, 0, 6, 42, 1, 0, 0, 0, 8, 50, 1, 0, 0, 0, 10, 58, 1,
+		0, 0, 0, 12, 60, 1, 0, 0, 0, 14, 62, 1, 0, 0, 0, 16, 66, 1, 0, 0, 0, 18,
+		70, 1, 0, 0, 0, 20, 21, 3, 4, 2, 0, 21, 22, 5, 0, 0, 1, 22, 1, 1, 0, 0,
+		0, 23, 24, 3, 4, 2, 0, 24, 25, 5, 0, 0, 1, 25, 33, 1, 0, 0, 0, 26, 27,
+		3, 6, 3, 0, 27, 28, 5, 0, 0, 1, 28, 33, 1, 0, 0, 0, 29, 30, 3, 8, 4, 0,
+		30, 31, 5, 0, 0, 1, 31, 33, 1, 0, 0, 0, 32, 23, 1, 0, 0, 0, 32, 26, 1,
+		0, 0, 0, 32, 29, 1, 0, 0, 0, 33, 3, 1, 0, 0, 0, 34, 39, 3, 10, 5, 0, 35,
+		36, 5, 1, 0, 0, 36, 38, 3, 10, 5, 0, 37, 35, 1, 0, 0, 0, 38, 41, 1, 0,
+		0, 0, 39, 37, 1, 0, 0, 0, 39, 40, 1, 0, 0, 0, 40, 5, 1, 0, 0, 0, 41, 39,
+		1, 0, 0, 0, 42, 47, 3, 10, 5, 0, 43, 44, 5, 2, 0, 0, 44, 46, 3, 10, 5,
+		0, 45, 43, 1, 0, 0, 0, 46, 49, 1, 0, 0, 0, 47, 45, 1, 0, 0, 0, 47, 48,
+		1, 0, 0, 0, 48, 7, 1, 0, 0, 0, 49, 47, 1, 0, 0, 0, 50, 51, 3, 10, 5, 0,
+		51, 52, 5, 3, 0, 0, 52, 53, 3, 10, 5, 0, 53, 9, 1, 0, 0, 0, 54, 59, 3,
+		12, 6, 0, 55, 59, 3, 16, 8, 0, 56, 59, 3, 14, 7, 0, 57, 59, 3, 18, 9, 0,
+		58, 54, 1, 0, 0, 0, 58, 55, 1, 0, 0, 0, 58, 56, 1, 0, 0, 0, 58, 57, 1,
+		0, 0, 0, 59, 11, 1, 0, 0, 0, 60, 61, 5, 8, 0, 0, 61, 13, 1, 0, 0, 0, 62,
+		63, 5, 8, 0, 0, 63, 64, 5, 5, 0, 0, 64, 65, 5, 8, 0, 0, 65, 15, 1, 0, 0,
+		0, 66, 67, 5, 8, 0, 0, 67, 68, 5, 6, 0, 0, 68, 69, 5, 7, 0, 0, 69, 17,
+		1, 0, 0, 0, 70, 71, 5, 8, 0, 0, 71, 72, 5, 4, 0, 0, 72, 73, 5, 8, 0, 0,
+		73, 19, 1, 0, 0, 0, 4, 32, 39, 47, 58,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -120,17 +117,16 @@ const (
 	AzmParserCOLON    = 6
 	AzmParserASTERISK = 7
 	AzmParserID       = 8
-	AzmParserNEWLINE  = 9
-	AzmParserWS       = 10
+	AzmParserWS       = 9
 )
 
 // AzmParser rules.
 const (
-	AzmParserRULE_prog         = 0
-	AzmParserRULE_stat         = 1
-	AzmParserRULE_unionRel     = 2
-	AzmParserRULE_intersectRel = 3
-	AzmParserRULE_exclusionRel = 4
+	AzmParserRULE_relation     = 0
+	AzmParserRULE_permission   = 1
+	AzmParserRULE_union        = 2
+	AzmParserRULE_intersection = 3
+	AzmParserRULE_exclusion    = 4
 	AzmParserRULE_rel          = 5
 	AzmParserRULE_singleRel    = 6
 	AzmParserRULE_subjectRel   = 7
@@ -138,84 +134,59 @@ const (
 	AzmParserRULE_arrowRel     = 9
 )
 
-// IProgContext is an interface to support dynamic dispatch.
-type IProgContext interface {
+// IRelationContext is an interface to support dynamic dispatch.
+type IRelationContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	AllStat() []IStatContext
-	Stat(i int) IStatContext
+	Union() IUnionContext
+	EOF() antlr.TerminalNode
 
-	// IsProgContext differentiates from other interfaces.
-	IsProgContext()
+	// IsRelationContext differentiates from other interfaces.
+	IsRelationContext()
 }
 
-type ProgContext struct {
+type RelationContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyProgContext() *ProgContext {
-	var p = new(ProgContext)
+func NewEmptyRelationContext() *RelationContext {
+	var p = new(RelationContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_prog
+	p.RuleIndex = AzmParserRULE_relation
 	return p
 }
 
-func InitEmptyProgContext(p *ProgContext) {
+func InitEmptyRelationContext(p *RelationContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_prog
+	p.RuleIndex = AzmParserRULE_relation
 }
 
-func (*ProgContext) IsProgContext() {}
+func (*RelationContext) IsRelationContext() {}
 
-func NewProgContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ProgContext {
-	var p = new(ProgContext)
+func NewRelationContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *RelationContext {
+	var p = new(RelationContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_prog
+	p.RuleIndex = AzmParserRULE_relation
 
 	return p
 }
 
-func (s *ProgContext) GetParser() antlr.Parser { return s.parser }
+func (s *RelationContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ProgContext) AllStat() []IStatContext {
-	children := s.GetChildren()
-	len := 0
-	for _, ctx := range children {
-		if _, ok := ctx.(IStatContext); ok {
-			len++
-		}
-	}
-
-	tst := make([]IStatContext, len)
-	i := 0
-	for _, ctx := range children {
-		if t, ok := ctx.(IStatContext); ok {
-			tst[i] = t.(IStatContext)
-			i++
-		}
-	}
-
-	return tst
-}
-
-func (s *ProgContext) Stat(i int) IStatContext {
+func (s *RelationContext) Union() IUnionContext {
 	var t antlr.RuleContext
-	j := 0
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IStatContext); ok {
-			if j == i {
-				t = ctx.(antlr.RuleContext)
-				break
-			}
-			j++
+		if _, ok := ctx.(IUnionContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
 		}
 	}
 
@@ -223,54 +194,48 @@ func (s *ProgContext) Stat(i int) IStatContext {
 		return nil
 	}
 
-	return t.(IStatContext)
+	return t.(IUnionContext)
 }
 
-func (s *ProgContext) GetRuleContext() antlr.RuleContext {
+func (s *RelationContext) EOF() antlr.TerminalNode {
+	return s.GetToken(AzmParserEOF, 0)
+}
+
+func (s *RelationContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *ProgContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *RelationContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *ProgContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *RelationContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterProg(s)
+		listenerT.EnterRelation(s)
 	}
 }
 
-func (s *ProgContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *RelationContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitProg(s)
+		listenerT.ExitRelation(s)
 	}
 }
 
-func (p *AzmParser) Prog() (localctx IProgContext) {
-	localctx = NewProgContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 0, AzmParserRULE_prog)
-	var _la int
-
+func (p *AzmParser) Relation() (localctx IRelationContext) {
+	localctx = NewRelationContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 0, AzmParserRULE_relation)
 	p.EnterOuterAlt(localctx, 1)
-	p.SetState(21)
-	p.GetErrorHandler().Sync(p)
-	if p.HasError() {
-		goto errorExit
+	{
+		p.SetState(20)
+		p.Union()
 	}
-	_la = p.GetTokenStream().LA(1)
-
-	for ok := true; ok; ok = _la == AzmParserID || _la == AzmParserNEWLINE {
-		{
-			p.SetState(20)
-			p.Stat()
-		}
-
-		p.SetState(23)
-		p.GetErrorHandler().Sync(p)
+	{
+		p.SetState(21)
+		p.Match(AzmParserEOF)
 		if p.HasError() {
+			// Recognition error - abort rule
 			goto errorExit
 		}
-		_la = p.GetTokenStream().LA(1)
 	}
 
 errorExit:
@@ -286,59 +251,59 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IStatContext is an interface to support dynamic dispatch.
-type IStatContext interface {
+// IPermissionContext is an interface to support dynamic dispatch.
+type IPermissionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	UnionRel() IUnionRelContext
-	NEWLINE() antlr.TerminalNode
-	IntersectRel() IIntersectRelContext
-	ExclusionRel() IExclusionRelContext
+	Union() IUnionContext
+	EOF() antlr.TerminalNode
+	Intersection() IIntersectionContext
+	Exclusion() IExclusionContext
 
-	// IsStatContext differentiates from other interfaces.
-	IsStatContext()
+	// IsPermissionContext differentiates from other interfaces.
+	IsPermissionContext()
 }
 
-type StatContext struct {
+type PermissionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyStatContext() *StatContext {
-	var p = new(StatContext)
+func NewEmptyPermissionContext() *PermissionContext {
+	var p = new(PermissionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_stat
+	p.RuleIndex = AzmParserRULE_permission
 	return p
 }
 
-func InitEmptyStatContext(p *StatContext) {
+func InitEmptyPermissionContext(p *PermissionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_stat
+	p.RuleIndex = AzmParserRULE_permission
 }
 
-func (*StatContext) IsStatContext() {}
+func (*PermissionContext) IsPermissionContext() {}
 
-func NewStatContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *StatContext {
-	var p = new(StatContext)
+func NewPermissionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *PermissionContext {
+	var p = new(PermissionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_stat
+	p.RuleIndex = AzmParserRULE_permission
 
 	return p
 }
 
-func (s *StatContext) GetParser() antlr.Parser { return s.parser }
+func (s *PermissionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *StatContext) UnionRel() IUnionRelContext {
+func (s *PermissionContext) Union() IUnionContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IUnionRelContext); ok {
+		if _, ok := ctx.(IUnionContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -348,17 +313,17 @@ func (s *StatContext) UnionRel() IUnionRelContext {
 		return nil
 	}
 
-	return t.(IUnionRelContext)
+	return t.(IUnionContext)
 }
 
-func (s *StatContext) NEWLINE() antlr.TerminalNode {
-	return s.GetToken(AzmParserNEWLINE, 0)
+func (s *PermissionContext) EOF() antlr.TerminalNode {
+	return s.GetToken(AzmParserEOF, 0)
 }
 
-func (s *StatContext) IntersectRel() IIntersectRelContext {
+func (s *PermissionContext) Intersection() IIntersectionContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IIntersectRelContext); ok {
+		if _, ok := ctx.(IIntersectionContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -368,13 +333,13 @@ func (s *StatContext) IntersectRel() IIntersectRelContext {
 		return nil
 	}
 
-	return t.(IIntersectRelContext)
+	return t.(IIntersectionContext)
 }
 
-func (s *StatContext) ExclusionRel() IExclusionRelContext {
+func (s *PermissionContext) Exclusion() IExclusionContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IExclusionRelContext); ok {
+		if _, ok := ctx.(IExclusionContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -384,48 +349,48 @@ func (s *StatContext) ExclusionRel() IExclusionRelContext {
 		return nil
 	}
 
-	return t.(IExclusionRelContext)
+	return t.(IExclusionContext)
 }
 
-func (s *StatContext) GetRuleContext() antlr.RuleContext {
+func (s *PermissionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *StatContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *PermissionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *StatContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *PermissionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterStat(s)
+		listenerT.EnterPermission(s)
 	}
 }
 
-func (s *StatContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *PermissionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitStat(s)
+		listenerT.ExitPermission(s)
 	}
 }
 
-func (p *AzmParser) Stat() (localctx IStatContext) {
-	localctx = NewStatContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 2, AzmParserRULE_stat)
-	p.SetState(35)
+func (p *AzmParser) Permission() (localctx IPermissionContext) {
+	localctx = NewPermissionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 2, AzmParserRULE_permission)
+	p.SetState(32)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
 
-	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 1, p.GetParserRuleContext()) {
+	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 0, p.GetParserRuleContext()) {
 	case 1:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(25)
-			p.UnionRel()
+			p.SetState(23)
+			p.Union()
 		}
 		{
-			p.SetState(26)
-			p.Match(AzmParserNEWLINE)
+			p.SetState(24)
+			p.Match(AzmParserEOF)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
@@ -435,12 +400,12 @@ func (p *AzmParser) Stat() (localctx IStatContext) {
 	case 2:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(28)
-			p.IntersectRel()
+			p.SetState(26)
+			p.Intersection()
 		}
 		{
-			p.SetState(29)
-			p.Match(AzmParserNEWLINE)
+			p.SetState(27)
+			p.Match(AzmParserEOF)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
@@ -450,23 +415,12 @@ func (p *AzmParser) Stat() (localctx IStatContext) {
 	case 3:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(31)
-			p.ExclusionRel()
+			p.SetState(29)
+			p.Exclusion()
 		}
 		{
-			p.SetState(32)
-			p.Match(AzmParserNEWLINE)
-			if p.HasError() {
-				// Recognition error - abort rule
-				goto errorExit
-			}
-		}
-
-	case 4:
-		p.EnterOuterAlt(localctx, 4)
-		{
-			p.SetState(34)
-			p.Match(AzmParserNEWLINE)
+			p.SetState(30)
+			p.Match(AzmParserEOF)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
@@ -490,8 +444,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IUnionRelContext is an interface to support dynamic dispatch.
-type IUnionRelContext interface {
+// IUnionContext is an interface to support dynamic dispatch.
+type IUnionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -501,43 +455,43 @@ type IUnionRelContext interface {
 	AllRel() []IRelContext
 	Rel(i int) IRelContext
 
-	// IsUnionRelContext differentiates from other interfaces.
-	IsUnionRelContext()
+	// IsUnionContext differentiates from other interfaces.
+	IsUnionContext()
 }
 
-type UnionRelContext struct {
+type UnionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyUnionRelContext() *UnionRelContext {
-	var p = new(UnionRelContext)
+func NewEmptyUnionContext() *UnionContext {
+	var p = new(UnionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_unionRel
+	p.RuleIndex = AzmParserRULE_union
 	return p
 }
 
-func InitEmptyUnionRelContext(p *UnionRelContext) {
+func InitEmptyUnionContext(p *UnionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_unionRel
+	p.RuleIndex = AzmParserRULE_union
 }
 
-func (*UnionRelContext) IsUnionRelContext() {}
+func (*UnionContext) IsUnionContext() {}
 
-func NewUnionRelContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UnionRelContext {
-	var p = new(UnionRelContext)
+func NewUnionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UnionContext {
+	var p = new(UnionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_unionRel
+	p.RuleIndex = AzmParserRULE_union
 
 	return p
 }
 
-func (s *UnionRelContext) GetParser() antlr.Parser { return s.parser }
+func (s *UnionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *UnionRelContext) AllRel() []IRelContext {
+func (s *UnionContext) AllRel() []IRelContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -558,7 +512,7 @@ func (s *UnionRelContext) AllRel() []IRelContext {
 	return tst
 }
 
-func (s *UnionRelContext) Rel(i int) IRelContext {
+func (s *UnionContext) Rel(i int) IRelContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -578,37 +532,37 @@ func (s *UnionRelContext) Rel(i int) IRelContext {
 	return t.(IRelContext)
 }
 
-func (s *UnionRelContext) GetRuleContext() antlr.RuleContext {
+func (s *UnionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *UnionRelContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *UnionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *UnionRelContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *UnionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterUnionRel(s)
+		listenerT.EnterUnion(s)
 	}
 }
 
-func (s *UnionRelContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *UnionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitUnionRel(s)
+		listenerT.ExitUnion(s)
 	}
 }
 
-func (p *AzmParser) UnionRel() (localctx IUnionRelContext) {
-	localctx = NewUnionRelContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 4, AzmParserRULE_unionRel)
+func (p *AzmParser) Union() (localctx IUnionContext) {
+	localctx = NewUnionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 4, AzmParserRULE_union)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(37)
+		p.SetState(34)
 		p.Rel()
 	}
-	p.SetState(42)
+	p.SetState(39)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -617,7 +571,7 @@ func (p *AzmParser) UnionRel() (localctx IUnionRelContext) {
 
 	for _la == AzmParserT__0 {
 		{
-			p.SetState(38)
+			p.SetState(35)
 			p.Match(AzmParserT__0)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -625,11 +579,11 @@ func (p *AzmParser) UnionRel() (localctx IUnionRelContext) {
 			}
 		}
 		{
-			p.SetState(39)
+			p.SetState(36)
 			p.Rel()
 		}
 
-		p.SetState(44)
+		p.SetState(41)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -650,8 +604,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IIntersectRelContext is an interface to support dynamic dispatch.
-type IIntersectRelContext interface {
+// IIntersectionContext is an interface to support dynamic dispatch.
+type IIntersectionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -661,43 +615,43 @@ type IIntersectRelContext interface {
 	AllRel() []IRelContext
 	Rel(i int) IRelContext
 
-	// IsIntersectRelContext differentiates from other interfaces.
-	IsIntersectRelContext()
+	// IsIntersectionContext differentiates from other interfaces.
+	IsIntersectionContext()
 }
 
-type IntersectRelContext struct {
+type IntersectionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyIntersectRelContext() *IntersectRelContext {
-	var p = new(IntersectRelContext)
+func NewEmptyIntersectionContext() *IntersectionContext {
+	var p = new(IntersectionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_intersectRel
+	p.RuleIndex = AzmParserRULE_intersection
 	return p
 }
 
-func InitEmptyIntersectRelContext(p *IntersectRelContext) {
+func InitEmptyIntersectionContext(p *IntersectionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_intersectRel
+	p.RuleIndex = AzmParserRULE_intersection
 }
 
-func (*IntersectRelContext) IsIntersectRelContext() {}
+func (*IntersectionContext) IsIntersectionContext() {}
 
-func NewIntersectRelContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *IntersectRelContext {
-	var p = new(IntersectRelContext)
+func NewIntersectionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *IntersectionContext {
+	var p = new(IntersectionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_intersectRel
+	p.RuleIndex = AzmParserRULE_intersection
 
 	return p
 }
 
-func (s *IntersectRelContext) GetParser() antlr.Parser { return s.parser }
+func (s *IntersectionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *IntersectRelContext) AllRel() []IRelContext {
+func (s *IntersectionContext) AllRel() []IRelContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -718,7 +672,7 @@ func (s *IntersectRelContext) AllRel() []IRelContext {
 	return tst
 }
 
-func (s *IntersectRelContext) Rel(i int) IRelContext {
+func (s *IntersectionContext) Rel(i int) IRelContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -738,37 +692,37 @@ func (s *IntersectRelContext) Rel(i int) IRelContext {
 	return t.(IRelContext)
 }
 
-func (s *IntersectRelContext) GetRuleContext() antlr.RuleContext {
+func (s *IntersectionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *IntersectRelContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *IntersectionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *IntersectRelContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *IntersectionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterIntersectRel(s)
+		listenerT.EnterIntersection(s)
 	}
 }
 
-func (s *IntersectRelContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *IntersectionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitIntersectRel(s)
+		listenerT.ExitIntersection(s)
 	}
 }
 
-func (p *AzmParser) IntersectRel() (localctx IIntersectRelContext) {
-	localctx = NewIntersectRelContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 6, AzmParserRULE_intersectRel)
+func (p *AzmParser) Intersection() (localctx IIntersectionContext) {
+	localctx = NewIntersectionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 6, AzmParserRULE_intersection)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(45)
+		p.SetState(42)
 		p.Rel()
 	}
-	p.SetState(50)
+	p.SetState(47)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -777,7 +731,7 @@ func (p *AzmParser) IntersectRel() (localctx IIntersectRelContext) {
 
 	for _la == AzmParserT__1 {
 		{
-			p.SetState(46)
+			p.SetState(43)
 			p.Match(AzmParserT__1)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -785,11 +739,11 @@ func (p *AzmParser) IntersectRel() (localctx IIntersectRelContext) {
 			}
 		}
 		{
-			p.SetState(47)
+			p.SetState(44)
 			p.Rel()
 		}
 
-		p.SetState(52)
+		p.SetState(49)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -810,8 +764,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IExclusionRelContext is an interface to support dynamic dispatch.
-type IExclusionRelContext interface {
+// IExclusionContext is an interface to support dynamic dispatch.
+type IExclusionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -821,43 +775,43 @@ type IExclusionRelContext interface {
 	AllRel() []IRelContext
 	Rel(i int) IRelContext
 
-	// IsExclusionRelContext differentiates from other interfaces.
-	IsExclusionRelContext()
+	// IsExclusionContext differentiates from other interfaces.
+	IsExclusionContext()
 }
 
-type ExclusionRelContext struct {
+type ExclusionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyExclusionRelContext() *ExclusionRelContext {
-	var p = new(ExclusionRelContext)
+func NewEmptyExclusionContext() *ExclusionContext {
+	var p = new(ExclusionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_exclusionRel
+	p.RuleIndex = AzmParserRULE_exclusion
 	return p
 }
 
-func InitEmptyExclusionRelContext(p *ExclusionRelContext) {
+func InitEmptyExclusionContext(p *ExclusionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_exclusionRel
+	p.RuleIndex = AzmParserRULE_exclusion
 }
 
-func (*ExclusionRelContext) IsExclusionRelContext() {}
+func (*ExclusionContext) IsExclusionContext() {}
 
-func NewExclusionRelContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ExclusionRelContext {
-	var p = new(ExclusionRelContext)
+func NewExclusionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ExclusionContext {
+	var p = new(ExclusionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_exclusionRel
+	p.RuleIndex = AzmParserRULE_exclusion
 
 	return p
 }
 
-func (s *ExclusionRelContext) GetParser() antlr.Parser { return s.parser }
+func (s *ExclusionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ExclusionRelContext) AllRel() []IRelContext {
+func (s *ExclusionContext) AllRel() []IRelContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -878,7 +832,7 @@ func (s *ExclusionRelContext) AllRel() []IRelContext {
 	return tst
 }
 
-func (s *ExclusionRelContext) Rel(i int) IRelContext {
+func (s *ExclusionContext) Rel(i int) IRelContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -898,36 +852,36 @@ func (s *ExclusionRelContext) Rel(i int) IRelContext {
 	return t.(IRelContext)
 }
 
-func (s *ExclusionRelContext) GetRuleContext() antlr.RuleContext {
+func (s *ExclusionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *ExclusionRelContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *ExclusionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *ExclusionRelContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *ExclusionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterExclusionRel(s)
+		listenerT.EnterExclusion(s)
 	}
 }
 
-func (s *ExclusionRelContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *ExclusionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitExclusionRel(s)
+		listenerT.ExitExclusion(s)
 	}
 }
 
-func (p *AzmParser) ExclusionRel() (localctx IExclusionRelContext) {
-	localctx = NewExclusionRelContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 8, AzmParserRULE_exclusionRel)
+func (p *AzmParser) Exclusion() (localctx IExclusionContext) {
+	localctx = NewExclusionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 8, AzmParserRULE_exclusion)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(53)
+		p.SetState(50)
 		p.Rel()
 	}
 	{
-		p.SetState(54)
+		p.SetState(51)
 		p.Match(AzmParserT__2)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -935,7 +889,7 @@ func (p *AzmParser) ExclusionRel() (localctx IExclusionRelContext) {
 		}
 	}
 	{
-		p.SetState(55)
+		p.SetState(52)
 		p.Rel()
 	}
 
@@ -1088,38 +1042,38 @@ func (s *RelContext) ExitRule(listener antlr.ParseTreeListener) {
 func (p *AzmParser) Rel() (localctx IRelContext) {
 	localctx = NewRelContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 10, AzmParserRULE_rel)
-	p.SetState(61)
+	p.SetState(58)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
 	}
 
-	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 4, p.GetParserRuleContext()) {
+	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 3, p.GetParserRuleContext()) {
 	case 1:
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(57)
+			p.SetState(54)
 			p.SingleRel()
 		}
 
 	case 2:
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(58)
+			p.SetState(55)
 			p.WildcardRel()
 		}
 
 	case 3:
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(59)
+			p.SetState(56)
 			p.SubjectRel()
 		}
 
 	case 4:
 		p.EnterOuterAlt(localctx, 4)
 		{
-			p.SetState(60)
+			p.SetState(57)
 			p.ArrowRel()
 		}
 
@@ -1215,7 +1169,7 @@ func (p *AzmParser) SingleRel() (localctx ISingleRelContext) {
 	p.EnterRule(localctx, 12, AzmParserRULE_singleRel)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(63)
+		p.SetState(60)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1321,7 +1275,7 @@ func (p *AzmParser) SubjectRel() (localctx ISubjectRelContext) {
 	p.EnterRule(localctx, 14, AzmParserRULE_subjectRel)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(65)
+		p.SetState(62)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1329,7 +1283,7 @@ func (p *AzmParser) SubjectRel() (localctx ISubjectRelContext) {
 		}
 	}
 	{
-		p.SetState(66)
+		p.SetState(63)
 		p.Match(AzmParserHASH)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1337,7 +1291,7 @@ func (p *AzmParser) SubjectRel() (localctx ISubjectRelContext) {
 		}
 	}
 	{
-		p.SetState(67)
+		p.SetState(64)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1443,7 +1397,7 @@ func (p *AzmParser) WildcardRel() (localctx IWildcardRelContext) {
 	p.EnterRule(localctx, 16, AzmParserRULE_wildcardRel)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(69)
+		p.SetState(66)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1451,7 +1405,7 @@ func (p *AzmParser) WildcardRel() (localctx IWildcardRelContext) {
 		}
 	}
 	{
-		p.SetState(70)
+		p.SetState(67)
 		p.Match(AzmParserCOLON)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1459,7 +1413,7 @@ func (p *AzmParser) WildcardRel() (localctx IWildcardRelContext) {
 		}
 	}
 	{
-		p.SetState(71)
+		p.SetState(68)
 		p.Match(AzmParserASTERISK)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1565,7 +1519,7 @@ func (p *AzmParser) ArrowRel() (localctx IArrowRelContext) {
 	p.EnterRule(localctx, 18, AzmParserRULE_arrowRel)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(73)
+		p.SetState(70)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1573,7 +1527,7 @@ func (p *AzmParser) ArrowRel() (localctx IArrowRelContext) {
 		}
 	}
 	{
-		p.SetState(74)
+		p.SetState(71)
 		p.Match(AzmParserARROW)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1581,7 +1535,7 @@ func (p *AzmParser) ArrowRel() (localctx IArrowRelContext) {
 		}
 	}
 	{
-		p.SetState(75)
+		p.SetState(72)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule

@@ -20,35 +20,35 @@ func (s *BaseAzmListener) EnterEveryRule(ctx antlr.ParserRuleContext) {}
 // ExitEveryRule is called when any rule is exited.
 func (s *BaseAzmListener) ExitEveryRule(ctx antlr.ParserRuleContext) {}
 
-// EnterProg is called when production prog is entered.
-func (s *BaseAzmListener) EnterProg(ctx *ProgContext) {}
+// EnterRelation is called when production relation is entered.
+func (s *BaseAzmListener) EnterRelation(ctx *RelationContext) {}
 
-// ExitProg is called when production prog is exited.
-func (s *BaseAzmListener) ExitProg(ctx *ProgContext) {}
+// ExitRelation is called when production relation is exited.
+func (s *BaseAzmListener) ExitRelation(ctx *RelationContext) {}
 
-// EnterStat is called when production stat is entered.
-func (s *BaseAzmListener) EnterStat(ctx *StatContext) {}
+// EnterPermission is called when production permission is entered.
+func (s *BaseAzmListener) EnterPermission(ctx *PermissionContext) {}
 
-// ExitStat is called when production stat is exited.
-func (s *BaseAzmListener) ExitStat(ctx *StatContext) {}
+// ExitPermission is called when production permission is exited.
+func (s *BaseAzmListener) ExitPermission(ctx *PermissionContext) {}
 
-// EnterUnionRel is called when production unionRel is entered.
-func (s *BaseAzmListener) EnterUnionRel(ctx *UnionRelContext) {}
+// EnterUnion is called when production union is entered.
+func (s *BaseAzmListener) EnterUnion(ctx *UnionContext) {}
 
-// ExitUnionRel is called when production unionRel is exited.
-func (s *BaseAzmListener) ExitUnionRel(ctx *UnionRelContext) {}
+// ExitUnion is called when production union is exited.
+func (s *BaseAzmListener) ExitUnion(ctx *UnionContext) {}
 
-// EnterIntersectRel is called when production intersectRel is entered.
-func (s *BaseAzmListener) EnterIntersectRel(ctx *IntersectRelContext) {}
+// EnterIntersection is called when production intersection is entered.
+func (s *BaseAzmListener) EnterIntersection(ctx *IntersectionContext) {}
 
-// ExitIntersectRel is called when production intersectRel is exited.
-func (s *BaseAzmListener) ExitIntersectRel(ctx *IntersectRelContext) {}
+// ExitIntersection is called when production intersection is exited.
+func (s *BaseAzmListener) ExitIntersection(ctx *IntersectionContext) {}
 
-// EnterExclusionRel is called when production exclusionRel is entered.
-func (s *BaseAzmListener) EnterExclusionRel(ctx *ExclusionRelContext) {}
+// EnterExclusion is called when production exclusion is entered.
+func (s *BaseAzmListener) EnterExclusion(ctx *ExclusionContext) {}
 
-// ExitExclusionRel is called when production exclusionRel is exited.
-func (s *BaseAzmListener) ExitExclusionRel(ctx *ExclusionRelContext) {}
+// ExitExclusion is called when production exclusion is exited.
+func (s *BaseAzmListener) ExitExclusion(ctx *ExclusionContext) {}
 
 // EnterRel is called when production rel is entered.
 func (s *BaseAzmListener) EnterRel(ctx *RelContext) {}
