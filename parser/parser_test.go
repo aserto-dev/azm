@@ -8,6 +8,8 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/parser"
+	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 )
 
 type production int
@@ -25,125 +27,193 @@ var (
 	errProductionNotSet        = errors.New("production not set (unknown)")
 )
 
-type AzmListener struct {
-	*parser.BaseAzmListener
-	production production
-	relations  []*model.ObjectRelation
+// type AzmListener struct {
+//     *parser.BaseAzmListener
+//     production production
+//     relations  []*model.ObjectRelation
+// }
+
+// func NewAzmListener() *AzmListener {
+//     azm := new(AzmListener)
+//     azm.production = unknown
+//     azm.relations = []*model.ObjectRelation{}
+//     return azm
+// }
+
+// func (l *AzmListener) GetPermission() ([]*model.ObjectRelation, error) {
+//     if l.production == permission {
+//         return l.relations, nil
+//     }
+//     return nil, errNotPermissionProduction
+// }
+
+// func (l *AzmListener) GetRelation() ([]*model.ObjectRelation, error) {
+//     if l.production == relation {
+//         return l.relations, nil
+//     }
+//     return nil, errNotRelationProduction
+// }
+
+// func (l *AzmListener) EnterPermission(c *parser.PermissionContext) {
+//     if l.production == unknown {
+//         l.production = permission
+//         return
+//     }
+//     panic(errProductionAlreadySet)
+// }
+
+// func (l *AzmListener) EnterRelation(c *parser.RelationContext) {
+//     if l.production == unknown {
+//         l.production = relation
+//         return
+//     }
+//     panic(errProductionAlreadySet)
+// }
+
+// func (l *AzmListener) ExitUnion(c *parser.UnionContext) {
+//     // relation production
+//     if l.production == relation {
+//         fmt.Println("ExitUnionRel", c.GetText())
+//         return
+//     }
+
+//     // permission production
+//     if l.production == permission {
+//         fmt.Println("ExitUnionRel", c.GetText())
+//         return
+//     }
+// }
+
+// func (l *AzmListener) ExitIntersection(c *parser.IntersectionContext) {
+//     // permission production
+//     if l.production == permission {
+//         fmt.Println("ExitIntersectRel", c.GetText())
+//     }
+// }
+
+// func (l *AzmListener) ExitExclusion(c *parser.ExclusionContext) {
+//     // permission production
+//     if l.production == permission {
+//         fmt.Println("ExitExclusionRel", c.GetText())
+//         return
+//     }
+// }
+
+// func (l *AzmListener) ExitSingleRel(c *parser.SingleRelContext) {
+//     fmt.Println("ExitSingleRel", c.GetText())
+//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+// }
+
+// func (l *AzmListener) ExitWildcardRel(c *parser.WildcardRelContext) {
+//     fmt.Println("ExitWildcardRel", c.GetText())
+//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+// }
+
+// func (l *AzmListener) ExitSubjectRel(c *parser.SubjectRelContext) {
+//     fmt.Println("ExitSubjectRel", c.GetText())
+//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+// }
+
+// func (l *AzmListener) ExitArrowRel(c *parser.ArrowRelContext) {
+//     fmt.Println("ExitArrowRel", c.GetText())
+//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+// }
+
+// func (l *AzmListener) ExitRelation(c *parser.RelationContext) {
+//     fmt.Println("ExitRelation", c.GetText())
+// }
+
+// func (l *AzmListener) ExitPermission(c *parser.PermissionContext) {
+//     fmt.Println("ExitPermission", c.GetText())
+// }
+
+type RelationVisitor struct {
+	parser.BaseAzmVisitor
+	relations []*model.Relation
 }
 
-func NewAzmListener() *AzmListener {
-	azm := new(AzmListener)
-	azm.production = unknown
-	azm.relations = []*model.ObjectRelation{}
-	return azm
-}
-
-func (l *AzmListener) GetPermission() ([]*model.ObjectRelation, error) {
-	if l.production == permission {
-		return l.relations, nil
+func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
+	fmt.Println("Visit", tree.GetText())
+	switch t := tree.(type) {
+	case *parser.PermissionContext:
+		return nil
+	case *parser.RelationContext:
+		return t.Accept(v)
 	}
-	return nil, errNotPermissionProduction
+
+	return nil
 }
 
-func (l *AzmListener) GetRelation() ([]*model.ObjectRelation, error) {
-	if l.production == relation {
-		return l.relations, nil
-	}
-	return nil, errNotRelationProduction
+func (v *RelationVisitor) VisitRelation(c *parser.RelationContext) interface{} {
+	return c.UnionRel().Accept(v)
 }
 
-func (l *AzmListener) EnterPermission(c *parser.PermissionContext) {
-	if l.production == unknown {
-		l.production = permission
-		return
-	}
-	panic(errProductionAlreadySet)
+func (v *RelationVisitor) VisitUnionRel(c *parser.UnionRelContext) interface{} {
+	return lo.Map(c.AllRel(), func(rel parser.IRelContext, _ int) *model.Relation {
+		return rel.Accept(v).(*model.Relation)
+	})
 }
 
-func (l *AzmListener) EnterRelation(c *parser.RelationContext) {
-	if l.production == unknown {
-		l.production = relation
-		return
-	}
-	panic(errProductionAlreadySet)
+func (v *RelationVisitor) VisitToSingleRel(c *parser.ToSingleRelContext) interface{} {
+	return &model.Relation{Direct: model.ObjectName(c.SingleRel().Accept(v).(string))}
 }
 
-func (l *AzmListener) ExitUnion(c *parser.UnionContext) {
-	// relation production
-	if l.production == relation {
-		fmt.Println("ExitUnionRel", c.GetText())
-		return
-	}
-
-	// permission production
-	if l.production == permission {
-		fmt.Println("ExitUnionRel", c.GetText())
-		return
-	}
+func (v *RelationVisitor) VisitSingleRel(c *parser.SingleRelContext) interface{} {
+	return c.GetText()
 }
 
-func (l *AzmListener) ExitIntersection(c *parser.IntersectionContext) {
-	// permission production
-	if l.production == permission {
-		fmt.Println("ExitIntersectRel", c.GetText())
-	}
+func (v *RelationVisitor) VisitToWildcardRel(c *parser.ToWildcardRelContext) interface{} {
+	return c.WildcardRel().Accept(v)
 }
 
-func (l *AzmListener) ExitExclusion(c *parser.ExclusionContext) {
-	// permission production
-	if l.production == permission {
-		fmt.Println("ExitExclusionRel", c.GetText())
-		return
-	}
+func (v *RelationVisitor) VisitWildcardRel(c *parser.WildcardRelContext) interface{} {
+	return &model.Relation{Wildcard: model.ObjectName(c.ID().GetText())}
 }
 
-func (l *AzmListener) ExitSingleRel(c *parser.SingleRelContext) {
-	fmt.Println("ExitSingleRel", c.GetText())
-	l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+func (v *RelationVisitor) VisitToSubjectRel(c *parser.ToSubjectRelContext) interface{} {
+	return c.SubjectRel().Accept(v)
 }
 
-func (l *AzmListener) ExitWildcardRel(c *parser.WildcardRelContext) {
-	fmt.Println("ExitWildcardRel", c.GetText())
-	l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
+func (v *RelationVisitor) VisitSubjectRel(c *parser.SubjectRelContext) interface{} {
+	return &model.Relation{Subject: &model.SubjectRelation{
+		Object:   model.ObjectName(c.ID(0).GetText()),
+		Relation: model.RelationName(c.ID(1).GetText()),
+	}}
 }
 
-func (l *AzmListener) ExitSubjectRel(c *parser.SubjectRelContext) {
-	fmt.Println("ExitSubjectRel", c.GetText())
-	l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-}
-
-func (l *AzmListener) ExitArrowRel(c *parser.ArrowRelContext) {
-	fmt.Println("ExitArrowRel", c.GetText())
-	l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-}
-
-func (l *AzmListener) ExitRelation(c *parser.RelationContext) {
-	fmt.Println("ExitRelation", c.GetText())
-}
-
-func (l *AzmListener) ExitPermission(c *parser.PermissionContext) {
-	fmt.Println("ExitPermission", c.GetText())
-}
-
-func TestParser(t *testing.T) {
-	input := antlr.NewInputStream("user | user:* | group#member | parent->viewer")
+func TestRelationParser(t *testing.T) {
+	// input := antlr.NewInputStream("user | user:* | group#member | parent->viewer")
+	input := antlr.NewInputStream("user | group | user:* | group#member")
 	// input, _ := antlr.NewFileStream("./parser_test.txt")
 	lexer := parser.NewAzmLexer(input)
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	p := parser.NewAzmParser(stream)
 	p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 
-	listener := NewAzmListener()
+	// listener := NewAzmListener()
 
 	rTree := p.Relation()
-	antlr.ParseTreeWalkerDefault.Walk(listener, rTree)
-	rel, err := listener.GetRelation()
-	if err != nil {
-		panic(err)
-	}
+	// antlr.ParseTreeWalkerDefault.Walk(listener, rTree)
+	// rel, err := listener.GetRelation()
+	// if err != nil {
+	//     panic(err)
+	// }
 
-	fmt.Printf("%v\n", rel)
+	// fmt.Printf("%v\n", rel)
+
+	var v RelationVisitor
+	r := v.Visit(rTree).([]*model.Relation)
+	assert.Len(t, r, 4)
+	assert.Equal(t, model.ObjectName("user"), r[0].Direct)
+	assert.Equal(t, model.ObjectName("group"), r[1].Direct)
+	assert.Equal(t, model.ObjectName("user"), r[2].Wildcard)
+	assert.Equal(t, model.ObjectName("group"), r[3].Subject.Object)
+	assert.Equal(t, model.RelationName("member"), r[3].Subject.Relation)
 
 	// pTree := p.Permission()
 	// antlr.ParseTreeWalkerDefault.Walk(listener, pTree)
+}
+
+func TestPermissionParser(t *testing.T) {
+
 }
