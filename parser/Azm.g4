@@ -1,38 +1,47 @@
 grammar Azm;
 
 relation
-    :   union EOF
-    ;
-    
-permission
-    :   union EOF
-    |   intersection EOF
-    |   exclusion EOF
+    :   unionRel EOF
     ;
 
-union
+permission
+    :   unionPerm EOF           # ToUnionPerm
+    |   intersectionPerm EOF    # ToIntersectionPerm
+    |   exclusionPerm EOF       # ToExclusionPerm
+    ;
+
+unionRel
     :   rel ('|' rel)*
     ;
 
-intersection
-    :   rel ('&' rel)*
+unionPerm
+    :   perm ('|' perm)*
     ;
 
-exclusion
-    :   rel '-' rel
+intersectionPerm
+    :   perm ('&' perm)*
+    ;
+
+exclusionPerm
+    :   perm '-' perm
     ;
 
 rel
-    :   singleRel
-    |   wildcardRel
-    |   subjectRel
-    |   arrowRel
+    :   singleRel       # ToSingleRel
+    |   wildcardRel     # ToWildcardRel
+    |   subjectRel      # ToSubjectRel
+    |   arrowRel        # ToArrowRel
+    ;
+
+perm
+    :   singleRel       # ToSinglePerm
+    |   arrowRel        # ToArrowPerm
     ;
 
 singleRel
     :   ID
     ;
-    
+
 subjectRel
     :   ID HASH ID
     ;
@@ -44,14 +53,14 @@ wildcardRel
 arrowRel
     :   ID ARROW ID
     ;
-    
+
 ARROW:
     '-''>' ;
 
-HASH:   
+HASH:
     '#' ;
 
-COLON:  
+COLON:
     ':' ;
 
 ASTERISK:
