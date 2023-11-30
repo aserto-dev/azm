@@ -5,20 +5,20 @@ relation
     ;
 
 permission
-    :   unionPerm EOF
-    |   intersectionPerm EOF
-    |   exclusionPerm EOF
+    :   union EOF           #UnionPerm
+    |   intersection EOF    #IntersectionPerm
+    |   exclusion EOF       #ExclusionPerm
     ;
 
-unionPerm
+union
     :   perm ('|' perm)*
     ;
 
-intersectionPerm
+intersection
     :   perm ('&' perm)*
     ;
 
-exclusionPerm
+exclusion
     :   perm '-' perm
     ;
 

@@ -10,17 +10,23 @@ type AzmListener interface {
 	// EnterRelation is called when entering the relation production.
 	EnterRelation(c *RelationContext)
 
-	// EnterPermission is called when entering the permission production.
-	EnterPermission(c *PermissionContext)
-
-	// EnterUnionPerm is called when entering the unionPerm production.
+	// EnterUnionPerm is called when entering the UnionPerm production.
 	EnterUnionPerm(c *UnionPermContext)
 
-	// EnterIntersectionPerm is called when entering the intersectionPerm production.
+	// EnterIntersectionPerm is called when entering the IntersectionPerm production.
 	EnterIntersectionPerm(c *IntersectionPermContext)
 
-	// EnterExclusionPerm is called when entering the exclusionPerm production.
+	// EnterExclusionPerm is called when entering the ExclusionPerm production.
 	EnterExclusionPerm(c *ExclusionPermContext)
+
+	// EnterUnion is called when entering the union production.
+	EnterUnion(c *UnionContext)
+
+	// EnterIntersection is called when entering the intersection production.
+	EnterIntersection(c *IntersectionContext)
+
+	// EnterExclusion is called when entering the exclusion production.
+	EnterExclusion(c *ExclusionContext)
 
 	// EnterSingleRel is called when entering the SingleRel production.
 	EnterSingleRel(c *SingleRelContext)
@@ -55,17 +61,23 @@ type AzmListener interface {
 	// ExitRelation is called when exiting the relation production.
 	ExitRelation(c *RelationContext)
 
-	// ExitPermission is called when exiting the permission production.
-	ExitPermission(c *PermissionContext)
-
-	// ExitUnionPerm is called when exiting the unionPerm production.
+	// ExitUnionPerm is called when exiting the UnionPerm production.
 	ExitUnionPerm(c *UnionPermContext)
 
-	// ExitIntersectionPerm is called when exiting the intersectionPerm production.
+	// ExitIntersectionPerm is called when exiting the IntersectionPerm production.
 	ExitIntersectionPerm(c *IntersectionPermContext)
 
-	// ExitExclusionPerm is called when exiting the exclusionPerm production.
+	// ExitExclusionPerm is called when exiting the ExclusionPerm production.
 	ExitExclusionPerm(c *ExclusionPermContext)
+
+	// ExitUnion is called when exiting the union production.
+	ExitUnion(c *UnionContext)
+
+	// ExitIntersection is called when exiting the intersection production.
+	ExitIntersection(c *IntersectionContext)
+
+	// ExitExclusion is called when exiting the exclusion production.
+	ExitExclusion(c *ExclusionContext)
 
 	// ExitSingleRel is called when exiting the SingleRel production.
 	ExitSingleRel(c *SingleRelContext)

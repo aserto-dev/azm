@@ -38,8 +38,8 @@ func azmParserInit() {
 		"", "", "", "", "ARROW", "HASH", "COLON", "ASTERISK", "ID", "WS",
 	}
 	staticData.RuleNames = []string{
-		"relation", "permission", "unionPerm", "intersectionPerm", "exclusionPerm",
-		"rel", "perm", "single", "subject", "wildcard", "arrow",
+		"relation", "permission", "union", "intersection", "exclusion", "rel",
+		"perm", "single", "subject", "wildcard", "arrow",
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
@@ -127,17 +127,17 @@ const (
 
 // AzmParser rules.
 const (
-	AzmParserRULE_relation         = 0
-	AzmParserRULE_permission       = 1
-	AzmParserRULE_unionPerm        = 2
-	AzmParserRULE_intersectionPerm = 3
-	AzmParserRULE_exclusionPerm    = 4
-	AzmParserRULE_rel              = 5
-	AzmParserRULE_perm             = 6
-	AzmParserRULE_single           = 7
-	AzmParserRULE_subject          = 8
-	AzmParserRULE_wildcard         = 9
-	AzmParserRULE_arrow            = 10
+	AzmParserRULE_relation     = 0
+	AzmParserRULE_permission   = 1
+	AzmParserRULE_union        = 2
+	AzmParserRULE_intersection = 3
+	AzmParserRULE_exclusion    = 4
+	AzmParserRULE_rel          = 5
+	AzmParserRULE_perm         = 6
+	AzmParserRULE_single       = 7
+	AzmParserRULE_subject      = 8
+	AzmParserRULE_wildcard     = 9
+	AzmParserRULE_arrow        = 10
 )
 
 // IRelationContext is an interface to support dynamic dispatch.
@@ -329,13 +329,6 @@ type IPermissionContext interface {
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
-
-	// Getter signatures
-	UnionPerm() IUnionPermContext
-	EOF() antlr.TerminalNode
-	IntersectionPerm() IIntersectionPermContext
-	ExclusionPerm() IExclusionPermContext
-
 	// IsPermissionContext differentiates from other interfaces.
 	IsPermissionContext()
 }
@@ -372,56 +365,8 @@ func NewPermissionContext(parser antlr.Parser, parent antlr.ParserRuleContext, i
 
 func (s *PermissionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *PermissionContext) UnionPerm() IUnionPermContext {
-	var t antlr.RuleContext
-	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IUnionPermContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
-		}
-	}
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IUnionPermContext)
-}
-
-func (s *PermissionContext) EOF() antlr.TerminalNode {
-	return s.GetToken(AzmParserEOF, 0)
-}
-
-func (s *PermissionContext) IntersectionPerm() IIntersectionPermContext {
-	var t antlr.RuleContext
-	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IIntersectionPermContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
-		}
-	}
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IIntersectionPermContext)
-}
-
-func (s *PermissionContext) ExclusionPerm() IExclusionPermContext {
-	var t antlr.RuleContext
-	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IExclusionPermContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
-		}
-	}
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IExclusionPermContext)
+func (s *PermissionContext) CopyAll(ctx *PermissionContext) {
+	s.CopyFrom(&ctx.BaseParserRuleContext)
 }
 
 func (s *PermissionContext) GetRuleContext() antlr.RuleContext {
@@ -432,22 +377,180 @@ func (s *PermissionContext) ToStringTree(ruleNames []string, recog antlr.Recogni
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *PermissionContext) EnterRule(listener antlr.ParseTreeListener) {
+type ExclusionPermContext struct {
+	PermissionContext
+}
+
+func NewExclusionPermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *ExclusionPermContext {
+	var p = new(ExclusionPermContext)
+
+	InitEmptyPermissionContext(&p.PermissionContext)
+	p.parser = parser
+	p.CopyAll(ctx.(*PermissionContext))
+
+	return p
+}
+
+func (s *ExclusionPermContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *ExclusionPermContext) Exclusion() IExclusionContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(IExclusionContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IExclusionContext)
+}
+
+func (s *ExclusionPermContext) EOF() antlr.TerminalNode {
+	return s.GetToken(AzmParserEOF, 0)
+}
+
+func (s *ExclusionPermContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterPermission(s)
+		listenerT.EnterExclusionPerm(s)
 	}
 }
 
-func (s *PermissionContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *ExclusionPermContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitPermission(s)
+		listenerT.ExitExclusionPerm(s)
 	}
 }
 
-func (s *PermissionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *ExclusionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitPermission(s)
+		return t.VisitExclusionPerm(s)
+
+	default:
+		return t.VisitChildren(s)
+	}
+}
+
+type IntersectionPermContext struct {
+	PermissionContext
+}
+
+func NewIntersectionPermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *IntersectionPermContext {
+	var p = new(IntersectionPermContext)
+
+	InitEmptyPermissionContext(&p.PermissionContext)
+	p.parser = parser
+	p.CopyAll(ctx.(*PermissionContext))
+
+	return p
+}
+
+func (s *IntersectionPermContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *IntersectionPermContext) Intersection() IIntersectionContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(IIntersectionContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IIntersectionContext)
+}
+
+func (s *IntersectionPermContext) EOF() antlr.TerminalNode {
+	return s.GetToken(AzmParserEOF, 0)
+}
+
+func (s *IntersectionPermContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(AzmListener); ok {
+		listenerT.EnterIntersectionPerm(s)
+	}
+}
+
+func (s *IntersectionPermContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(AzmListener); ok {
+		listenerT.ExitIntersectionPerm(s)
+	}
+}
+
+func (s *IntersectionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case AzmVisitor:
+		return t.VisitIntersectionPerm(s)
+
+	default:
+		return t.VisitChildren(s)
+	}
+}
+
+type UnionPermContext struct {
+	PermissionContext
+}
+
+func NewUnionPermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *UnionPermContext {
+	var p = new(UnionPermContext)
+
+	InitEmptyPermissionContext(&p.PermissionContext)
+	p.parser = parser
+	p.CopyAll(ctx.(*PermissionContext))
+
+	return p
+}
+
+func (s *UnionPermContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *UnionPermContext) Union() IUnionContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(IUnionContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IUnionContext)
+}
+
+func (s *UnionPermContext) EOF() antlr.TerminalNode {
+	return s.GetToken(AzmParserEOF, 0)
+}
+
+func (s *UnionPermContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(AzmListener); ok {
+		listenerT.EnterUnionPerm(s)
+	}
+}
+
+func (s *UnionPermContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(AzmListener); ok {
+		listenerT.ExitUnionPerm(s)
+	}
+}
+
+func (s *UnionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+	switch t := visitor.(type) {
+	case AzmVisitor:
+		return t.VisitUnionPerm(s)
 
 	default:
 		return t.VisitChildren(s)
@@ -465,10 +568,11 @@ func (p *AzmParser) Permission() (localctx IPermissionContext) {
 
 	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 1, p.GetParserRuleContext()) {
 	case 1:
+		localctx = NewUnionPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
 			p.SetState(32)
-			p.UnionPerm()
+			p.Union()
 		}
 		{
 			p.SetState(33)
@@ -480,10 +584,11 @@ func (p *AzmParser) Permission() (localctx IPermissionContext) {
 		}
 
 	case 2:
+		localctx = NewIntersectionPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
 			p.SetState(35)
-			p.IntersectionPerm()
+			p.Intersection()
 		}
 		{
 			p.SetState(36)
@@ -495,10 +600,11 @@ func (p *AzmParser) Permission() (localctx IPermissionContext) {
 		}
 
 	case 3:
+		localctx = NewExclusionPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 3)
 		{
 			p.SetState(38)
-			p.ExclusionPerm()
+			p.Exclusion()
 		}
 		{
 			p.SetState(39)
@@ -526,8 +632,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IUnionPermContext is an interface to support dynamic dispatch.
-type IUnionPermContext interface {
+// IUnionContext is an interface to support dynamic dispatch.
+type IUnionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -537,43 +643,43 @@ type IUnionPermContext interface {
 	AllPerm() []IPermContext
 	Perm(i int) IPermContext
 
-	// IsUnionPermContext differentiates from other interfaces.
-	IsUnionPermContext()
+	// IsUnionContext differentiates from other interfaces.
+	IsUnionContext()
 }
 
-type UnionPermContext struct {
+type UnionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyUnionPermContext() *UnionPermContext {
-	var p = new(UnionPermContext)
+func NewEmptyUnionContext() *UnionContext {
+	var p = new(UnionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_unionPerm
+	p.RuleIndex = AzmParserRULE_union
 	return p
 }
 
-func InitEmptyUnionPermContext(p *UnionPermContext) {
+func InitEmptyUnionContext(p *UnionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_unionPerm
+	p.RuleIndex = AzmParserRULE_union
 }
 
-func (*UnionPermContext) IsUnionPermContext() {}
+func (*UnionContext) IsUnionContext() {}
 
-func NewUnionPermContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UnionPermContext {
-	var p = new(UnionPermContext)
+func NewUnionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *UnionContext {
+	var p = new(UnionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_unionPerm
+	p.RuleIndex = AzmParserRULE_union
 
 	return p
 }
 
-func (s *UnionPermContext) GetParser() antlr.Parser { return s.parser }
+func (s *UnionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *UnionPermContext) AllPerm() []IPermContext {
+func (s *UnionContext) AllPerm() []IPermContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -594,7 +700,7 @@ func (s *UnionPermContext) AllPerm() []IPermContext {
 	return tst
 }
 
-func (s *UnionPermContext) Perm(i int) IPermContext {
+func (s *UnionContext) Perm(i int) IPermContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -614,39 +720,39 @@ func (s *UnionPermContext) Perm(i int) IPermContext {
 	return t.(IPermContext)
 }
 
-func (s *UnionPermContext) GetRuleContext() antlr.RuleContext {
+func (s *UnionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *UnionPermContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *UnionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *UnionPermContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *UnionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterUnionPerm(s)
+		listenerT.EnterUnion(s)
 	}
 }
 
-func (s *UnionPermContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *UnionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitUnionPerm(s)
+		listenerT.ExitUnion(s)
 	}
 }
 
-func (s *UnionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *UnionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitUnionPerm(s)
+		return t.VisitUnion(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *AzmParser) UnionPerm() (localctx IUnionPermContext) {
-	localctx = NewUnionPermContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 4, AzmParserRULE_unionPerm)
+func (p *AzmParser) Union() (localctx IUnionContext) {
+	localctx = NewUnionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 4, AzmParserRULE_union)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
@@ -696,8 +802,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IIntersectionPermContext is an interface to support dynamic dispatch.
-type IIntersectionPermContext interface {
+// IIntersectionContext is an interface to support dynamic dispatch.
+type IIntersectionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -707,43 +813,43 @@ type IIntersectionPermContext interface {
 	AllPerm() []IPermContext
 	Perm(i int) IPermContext
 
-	// IsIntersectionPermContext differentiates from other interfaces.
-	IsIntersectionPermContext()
+	// IsIntersectionContext differentiates from other interfaces.
+	IsIntersectionContext()
 }
 
-type IntersectionPermContext struct {
+type IntersectionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyIntersectionPermContext() *IntersectionPermContext {
-	var p = new(IntersectionPermContext)
+func NewEmptyIntersectionContext() *IntersectionContext {
+	var p = new(IntersectionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_intersectionPerm
+	p.RuleIndex = AzmParserRULE_intersection
 	return p
 }
 
-func InitEmptyIntersectionPermContext(p *IntersectionPermContext) {
+func InitEmptyIntersectionContext(p *IntersectionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_intersectionPerm
+	p.RuleIndex = AzmParserRULE_intersection
 }
 
-func (*IntersectionPermContext) IsIntersectionPermContext() {}
+func (*IntersectionContext) IsIntersectionContext() {}
 
-func NewIntersectionPermContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *IntersectionPermContext {
-	var p = new(IntersectionPermContext)
+func NewIntersectionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *IntersectionContext {
+	var p = new(IntersectionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_intersectionPerm
+	p.RuleIndex = AzmParserRULE_intersection
 
 	return p
 }
 
-func (s *IntersectionPermContext) GetParser() antlr.Parser { return s.parser }
+func (s *IntersectionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *IntersectionPermContext) AllPerm() []IPermContext {
+func (s *IntersectionContext) AllPerm() []IPermContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -764,7 +870,7 @@ func (s *IntersectionPermContext) AllPerm() []IPermContext {
 	return tst
 }
 
-func (s *IntersectionPermContext) Perm(i int) IPermContext {
+func (s *IntersectionContext) Perm(i int) IPermContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -784,39 +890,39 @@ func (s *IntersectionPermContext) Perm(i int) IPermContext {
 	return t.(IPermContext)
 }
 
-func (s *IntersectionPermContext) GetRuleContext() antlr.RuleContext {
+func (s *IntersectionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *IntersectionPermContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *IntersectionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *IntersectionPermContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *IntersectionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterIntersectionPerm(s)
+		listenerT.EnterIntersection(s)
 	}
 }
 
-func (s *IntersectionPermContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *IntersectionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitIntersectionPerm(s)
+		listenerT.ExitIntersection(s)
 	}
 }
 
-func (s *IntersectionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *IntersectionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitIntersectionPerm(s)
+		return t.VisitIntersection(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *AzmParser) IntersectionPerm() (localctx IIntersectionPermContext) {
-	localctx = NewIntersectionPermContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 6, AzmParserRULE_intersectionPerm)
+func (p *AzmParser) Intersection() (localctx IIntersectionContext) {
+	localctx = NewIntersectionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 6, AzmParserRULE_intersection)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
@@ -866,8 +972,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IExclusionPermContext is an interface to support dynamic dispatch.
-type IExclusionPermContext interface {
+// IExclusionContext is an interface to support dynamic dispatch.
+type IExclusionContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -877,43 +983,43 @@ type IExclusionPermContext interface {
 	AllPerm() []IPermContext
 	Perm(i int) IPermContext
 
-	// IsExclusionPermContext differentiates from other interfaces.
-	IsExclusionPermContext()
+	// IsExclusionContext differentiates from other interfaces.
+	IsExclusionContext()
 }
 
-type ExclusionPermContext struct {
+type ExclusionContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyExclusionPermContext() *ExclusionPermContext {
-	var p = new(ExclusionPermContext)
+func NewEmptyExclusionContext() *ExclusionContext {
+	var p = new(ExclusionContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_exclusionPerm
+	p.RuleIndex = AzmParserRULE_exclusion
 	return p
 }
 
-func InitEmptyExclusionPermContext(p *ExclusionPermContext) {
+func InitEmptyExclusionContext(p *ExclusionContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_exclusionPerm
+	p.RuleIndex = AzmParserRULE_exclusion
 }
 
-func (*ExclusionPermContext) IsExclusionPermContext() {}
+func (*ExclusionContext) IsExclusionContext() {}
 
-func NewExclusionPermContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ExclusionPermContext {
-	var p = new(ExclusionPermContext)
+func NewExclusionContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ExclusionContext {
+	var p = new(ExclusionContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_exclusionPerm
+	p.RuleIndex = AzmParserRULE_exclusion
 
 	return p
 }
 
-func (s *ExclusionPermContext) GetParser() antlr.Parser { return s.parser }
+func (s *ExclusionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ExclusionPermContext) AllPerm() []IPermContext {
+func (s *ExclusionContext) AllPerm() []IPermContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -934,7 +1040,7 @@ func (s *ExclusionPermContext) AllPerm() []IPermContext {
 	return tst
 }
 
-func (s *ExclusionPermContext) Perm(i int) IPermContext {
+func (s *ExclusionContext) Perm(i int) IPermContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -954,39 +1060,39 @@ func (s *ExclusionPermContext) Perm(i int) IPermContext {
 	return t.(IPermContext)
 }
 
-func (s *ExclusionPermContext) GetRuleContext() antlr.RuleContext {
+func (s *ExclusionContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *ExclusionPermContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *ExclusionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *ExclusionPermContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *ExclusionContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterExclusionPerm(s)
+		listenerT.EnterExclusion(s)
 	}
 }
 
-func (s *ExclusionPermContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *ExclusionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitExclusionPerm(s)
+		listenerT.ExitExclusion(s)
 	}
 }
 
-func (s *ExclusionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *ExclusionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitExclusionPerm(s)
+		return t.VisitExclusion(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *AzmParser) ExclusionPerm() (localctx IExclusionPermContext) {
-	localctx = NewExclusionPermContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 8, AzmParserRULE_exclusionPerm)
+func (p *AzmParser) Exclusion() (localctx IExclusionContext) {
+	localctx = NewExclusionContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 8, AzmParserRULE_exclusion)
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(59)
