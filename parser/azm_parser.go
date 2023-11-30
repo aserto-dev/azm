@@ -39,43 +39,43 @@ func azmParserInit() {
 	}
 	staticData.RuleNames = []string{
 		"relation", "permission", "union", "intersection", "exclusion", "rel",
-		"perm", "single", "subject", "wildcard", "arrow",
+		"perm", "direct", "subject", "wildcard", "arrow",
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 9, 88, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
+		4, 1, 9, 87, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
 		2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7, 10,
 		1, 0, 1, 0, 1, 0, 5, 0, 26, 8, 0, 10, 0, 12, 0, 29, 9, 0, 1, 0, 1, 0, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 42, 8, 1, 1, 2,
 		1, 2, 1, 2, 5, 2, 47, 8, 2, 10, 2, 12, 2, 50, 9, 2, 1, 3, 1, 3, 1, 3, 5,
 		3, 55, 8, 3, 10, 3, 12, 3, 58, 9, 3, 1, 4, 1, 4, 1, 4, 1, 4, 1, 5, 1, 5,
-		1, 5, 1, 5, 3, 5, 68, 8, 5, 1, 6, 1, 6, 3, 6, 72, 8, 6, 1, 7, 1, 7, 1,
-		8, 1, 8, 1, 8, 1, 8, 1, 9, 1, 9, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10, 1, 10,
-		1, 10, 0, 0, 11, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 0, 0, 85, 0, 22,
-		1, 0, 0, 0, 2, 41, 1, 0, 0, 0, 4, 43, 1, 0, 0, 0, 6, 51, 1, 0, 0, 0, 8,
-		59, 1, 0, 0, 0, 10, 67, 1, 0, 0, 0, 12, 71, 1, 0, 0, 0, 14, 73, 1, 0, 0,
-		0, 16, 75, 1, 0, 0, 0, 18, 79, 1, 0, 0, 0, 20, 83, 1, 0, 0, 0, 22, 27,
-		3, 10, 5, 0, 23, 24, 5, 1, 0, 0, 24, 26, 3, 10, 5, 0, 25, 23, 1, 0, 0,
-		0, 26, 29, 1, 0, 0, 0, 27, 25, 1, 0, 0, 0, 27, 28, 1, 0, 0, 0, 28, 30,
-		1, 0, 0, 0, 29, 27, 1, 0, 0, 0, 30, 31, 5, 0, 0, 1, 31, 1, 1, 0, 0, 0,
-		32, 33, 3, 4, 2, 0, 33, 34, 5, 0, 0, 1, 34, 42, 1, 0, 0, 0, 35, 36, 3,
-		6, 3, 0, 36, 37, 5, 0, 0, 1, 37, 42, 1, 0, 0, 0, 38, 39, 3, 8, 4, 0, 39,
-		40, 5, 0, 0, 1, 40, 42, 1, 0, 0, 0, 41, 32, 1, 0, 0, 0, 41, 35, 1, 0, 0,
-		0, 41, 38, 1, 0, 0, 0, 42, 3, 1, 0, 0, 0, 43, 48, 3, 12, 6, 0, 44, 45,
-		5, 1, 0, 0, 45, 47, 3, 12, 6, 0, 46, 44, 1, 0, 0, 0, 47, 50, 1, 0, 0, 0,
-		48, 46, 1, 0, 0, 0, 48, 49, 1, 0, 0, 0, 49, 5, 1, 0, 0, 0, 50, 48, 1, 0,
-		0, 0, 51, 56, 3, 12, 6, 0, 52, 53, 5, 2, 0, 0, 53, 55, 3, 12, 6, 0, 54,
-		52, 1, 0, 0, 0, 55, 58, 1, 0, 0, 0, 56, 54, 1, 0, 0, 0, 56, 57, 1, 0, 0,
-		0, 57, 7, 1, 0, 0, 0, 58, 56, 1, 0, 0, 0, 59, 60, 3, 12, 6, 0, 60, 61,
-		5, 3, 0, 0, 61, 62, 3, 12, 6, 0, 62, 9, 1, 0, 0, 0, 63, 68, 3, 14, 7, 0,
-		64, 68, 3, 18, 9, 0, 65, 68, 3, 16, 8, 0, 66, 68, 3, 20, 10, 0, 67, 63,
-		1, 0, 0, 0, 67, 64, 1, 0, 0, 0, 67, 65, 1, 0, 0, 0, 67, 66, 1, 0, 0, 0,
-		68, 11, 1, 0, 0, 0, 69, 72, 3, 14, 7, 0, 70, 72, 3, 20, 10, 0, 71, 69,
-		1, 0, 0, 0, 71, 70, 1, 0, 0, 0, 72, 13, 1, 0, 0, 0, 73, 74, 5, 8, 0, 0,
-		74, 15, 1, 0, 0, 0, 75, 76, 5, 8, 0, 0, 76, 77, 5, 5, 0, 0, 77, 78, 5,
-		8, 0, 0, 78, 17, 1, 0, 0, 0, 79, 80, 5, 8, 0, 0, 80, 81, 5, 6, 0, 0, 81,
-		82, 5, 7, 0, 0, 82, 19, 1, 0, 0, 0, 83, 84, 5, 8, 0, 0, 84, 85, 5, 4, 0,
-		0, 85, 86, 5, 8, 0, 0, 86, 21, 1, 0, 0, 0, 6, 27, 41, 48, 56, 67, 71,
+		1, 5, 3, 5, 67, 8, 5, 1, 6, 1, 6, 3, 6, 71, 8, 6, 1, 7, 1, 7, 1, 8, 1,
+		8, 1, 8, 1, 8, 1, 9, 1, 9, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10,
+		0, 0, 11, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 0, 0, 83, 0, 22, 1, 0,
+		0, 0, 2, 41, 1, 0, 0, 0, 4, 43, 1, 0, 0, 0, 6, 51, 1, 0, 0, 0, 8, 59, 1,
+		0, 0, 0, 10, 66, 1, 0, 0, 0, 12, 70, 1, 0, 0, 0, 14, 72, 1, 0, 0, 0, 16,
+		74, 1, 0, 0, 0, 18, 78, 1, 0, 0, 0, 20, 82, 1, 0, 0, 0, 22, 27, 3, 10,
+		5, 0, 23, 24, 5, 1, 0, 0, 24, 26, 3, 10, 5, 0, 25, 23, 1, 0, 0, 0, 26,
+		29, 1, 0, 0, 0, 27, 25, 1, 0, 0, 0, 27, 28, 1, 0, 0, 0, 28, 30, 1, 0, 0,
+		0, 29, 27, 1, 0, 0, 0, 30, 31, 5, 0, 0, 1, 31, 1, 1, 0, 0, 0, 32, 33, 3,
+		4, 2, 0, 33, 34, 5, 0, 0, 1, 34, 42, 1, 0, 0, 0, 35, 36, 3, 6, 3, 0, 36,
+		37, 5, 0, 0, 1, 37, 42, 1, 0, 0, 0, 38, 39, 3, 8, 4, 0, 39, 40, 5, 0, 0,
+		1, 40, 42, 1, 0, 0, 0, 41, 32, 1, 0, 0, 0, 41, 35, 1, 0, 0, 0, 41, 38,
+		1, 0, 0, 0, 42, 3, 1, 0, 0, 0, 43, 48, 3, 12, 6, 0, 44, 45, 5, 1, 0, 0,
+		45, 47, 3, 12, 6, 0, 46, 44, 1, 0, 0, 0, 47, 50, 1, 0, 0, 0, 48, 46, 1,
+		0, 0, 0, 48, 49, 1, 0, 0, 0, 49, 5, 1, 0, 0, 0, 50, 48, 1, 0, 0, 0, 51,
+		56, 3, 12, 6, 0, 52, 53, 5, 2, 0, 0, 53, 55, 3, 12, 6, 0, 54, 52, 1, 0,
+		0, 0, 55, 58, 1, 0, 0, 0, 56, 54, 1, 0, 0, 0, 56, 57, 1, 0, 0, 0, 57, 7,
+		1, 0, 0, 0, 58, 56, 1, 0, 0, 0, 59, 60, 3, 12, 6, 0, 60, 61, 5, 3, 0, 0,
+		61, 62, 3, 12, 6, 0, 62, 9, 1, 0, 0, 0, 63, 67, 3, 14, 7, 0, 64, 67, 3,
+		18, 9, 0, 65, 67, 3, 16, 8, 0, 66, 63, 1, 0, 0, 0, 66, 64, 1, 0, 0, 0,
+		66, 65, 1, 0, 0, 0, 67, 11, 1, 0, 0, 0, 68, 71, 3, 14, 7, 0, 69, 71, 3,
+		20, 10, 0, 70, 68, 1, 0, 0, 0, 70, 69, 1, 0, 0, 0, 71, 13, 1, 0, 0, 0,
+		72, 73, 5, 8, 0, 0, 73, 15, 1, 0, 0, 0, 74, 75, 5, 8, 0, 0, 75, 76, 5,
+		5, 0, 0, 76, 77, 5, 8, 0, 0, 77, 17, 1, 0, 0, 0, 78, 79, 5, 8, 0, 0, 79,
+		80, 5, 6, 0, 0, 80, 81, 5, 7, 0, 0, 81, 19, 1, 0, 0, 0, 82, 83, 5, 8, 0,
+		0, 83, 84, 5, 4, 0, 0, 84, 85, 5, 8, 0, 0, 85, 21, 1, 0, 0, 0, 6, 27, 41,
+		48, 56, 66, 70,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -134,7 +134,7 @@ const (
 	AzmParserRULE_exclusion    = 4
 	AzmParserRULE_rel          = 5
 	AzmParserRULE_perm         = 6
-	AzmParserRULE_single       = 7
+	AzmParserRULE_direct       = 7
 	AzmParserRULE_subject      = 8
 	AzmParserRULE_wildcard     = 9
 	AzmParserRULE_arrow        = 10
@@ -1094,12 +1094,12 @@ func (s *RelContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) st
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-type SingleRelContext struct {
+type DirectRelContext struct {
 	RelContext
 }
 
-func NewSingleRelContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *SingleRelContext {
-	var p = new(SingleRelContext)
+func NewDirectRelContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *DirectRelContext {
+	var p = new(DirectRelContext)
 
 	InitEmptyRelContext(&p.RelContext)
 	p.parser = parser
@@ -1108,14 +1108,14 @@ func NewSingleRelContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *Sing
 	return p
 }
 
-func (s *SingleRelContext) GetRuleContext() antlr.RuleContext {
+func (s *DirectRelContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *SingleRelContext) Single() ISingleContext {
+func (s *DirectRelContext) Direct() IDirectContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(ISingleContext); ok {
+		if _, ok := ctx.(IDirectContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -1125,13 +1125,13 @@ func (s *SingleRelContext) Single() ISingleContext {
 		return nil
 	}
 
-	return t.(ISingleContext)
+	return t.(IDirectContext)
 }
 
-func (s *SingleRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *DirectRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitSingleRel(s)
+		return t.VisitDirectRel(s)
 
 	default:
 		return t.VisitChildren(s)
@@ -1176,50 +1176,6 @@ func (s *SubjectRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
 		return t.VisitSubjectRel(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
-type ArrowRelContext struct {
-	RelContext
-}
-
-func NewArrowRelContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *ArrowRelContext {
-	var p = new(ArrowRelContext)
-
-	InitEmptyRelContext(&p.RelContext)
-	p.parser = parser
-	p.CopyAll(ctx.(*RelContext))
-
-	return p
-}
-
-func (s *ArrowRelContext) GetRuleContext() antlr.RuleContext {
-	return s
-}
-
-func (s *ArrowRelContext) Arrow() IArrowContext {
-	var t antlr.RuleContext
-	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IArrowContext); ok {
-			t = ctx.(antlr.RuleContext)
-			break
-		}
-	}
-
-	if t == nil {
-		return nil
-	}
-
-	return t.(IArrowContext)
-}
-
-func (s *ArrowRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case AzmVisitor:
-		return t.VisitArrowRel(s)
 
 	default:
 		return t.VisitChildren(s)
@@ -1273,7 +1229,7 @@ func (s *WildcardRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} 
 func (p *AzmParser) Rel() (localctx IRelContext) {
 	localctx = NewRelContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 10, AzmParserRULE_rel)
-	p.SetState(67)
+	p.SetState(66)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -1281,11 +1237,11 @@ func (p *AzmParser) Rel() (localctx IRelContext) {
 
 	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 4, p.GetParserRuleContext()) {
 	case 1:
-		localctx = NewSingleRelContext(p, localctx)
+		localctx = NewDirectRelContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
 			p.SetState(63)
-			p.Single()
+			p.Direct()
 		}
 
 	case 2:
@@ -1302,14 +1258,6 @@ func (p *AzmParser) Rel() (localctx IRelContext) {
 		{
 			p.SetState(65)
 			p.Subject()
-		}
-
-	case 4:
-		localctx = NewArrowRelContext(p, localctx)
-		p.EnterOuterAlt(localctx, 4)
-		{
-			p.SetState(66)
-			p.Arrow()
 		}
 
 	case antlr.ATNInvalidAltNumber:
@@ -1427,12 +1375,12 @@ func (s *ArrowPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	}
 }
 
-type SinglePermContext struct {
+type DirectPermContext struct {
 	PermContext
 }
 
-func NewSinglePermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *SinglePermContext {
-	var p = new(SinglePermContext)
+func NewDirectPermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *DirectPermContext {
+	var p = new(DirectPermContext)
 
 	InitEmptyPermContext(&p.PermContext)
 	p.parser = parser
@@ -1441,14 +1389,14 @@ func NewSinglePermContext(parser antlr.Parser, ctx antlr.ParserRuleContext) *Sin
 	return p
 }
 
-func (s *SinglePermContext) GetRuleContext() antlr.RuleContext {
+func (s *DirectPermContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *SinglePermContext) Single() ISingleContext {
+func (s *DirectPermContext) Direct() IDirectContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(ISingleContext); ok {
+		if _, ok := ctx.(IDirectContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -1458,13 +1406,13 @@ func (s *SinglePermContext) Single() ISingleContext {
 		return nil
 	}
 
-	return t.(ISingleContext)
+	return t.(IDirectContext)
 }
 
-func (s *SinglePermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *DirectPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitSinglePerm(s)
+		return t.VisitDirectPerm(s)
 
 	default:
 		return t.VisitChildren(s)
@@ -1474,7 +1422,7 @@ func (s *SinglePermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 func (p *AzmParser) Perm() (localctx IPermContext) {
 	localctx = NewPermContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 12, AzmParserRULE_perm)
-	p.SetState(71)
+	p.SetState(70)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -1482,18 +1430,18 @@ func (p *AzmParser) Perm() (localctx IPermContext) {
 
 	switch p.GetInterpreter().AdaptivePredict(p.BaseParser, p.GetTokenStream(), 5, p.GetParserRuleContext()) {
 	case 1:
-		localctx = NewSinglePermContext(p, localctx)
+		localctx = NewDirectPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(69)
-			p.Single()
+			p.SetState(68)
+			p.Direct()
 		}
 
 	case 2:
 		localctx = NewArrowPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(70)
+			p.SetState(69)
 			p.Arrow()
 		}
 
@@ -1514,8 +1462,8 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// ISingleContext is an interface to support dynamic dispatch.
-type ISingleContext interface {
+// IDirectContext is an interface to support dynamic dispatch.
+type IDirectContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
@@ -1524,70 +1472,70 @@ type ISingleContext interface {
 	// Getter signatures
 	ID() antlr.TerminalNode
 
-	// IsSingleContext differentiates from other interfaces.
-	IsSingleContext()
+	// IsDirectContext differentiates from other interfaces.
+	IsDirectContext()
 }
 
-type SingleContext struct {
+type DirectContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptySingleContext() *SingleContext {
-	var p = new(SingleContext)
+func NewEmptyDirectContext() *DirectContext {
+	var p = new(DirectContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_single
+	p.RuleIndex = AzmParserRULE_direct
 	return p
 }
 
-func InitEmptySingleContext(p *SingleContext) {
+func InitEmptyDirectContext(p *DirectContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = AzmParserRULE_single
+	p.RuleIndex = AzmParserRULE_direct
 }
 
-func (*SingleContext) IsSingleContext() {}
+func (*DirectContext) IsDirectContext() {}
 
-func NewSingleContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *SingleContext {
-	var p = new(SingleContext)
+func NewDirectContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *DirectContext {
+	var p = new(DirectContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = AzmParserRULE_single
+	p.RuleIndex = AzmParserRULE_direct
 
 	return p
 }
 
-func (s *SingleContext) GetParser() antlr.Parser { return s.parser }
+func (s *DirectContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *SingleContext) ID() antlr.TerminalNode {
+func (s *DirectContext) ID() antlr.TerminalNode {
 	return s.GetToken(AzmParserID, 0)
 }
 
-func (s *SingleContext) GetRuleContext() antlr.RuleContext {
+func (s *DirectContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *SingleContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *DirectContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *SingleContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
+func (s *DirectContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
-		return t.VisitSingle(s)
+		return t.VisitDirect(s)
 
 	default:
 		return t.VisitChildren(s)
 	}
 }
 
-func (p *AzmParser) Single() (localctx ISingleContext) {
-	localctx = NewSingleContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 14, AzmParserRULE_single)
+func (p *AzmParser) Direct() (localctx IDirectContext) {
+	localctx = NewDirectContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 14, AzmParserRULE_direct)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(73)
+		p.SetState(72)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1691,7 +1639,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 	p.EnterRule(localctx, 16, AzmParserRULE_subject)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(75)
+		p.SetState(74)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1699,7 +1647,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 		}
 	}
 	{
-		p.SetState(76)
+		p.SetState(75)
 		p.Match(AzmParserHASH)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1707,7 +1655,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 		}
 	}
 	{
-		p.SetState(77)
+		p.SetState(76)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1811,7 +1759,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 	p.EnterRule(localctx, 18, AzmParserRULE_wildcard)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(79)
+		p.SetState(78)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1819,7 +1767,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 		}
 	}
 	{
-		p.SetState(80)
+		p.SetState(79)
 		p.Match(AzmParserCOLON)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1827,7 +1775,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 		}
 	}
 	{
-		p.SetState(81)
+		p.SetState(80)
 		p.Match(AzmParserASTERISK)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1931,7 +1879,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 	p.EnterRule(localctx, 20, AzmParserRULE_arrow)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(83)
+		p.SetState(82)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1939,7 +1887,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 		}
 	}
 	{
-		p.SetState(84)
+		p.SetState(83)
 		p.Match(AzmParserARROW)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1947,7 +1895,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 		}
 	}
 	{
-		p.SetState(85)
+		p.SetState(84)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule

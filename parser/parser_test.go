@@ -22,7 +22,6 @@ func TestRelationParser(t *testing.T) {
 				assert.Equal(model.ObjectName("user"), term.Direct)
 				assert.Nil(term.Subject)
 				assert.Empty(term.Wildcard)
-				assert.Nil(term.Arrow)
 			},
 		},
 		{
@@ -34,7 +33,6 @@ func TestRelationParser(t *testing.T) {
 				assert.Equal(model.RelationName("member"), term.Subject.Relation)
 				assert.Empty(term.Direct)
 				assert.Empty(term.Wildcard)
-				assert.Nil(term.Arrow)
 			},
 		},
 		{
@@ -45,19 +43,6 @@ func TestRelationParser(t *testing.T) {
 				assert.Equal(model.ObjectName("user"), term.Wildcard)
 				assert.Nil(term.Subject)
 				assert.Empty(term.Direct)
-				assert.Nil(term.Arrow)
-			},
-		},
-		{
-			"parent->can_read",
-			func(rel []*model.Relation, assert *assert.Assertions) {
-				assert.Len(rel, 1)
-				term := rel[0]
-				assert.Equal(model.RelationName("parent"), term.Arrow.Base)
-				assert.Equal("can_read", term.Arrow.Relation)
-				assert.Nil(term.Subject)
-				assert.Empty(term.Direct)
-				assert.Empty(term.Wildcard)
 			},
 		},
 		{
@@ -97,7 +82,7 @@ func TestPermissionParser(t *testing.T) {
 		{
 			"can_write",
 			func(perm *model.Permission, assert *assert.Assertions) {
-				assert.Equal("can_write", perm.Union[0].Relation)
+				assert.Equal("can_write", perm.Union[0].RelOrPerm)
 				assert.Empty(perm.Union[0].Base)
 				assert.Empty(perm.Intersection)
 				assert.Nil(perm.Exclusion)
@@ -107,38 +92,38 @@ func TestPermissionParser(t *testing.T) {
 			"can_write | parent->can_read",
 			func(perm *model.Permission, assert *assert.Assertions) {
 				assert.Len(perm.Union, 2)
-				assert.Equal("can_write", perm.Union[0].Relation)
+				assert.Equal("can_write", perm.Union[0].RelOrPerm)
 				assert.Empty(perm.Union[0].Base)
 				assert.Equal(model.RelationName("parent"), perm.Union[1].Base)
-				assert.Equal("can_read", perm.Union[1].Relation)
+				assert.Equal("can_read", perm.Union[1].RelOrPerm)
 			},
 		},
 		{
 			"can_write & can_read",
 			func(perm *model.Permission, assert *assert.Assertions) {
 				assert.Len(perm.Intersection, 2)
-				assert.Equal("can_write", perm.Intersection[0].Relation)
+				assert.Equal("can_write", perm.Intersection[0].RelOrPerm)
 				assert.Empty(perm.Intersection[0].Base)
-				assert.Equal("can_read", perm.Intersection[1].Relation)
+				assert.Equal("can_read", perm.Intersection[1].RelOrPerm)
 				assert.Empty(perm.Intersection[1].Base)
 			},
 		},
 		{
 			"can_write - can_read",
 			func(perm *model.Permission, assert *assert.Assertions) {
-				assert.Equal("can_write", perm.Exclusion.Base.Relation)
-				assert.Empty(perm.Exclusion.Base.Base)
-				assert.Equal("can_read", perm.Exclusion.Subtract.Relation)
-				assert.Empty(perm.Exclusion.Subtract.Base)
+				assert.Equal("can_write", perm.Exclusion.Include.RelOrPerm)
+				assert.Empty(perm.Exclusion.Include.Base)
+				assert.Equal("can_read", perm.Exclusion.Exclude.RelOrPerm)
+				assert.Empty(perm.Exclusion.Exclude.Base)
 			},
 		},
 		{
 			"parent->can_read - parent->can_write",
 			func(perm *model.Permission, assert *assert.Assertions) {
-				assert.Equal(model.RelationName("parent"), perm.Exclusion.Base.Base)
-				assert.Equal("can_read", perm.Exclusion.Base.Relation)
-				assert.Equal(model.RelationName("parent"), perm.Exclusion.Subtract.Base)
-				assert.Equal("can_write", perm.Exclusion.Subtract.Relation)
+				assert.Equal(model.RelationName("parent"), perm.Exclusion.Include.Base)
+				assert.Equal("can_read", perm.Exclusion.Include.RelOrPerm)
+				assert.Equal(model.RelationName("parent"), perm.Exclusion.Exclude.Base)
+				assert.Equal("can_write", perm.Exclusion.Exclude.RelOrPerm)
 			},
 		},
 	}

@@ -38,16 +38,16 @@ func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) in
 func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interface{} {
 	return &model.Permission{
 		Exclusion: &model.ExclusionPermission{
-			Base:     c.Exclusion().Perm(0).Accept(v).(*model.RelationRef),
-			Subtract: c.Exclusion().Perm(1).Accept(v).(*model.RelationRef),
+			Include: c.Exclusion().Perm(0).Accept(v).(*model.RelationRef),
+			Exclude: c.Exclusion().Perm(1).Accept(v).(*model.RelationRef),
 		},
 	}
 }
 
-func (v *PermissionVisitor) VisitSinglePerm(c *SinglePermContext) interface{} {
-	return &model.RelationRef{Relation: c.Single().ID().GetText()}
+func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
+	return &model.RelationRef{RelOrPerm: c.Direct().ID().GetText()}
 }
 
 func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
-	return &model.RelationRef{Base: model.RelationName(c.Arrow().ID(0).GetText()), Relation: c.Arrow().ID(1).GetText()}
+	return &model.RelationRef{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: c.Arrow().ID(1).GetText()}
 }

@@ -89,8 +89,8 @@ func Load(r io.Reader) (*model.Model, error) {
 
 			case *ExclusionOperator:
 				p.Exclusion = &model.ExclusionPermission{
-					Base:     x.Base,
-					Subtract: x.Subtract,
+					Include: x.Base,
+					Exclude: x.Subtract,
 				}
 
 			case *ArrowOperator:

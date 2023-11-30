@@ -70,18 +70,21 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 }
 
 // convert union []string to []model.RelationName.
-func (c *Cache) expandUnion(o *model.Object, u ...string) []model.RelationName {
+func (c *Cache) expandUnion(o *model.Object, u ...*model.RelationRef) []model.RelationName {
 	result := []model.RelationName{}
-	for _, v := range u {
-		rn := model.RelationName(v)
+	for _, ref := range u {
+		if ref.Base != "" {
+			panic("expandUnion: arrow permissions not supported yet")
+		}
+		rn := model.RelationName(ref.RelOrPerm)
 		result = append(result, rn)
 
-		exp := lo.FilterMap(o.Relations[rn], func(r *model.Relation, _ int) (string, bool) {
+		exp := lo.FilterMap(o.Relations[rn], func(r *model.Relation, _ int) (*model.RelationRef, bool) {
 			if r.Direct == "" {
-				return "", false
+				return &model.RelationRef{}, false
 			}
 			_, ok := o.Relations[model.RelationName(r.Direct)]
-			return string(r.Direct), ok
+			return &model.RelationRef{RelOrPerm: string(r.Direct)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

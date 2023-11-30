@@ -35,7 +35,7 @@ func (v *BaseAzmVisitor) VisitExclusion(ctx *ExclusionContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitSingleRel(ctx *SingleRelContext) interface{} {
+func (v *BaseAzmVisitor) VisitDirectRel(ctx *DirectRelContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -47,11 +47,7 @@ func (v *BaseAzmVisitor) VisitSubjectRel(ctx *SubjectRelContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitArrowRel(ctx *ArrowRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitSinglePerm(ctx *SinglePermContext) interface{} {
+func (v *BaseAzmVisitor) VisitDirectPerm(ctx *DirectPermContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -59,7 +55,7 @@ func (v *BaseAzmVisitor) VisitArrowPerm(ctx *ArrowPermContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitSingle(ctx *SingleContext) interface{} {
+func (v *BaseAzmVisitor) VisitDirect(ctx *DirectContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

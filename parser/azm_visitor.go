@@ -28,8 +28,8 @@ type AzmVisitor interface {
 	// Visit a parse tree produced by AzmParser#exclusion.
 	VisitExclusion(ctx *ExclusionContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#SingleRel.
-	VisitSingleRel(ctx *SingleRelContext) interface{}
+	// Visit a parse tree produced by AzmParser#DirectRel.
+	VisitDirectRel(ctx *DirectRelContext) interface{}
 
 	// Visit a parse tree produced by AzmParser#WildcardRel.
 	VisitWildcardRel(ctx *WildcardRelContext) interface{}
@@ -37,17 +37,14 @@ type AzmVisitor interface {
 	// Visit a parse tree produced by AzmParser#SubjectRel.
 	VisitSubjectRel(ctx *SubjectRelContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#ArrowRel.
-	VisitArrowRel(ctx *ArrowRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#SinglePerm.
-	VisitSinglePerm(ctx *SinglePermContext) interface{}
+	// Visit a parse tree produced by AzmParser#DirectPerm.
+	VisitDirectPerm(ctx *DirectPermContext) interface{}
 
 	// Visit a parse tree produced by AzmParser#ArrowPerm.
 	VisitArrowPerm(ctx *ArrowPermContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#single.
-	VisitSingle(ctx *SingleContext) interface{}
+	// Visit a parse tree produced by AzmParser#direct.
+	VisitDirect(ctx *DirectContext) interface{}
 
 	// Visit a parse tree produced by AzmParser#subject.
 	VisitSubject(ctx *SubjectContext) interface{}

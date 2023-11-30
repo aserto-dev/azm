@@ -25,8 +25,8 @@ func (v *RelationVisitor) VisitRelation(c *RelationContext) interface{} {
 	})
 }
 
-func (v *RelationVisitor) VisitSingleRel(c *SingleRelContext) interface{} {
-	return &model.Relation{Direct: model.ObjectName(c.Single().ID().GetText())}
+func (v *RelationVisitor) VisitDirectRel(c *DirectRelContext) interface{} {
+	return &model.Relation{Direct: model.ObjectName(c.Direct().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitWildcardRel(c *WildcardRelContext) interface{} {
@@ -37,12 +37,5 @@ func (v *RelationVisitor) VisitSubjectRel(c *SubjectRelContext) interface{} {
 	return &model.Relation{Subject: &model.SubjectRelation{
 		Object:   model.ObjectName(c.Subject().ID(0).GetText()),
 		Relation: model.RelationName(c.Subject().ID(1).GetText()),
-	}}
-}
-
-func (v *RelationVisitor) VisitArrowRel(c *ArrowRelContext) interface{} {
-	return &model.Relation{Arrow: &model.RelationRef{
-		Base:     model.RelationName(c.Arrow().ID(0).GetText()),
-		Relation: c.Arrow().ID(1).GetText(),
 	}}
 }

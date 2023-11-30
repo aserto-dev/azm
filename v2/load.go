@@ -71,11 +71,11 @@ func Load(r io.Reader) (*model.Model, error) {
 				// if permission does not exist, create permission definition.
 				if pd, ok := o.Permissions[pn]; !ok {
 					p := &model.Permission{
-						Union: []string{relName},
+						Union: []*model.RelationRef{{RelOrPerm: relName}},
 					}
 					o.Permissions[pn] = p
 				} else {
-					pd.Union = append(pd.Union, relName)
+					pd.Union = append(pd.Union, &model.RelationRef{RelOrPerm: relName})
 					o.Permissions[pn] = pd
 				}
 			}
