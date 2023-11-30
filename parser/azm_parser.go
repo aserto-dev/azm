@@ -241,18 +241,6 @@ func (s *RelationContext) ToStringTree(ruleNames []string, recog antlr.Recognize
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *RelationContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterRelation(s)
-	}
-}
-
-func (s *RelationContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitRelation(s)
-	}
-}
-
 func (s *RelationContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -415,18 +403,6 @@ func (s *ExclusionPermContext) EOF() antlr.TerminalNode {
 	return s.GetToken(AzmParserEOF, 0)
 }
 
-func (s *ExclusionPermContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterExclusionPerm(s)
-	}
-}
-
-func (s *ExclusionPermContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitExclusionPerm(s)
-	}
-}
-
 func (s *ExclusionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -475,18 +451,6 @@ func (s *IntersectionPermContext) EOF() antlr.TerminalNode {
 	return s.GetToken(AzmParserEOF, 0)
 }
 
-func (s *IntersectionPermContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterIntersectionPerm(s)
-	}
-}
-
-func (s *IntersectionPermContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitIntersectionPerm(s)
-	}
-}
-
 func (s *IntersectionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -533,18 +497,6 @@ func (s *UnionPermContext) Union() IUnionContext {
 
 func (s *UnionPermContext) EOF() antlr.TerminalNode {
 	return s.GetToken(AzmParserEOF, 0)
-}
-
-func (s *UnionPermContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterUnionPerm(s)
-	}
-}
-
-func (s *UnionPermContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitUnionPerm(s)
-	}
 }
 
 func (s *UnionPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -728,18 +680,6 @@ func (s *UnionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) 
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *UnionContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterUnion(s)
-	}
-}
-
-func (s *UnionContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitUnion(s)
-	}
-}
-
 func (s *UnionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -896,18 +836,6 @@ func (s *IntersectionContext) GetRuleContext() antlr.RuleContext {
 
 func (s *IntersectionContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-func (s *IntersectionContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterIntersection(s)
-	}
-}
-
-func (s *IntersectionContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitIntersection(s)
-	}
 }
 
 func (s *IntersectionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -1068,18 +996,6 @@ func (s *ExclusionContext) ToStringTree(ruleNames []string, recog antlr.Recogniz
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *ExclusionContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterExclusion(s)
-	}
-}
-
-func (s *ExclusionContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitExclusion(s)
-	}
-}
-
 func (s *ExclusionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -1212,18 +1128,6 @@ func (s *SingleRelContext) Single() ISingleContext {
 	return t.(ISingleContext)
 }
 
-func (s *SingleRelContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterSingleRel(s)
-	}
-}
-
-func (s *SingleRelContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitSingleRel(s)
-	}
-}
-
 func (s *SingleRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -1266,18 +1170,6 @@ func (s *SubjectRelContext) Subject() ISubjectContext {
 	}
 
 	return t.(ISubjectContext)
-}
-
-func (s *SubjectRelContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterSubjectRel(s)
-	}
-}
-
-func (s *SubjectRelContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitSubjectRel(s)
-	}
 }
 
 func (s *SubjectRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -1324,18 +1216,6 @@ func (s *ArrowRelContext) Arrow() IArrowContext {
 	return t.(IArrowContext)
 }
 
-func (s *ArrowRelContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterArrowRel(s)
-	}
-}
-
-func (s *ArrowRelContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitArrowRel(s)
-	}
-}
-
 func (s *ArrowRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -1378,18 +1258,6 @@ func (s *WildcardRelContext) Wildcard() IWildcardContext {
 	}
 
 	return t.(IWildcardContext)
-}
-
-func (s *WildcardRelContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterWildcardRel(s)
-	}
-}
-
-func (s *WildcardRelContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitWildcardRel(s)
-	}
 }
 
 func (s *WildcardRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -1549,18 +1417,6 @@ func (s *ArrowPermContext) Arrow() IArrowContext {
 	return t.(IArrowContext)
 }
 
-func (s *ArrowPermContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterArrowPerm(s)
-	}
-}
-
-func (s *ArrowPermContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitArrowPerm(s)
-	}
-}
-
 func (s *ArrowPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -1603,18 +1459,6 @@ func (s *SinglePermContext) Single() ISingleContext {
 	}
 
 	return t.(ISingleContext)
-}
-
-func (s *SinglePermContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterSinglePerm(s)
-	}
-}
-
-func (s *SinglePermContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitSinglePerm(s)
-	}
 }
 
 func (s *SinglePermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -1728,18 +1572,6 @@ func (s *SingleContext) ToStringTree(ruleNames []string, recog antlr.Recognizer)
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *SingleContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterSingle(s)
-	}
-}
-
-func (s *SingleContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitSingle(s)
-	}
-}
-
 func (s *SingleContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -1842,18 +1674,6 @@ func (s *SubjectContext) GetRuleContext() antlr.RuleContext {
 
 func (s *SubjectContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-func (s *SubjectContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterSubject(s)
-	}
-}
-
-func (s *SubjectContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitSubject(s)
-	}
 }
 
 func (s *SubjectContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
@@ -1976,18 +1796,6 @@ func (s *WildcardContext) ToStringTree(ruleNames []string, recog antlr.Recognize
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *WildcardContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterWildcard(s)
-	}
-}
-
-func (s *WildcardContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitWildcard(s)
-	}
-}
-
 func (s *WildcardContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
 	case AzmVisitor:
@@ -2106,18 +1914,6 @@ func (s *ArrowContext) GetRuleContext() antlr.RuleContext {
 
 func (s *ArrowContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
-}
-
-func (s *ArrowContext) EnterRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.EnterArrow(s)
-	}
-}
-
-func (s *ArrowContext) ExitRule(listener antlr.ParseTreeListener) {
-	if listenerT, ok := listener.(AzmListener); ok {
-		listenerT.ExitArrow(s)
-	}
 }
 
 func (s *ArrowContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
