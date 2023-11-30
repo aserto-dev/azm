@@ -11,12 +11,17 @@ import (
 	"github.com/aserto-dev/azm/model/diff"
 )
 
-const ModelVersion int = 1
+const ModelVersion int = 2
 
 type Model struct {
 	Version  int                    `json:"version"`
 	Objects  map[ObjectName]*Object `json:"types"`
 	Metadata *Metadata              `json:"metadata"`
+}
+
+type Metadata struct {
+	UpdatedAt time.Time `json:"updated_at"`
+	ETag      string    `json:"etag"`
 }
 
 type ObjectName Identifier
@@ -48,6 +53,33 @@ type Relation struct {
 	Direct   ObjectName       `json:"direct,omitempty"`
 	Subject  *SubjectRelation `json:"subject,omitempty"`
 	Wildcard ObjectName       `json:"wildcard,omitempty"`
+	Arrow    *RelationRef     `json:"arrow,omitempty"`
+}
+
+type RelationRef struct {
+	Base     RelationName `json:"base,omitempty"`
+	Relation string       `json:"relation"`
+}
+
+type SubjectRelation struct {
+	Object   ObjectName   `json:"object,omitempty"`
+	Relation RelationName `json:"relation,omitempty"`
+}
+
+type Permission struct {
+	Union        []*RelationRef       `json:"union,omitempty"`
+	Intersection []*RelationRef       `json:"intersection,omitempty"`
+	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
+}
+
+type ExclusionPermission struct {
+	Base     *RelationRef `json:"base,omitempty"`
+	Subtract *RelationRef `json:"subtract,omitempty"`
+}
+
+type ArrowPermission struct {
+	Relation   string `json:"relation,omitempty"`
+	Permission string `json:"permission,omitempty"`
 }
 
 type ObjectRelation struct {
@@ -61,33 +93,6 @@ func NewObjectRelation(on ObjectName, rn RelationName) *ObjectRelation {
 
 func (or ObjectRelation) String() string {
 	return fmt.Sprintf("%s:%s", or.Object, or.Relation)
-}
-
-type SubjectRelation struct {
-	Object   ObjectName   `json:"object,omitempty"`
-	Relation RelationName `json:"relation,omitempty"`
-}
-
-type Permission struct {
-	Union        []string             `json:"union,omitempty"`
-	Intersection []string             `json:"intersection,omitempty"`
-	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
-	Arrow        *ArrowPermission     `json:"arrow,omitempty"`
-}
-
-type ExclusionPermission struct {
-	Base     string `json:"base,omitempty"`
-	Subtract string `json:"subtract,omitempty"`
-}
-
-type ArrowPermission struct {
-	Relation   string `json:"relation,omitempty"`
-	Permission string `json:"permission,omitempty"`
-}
-
-type Metadata struct {
-	UpdatedAt time.Time `json:"updated_at"`
-	ETag      string    `json:"etag"`
 }
 
 func New(r io.Reader) (*Model, error) {
