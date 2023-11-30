@@ -11,10 +11,6 @@ func (v *BaseAzmVisitor) VisitRelation(ctx *RelationContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitPermission(ctx *PermissionContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *BaseAzmVisitor) VisitUnionPerm(ctx *UnionPermContext) interface{} {
 	return v.VisitChildren(ctx)
 }
@@ -24,6 +20,18 @@ func (v *BaseAzmVisitor) VisitIntersectionPerm(ctx *IntersectionPermContext) int
 }
 
 func (v *BaseAzmVisitor) VisitExclusionPerm(ctx *ExclusionPermContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitUnion(ctx *UnionContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitIntersection(ctx *IntersectionContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitExclusion(ctx *ExclusionContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

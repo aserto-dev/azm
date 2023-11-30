@@ -10,17 +10,23 @@ type AzmVisitor interface {
 	// Visit a parse tree produced by AzmParser#relation.
 	VisitRelation(ctx *RelationContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#permission.
-	VisitPermission(ctx *PermissionContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#unionPerm.
+	// Visit a parse tree produced by AzmParser#UnionPerm.
 	VisitUnionPerm(ctx *UnionPermContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#intersectionPerm.
+	// Visit a parse tree produced by AzmParser#IntersectionPerm.
 	VisitIntersectionPerm(ctx *IntersectionPermContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#exclusionPerm.
+	// Visit a parse tree produced by AzmParser#ExclusionPerm.
 	VisitExclusionPerm(ctx *ExclusionPermContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#union.
+	VisitUnion(ctx *UnionContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#intersection.
+	VisitIntersection(ctx *IntersectionContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#exclusion.
+	VisitExclusion(ctx *ExclusionContext) interface{}
 
 	// Visit a parse tree produced by AzmParser#SingleRel.
 	VisitSingleRel(ctx *SingleRelContext) interface{}

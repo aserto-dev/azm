@@ -25,9 +25,9 @@ WS
 rule names:
 relation
 permission
-unionPerm
-intersectionPerm
-exclusionPerm
+union
+intersection
+exclusion
 rel
 perm
 single

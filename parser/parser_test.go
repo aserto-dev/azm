@@ -1,7 +1,6 @@
 package parser_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -11,134 +10,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type production int
-
-const (
-	unknown production = iota
-	permission
-	relation
-)
-
-var (
-	errNotPermissionProduction = errors.New("not a permission production")
-	errNotRelationProduction   = errors.New("not a relation production")
-	errProductionAlreadySet    = errors.New("production already set")
-	errProductionNotSet        = errors.New("production not set (unknown)")
-)
-
-// type AzmListener struct {
-//     *parser.BaseAzmListener
-//     production production
-//     relations  []*model.ObjectRelation
-// }
-
-// func NewAzmListener() *AzmListener {
-//     azm := new(AzmListener)
-//     azm.production = unknown
-//     azm.relations = []*model.ObjectRelation{}
-//     return azm
-// }
-
-// func (l *AzmListener) GetPermission() ([]*model.ObjectRelation, error) {
-//     if l.production == permission {
-//         return l.relations, nil
-//     }
-//     return nil, errNotPermissionProduction
-// }
-
-// func (l *AzmListener) GetRelation() ([]*model.ObjectRelation, error) {
-//     if l.production == relation {
-//         return l.relations, nil
-//     }
-//     return nil, errNotRelationProduction
-// }
-
-// func (l *AzmListener) EnterPermission(c *parser.PermissionContext) {
-//     if l.production == unknown {
-//         l.production = permission
-//         return
-//     }
-//     panic(errProductionAlreadySet)
-// }
-
-// func (l *AzmListener) EnterRelation(c *parser.RelationContext) {
-//     if l.production == unknown {
-//         l.production = relation
-//         return
-//     }
-//     panic(errProductionAlreadySet)
-// }
-
-// func (l *AzmListener) ExitUnion(c *parser.UnionContext) {
-//     // relation production
-//     if l.production == relation {
-//         fmt.Println("ExitUnionRel", c.GetText())
-//         return
-//     }
-
-//     // permission production
-//     if l.production == permission {
-//         fmt.Println("ExitUnionRel", c.GetText())
-//         return
-//     }
-// }
-
-// func (l *AzmListener) ExitIntersection(c *parser.IntersectionContext) {
-//     // permission production
-//     if l.production == permission {
-//         fmt.Println("ExitIntersectRel", c.GetText())
-//     }
-// }
-
-// func (l *AzmListener) ExitExclusion(c *parser.ExclusionContext) {
-//     // permission production
-//     if l.production == permission {
-//         fmt.Println("ExitExclusionRel", c.GetText())
-//         return
-//     }
-// }
-
-// func (l *AzmListener) ExitSingleRel(c *parser.SingleRelContext) {
-//     fmt.Println("ExitSingleRel", c.GetText())
-//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-// }
-
-// func (l *AzmListener) ExitWildcardRel(c *parser.WildcardRelContext) {
-//     fmt.Println("ExitWildcardRel", c.GetText())
-//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-// }
-
-// func (l *AzmListener) ExitSubjectRel(c *parser.SubjectRelContext) {
-//     fmt.Println("ExitSubjectRel", c.GetText())
-//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-// }
-
-// func (l *AzmListener) ExitArrowRel(c *parser.ArrowRelContext) {
-//     fmt.Println("ExitArrowRel", c.GetText())
-//     l.relations = append(l.relations, &model.ObjectRelation{Object: "", Relation: ""})
-// }
-
-// func (l *AzmListener) ExitRelation(c *parser.RelationContext) {
-//     fmt.Println("ExitRelation", c.GetText())
-// }
-
-// func (l *AzmListener) ExitPermission(c *parser.PermissionContext) {
-//     fmt.Println("ExitPermission", c.GetText())
-// }
-
 type RelationVisitor struct {
 	parser.BaseAzmVisitor
 }
 
 func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
 	switch t := tree.(type) {
-	case *parser.PermissionContext:
-		panic("RelationVisitor cannot visit permissions")
 	case *parser.RelationContext:
 		return t.Accept(v)
+	default:
+		panic("RelationVisitor can only visit relations")
 	}
-
-	return nil
 }
 
 func (v *RelationVisitor) VisitRelation(c *parser.RelationContext) interface{} {
@@ -162,39 +44,137 @@ func (v *RelationVisitor) VisitSubjectRel(c *parser.SubjectRelContext) interface
 	}}
 }
 
+type PermissionVisitor struct {
+	parser.BaseAzmVisitor
+}
+
+func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
+	switch t := tree.(type) {
+	case *parser.UnionPermContext, *parser.IntersectionPermContext, *parser.ExclusionPermContext:
+		return t.Accept(v)
+	default:
+		panic("PermissionVisitor can only visit permissions")
+	}
+}
+
+func (v *PermissionVisitor) VisitUnionPerm(c *parser.UnionPermContext) interface{} {
+	return &model.Permission{
+		Union: lo.Map(c.Union().AllPerm(), func(perm parser.IPermContext, _ int) string {
+			return perm.Accept(v).(string)
+		}),
+	}
+}
+
+func (v *PermissionVisitor) VisitIntersectionPerm(c *parser.IntersectionPermContext) interface{} {
+	return &model.Permission{
+		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm parser.IPermContext, _ int) string {
+			return perm.Accept(v).(string)
+		}),
+	}
+}
+
+func (v *PermissionVisitor) VisitExclusionPerm(c *parser.ExclusionPermContext) interface{} {
+	return &model.Permission{
+		Exclusion: &model.ExclusionPermission{
+			Base:     c.Exclusion().Perm(0).Accept(v).(string),
+			Subtract: c.Exclusion().Perm(1).Accept(v).(string),
+		},
+	}
+}
+
+func (v *PermissionVisitor) VisitSinglePerm(c *parser.SinglePermContext) interface{} {
+	return c.Single().ID().GetText()
+}
+
+func (v *PermissionVisitor) VisitArrowPerm(c *parser.ArrowPermContext) interface{} {
+	return c.Arrow().GetText()
+}
+
 func TestRelationParser(t *testing.T) {
-	// input := antlr.NewInputStream("user | user:* | group#member | parent->viewer")
-	input := antlr.NewInputStream("user | group | user:* | group#member")
-	// input, _ := antlr.NewFileStream("./parser_test.txt")
-	lexer := parser.NewAzmLexer(input)
-	stream := antlr.NewCommonTokenStream(lexer, 0)
-	p := parser.NewAzmParser(stream)
-	p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+	tests := []struct {
+		input    string
+		validate func([]*model.Relation, *assert.Assertions)
+	}{
+		{
+			"user | group | user:* | group#member",
+			func(rel []*model.Relation, assert *assert.Assertions) {
+				assert.Len(rel, 4)
+				assert.Equal(model.ObjectName("user"), rel[0].Direct)
+				assert.Equal(model.ObjectName("group"), rel[1].Direct)
+				assert.Equal(model.ObjectName("user"), rel[2].Wildcard)
+				assert.Equal(model.ObjectName("group"), rel[3].Subject.Object)
+				assert.Equal(model.RelationName("member"), rel[3].Subject.Relation)
+			},
+		},
+	}
 
-	// listener := NewAzmListener()
-
-	rTree := p.Relation()
-	// antlr.ParseTreeWalkerDefault.Walk(listener, rTree)
-	// rel, err := listener.GetRelation()
-	// if err != nil {
-	//     panic(err)
-	// }
-
-	// fmt.Printf("%v\n", rel)
-
-	var v RelationVisitor
-	rel := v.Visit(rTree).([]*model.Relation)
-	assert.Len(t, rel, 4)
-	assert.Equal(t, model.ObjectName("user"), rel[0].Direct)
-	assert.Equal(t, model.ObjectName("group"), rel[1].Direct)
-	assert.Equal(t, model.ObjectName("user"), rel[2].Wildcard)
-	assert.Equal(t, model.ObjectName("group"), rel[3].Subject.Object)
-	assert.Equal(t, model.RelationName("member"), rel[3].Subject.Relation)
-
-	// pTree := p.Permission()
-	// antlr.ParseTreeWalkerDefault.Walk(listener, pTree)
+	for _, test := range tests {
+		t.Run(test.input, func(tt *testing.T) {
+			rel := parseRelation(test.input)
+			test.validate(rel, assert.New(tt))
+		})
+	}
 }
 
 func TestPermissionParser(t *testing.T) {
+	tests := []struct {
+		input    string
+		validate func(*model.Permission, *assert.Assertions)
+	}{
+		{
+			"can_write | parent->can_read",
+			func(perm *model.Permission, assert *assert.Assertions) {
+				assert.Len(perm.Union, 2)
+				assert.Equal("can_write", perm.Union[0])
+				assert.Equal("parent->can_read", perm.Union[1])
+			},
+		},
+		{
+			"can_write & can_read",
+			func(perm *model.Permission, assert *assert.Assertions) {
+				assert.Len(perm.Intersection, 2)
+				assert.Equal("can_write", perm.Intersection[0])
+				assert.Equal("can_read", perm.Intersection[1])
+			},
+		},
+		{
+			"can_write - can_read",
+			func(perm *model.Permission, assert *assert.Assertions) {
+				assert.Equal("can_write", perm.Exclusion.Base)
+				assert.Equal("can_read", perm.Exclusion.Subtract)
+			},
+		},
+	}
 
+	for _, test := range tests {
+		t.Run(test.input, func(tt *testing.T) {
+			perm := parsePermission(test.input)
+			test.validate(perm, assert.New(tt))
+		})
+	}
+
+}
+
+func parseRelation(input string) []*model.Relation {
+	p := newParser(input)
+	rTree := p.Relation()
+
+	var v RelationVisitor
+	return v.Visit(rTree).([]*model.Relation)
+}
+
+func parsePermission(input string) *model.Permission {
+	p := newParser(input)
+	pTree := p.Permission()
+
+	var v PermissionVisitor
+	return v.Visit(pTree).(*model.Permission)
+}
+
+func newParser(input string) *parser.AzmParser {
+	lexer := parser.NewAzmLexer(antlr.NewInputStream(input))
+	stream := antlr.NewCommonTokenStream(lexer, 0)
+	p := parser.NewAzmParser(stream)
+	p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+	return p
 }
