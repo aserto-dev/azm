@@ -23,18 +23,17 @@ exclusion
     ;
 
 rel
-    :   single      #SingleRel
+    :   direct      #DirectRel
     |   wildcard    #WildcardRel
     |   subject     #SubjectRel
-    |   arrow       #ArrowRel
     ;
 
 perm
-    :   single      #SinglePerm
+    :   direct      #DirectPerm
     |   arrow       #ArrowPerm
     ;
 
-single
+direct
     :   ID
     ;
 

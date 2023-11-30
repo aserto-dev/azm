@@ -33,7 +33,7 @@ var m1 = model.Model{
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
 				model.PermissionName("read"): {
-					Union: []string{"owner"},
+					Union: []*model.RelationRef{{RelOrPerm: "owner"}},
 				},
 			},
 		},
@@ -52,25 +52,22 @@ var m1 = model.Model{
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
 				model.PermissionName("edit"): {
-					Union: []string{"writer"},
+					Union: []*model.RelationRef{{RelOrPerm: "writer"}},
 				},
 				model.PermissionName("view"): {
-					Union: []string{"reader", "writer"},
+					Union: []*model.RelationRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
 				},
 				model.PermissionName("read_and_write"): {
-					Intersection: []string{"reader", "writer"},
+					Intersection: []*model.RelationRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
 				},
 				model.PermissionName("can_only_read"): {
 					Exclusion: &model.ExclusionPermission{
-						Base:     "reader",
-						Subtract: "writer",
+						Include: &model.RelationRef{RelOrPerm: "reader"},
+						Exclude: &model.RelationRef{RelOrPerm: "writer"},
 					},
 				},
 				model.PermissionName("read"): {
-					Arrow: &model.ArrowPermission{
-						Relation:   "parent_folder",
-						Permission: "read",
-					},
+					Union: []*model.RelationRef{{Base: "parent_folder", RelOrPerm: "read"}},
 				},
 			},
 		},

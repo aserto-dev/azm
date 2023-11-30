@@ -53,12 +53,6 @@ type Relation struct {
 	Direct   ObjectName       `json:"direct,omitempty"`
 	Subject  *SubjectRelation `json:"subject,omitempty"`
 	Wildcard ObjectName       `json:"wildcard,omitempty"`
-	Arrow    *RelationRef     `json:"arrow,omitempty"`
-}
-
-type RelationRef struct {
-	Base     RelationName `json:"base,omitempty"`
-	Relation string       `json:"relation"`
 }
 
 type SubjectRelation struct {
@@ -72,9 +66,14 @@ type Permission struct {
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 }
 
+type RelationRef struct {
+	Base      RelationName `json:"base,omitempty"`
+	RelOrPerm string       `json:"rel_or_perm"`
+}
+
 type ExclusionPermission struct {
-	Base     *RelationRef `json:"base,omitempty"`
-	Subtract *RelationRef `json:"subtract,omitempty"`
+	Include *RelationRef `json:"include,omitempty"`
+	Exclude *RelationRef `json:"exclude,omitempty"`
 }
 
 type ArrowPermission struct {

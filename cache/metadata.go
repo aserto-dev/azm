@@ -97,7 +97,13 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []string {
 	permissions := []string{}
 	for pn, p := range o.Permissions {
-		if lo.Contains(p.Union, string(rn)) {
+		union := lo.Map(p.Union, func(r *model.RelationRef, _ int) string {
+			if r.Base != "" {
+				panic("arrow permissions not supported yet")
+			}
+			return r.RelOrPerm
+		})
+		if lo.Contains(union, string(rn)) {
 			permissions = append(permissions, string(pn))
 		}
 	}
