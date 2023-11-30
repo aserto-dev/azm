@@ -10,17 +10,8 @@ type AzmVisitor interface {
 	// Visit a parse tree produced by AzmParser#relation.
 	VisitRelation(ctx *RelationContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#ToUnionPerm.
-	VisitToUnionPerm(ctx *ToUnionPermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToIntersectionPerm.
-	VisitToIntersectionPerm(ctx *ToIntersectionPermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToExclusionPerm.
-	VisitToExclusionPerm(ctx *ToExclusionPermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#unionRel.
-	VisitUnionRel(ctx *UnionRelContext) interface{}
+	// Visit a parse tree produced by AzmParser#permission.
+	VisitPermission(ctx *PermissionContext) interface{}
 
 	// Visit a parse tree produced by AzmParser#unionPerm.
 	VisitUnionPerm(ctx *UnionPermContext) interface{}
@@ -31,33 +22,33 @@ type AzmVisitor interface {
 	// Visit a parse tree produced by AzmParser#exclusionPerm.
 	VisitExclusionPerm(ctx *ExclusionPermContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#ToSingleRel.
-	VisitToSingleRel(ctx *ToSingleRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToWildcardRel.
-	VisitToWildcardRel(ctx *ToWildcardRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToSubjectRel.
-	VisitToSubjectRel(ctx *ToSubjectRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToArrowRel.
-	VisitToArrowRel(ctx *ToArrowRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToSinglePerm.
-	VisitToSinglePerm(ctx *ToSinglePermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#ToArrowPerm.
-	VisitToArrowPerm(ctx *ToArrowPermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#singleRel.
+	// Visit a parse tree produced by AzmParser#SingleRel.
 	VisitSingleRel(ctx *SingleRelContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#subjectRel.
-	VisitSubjectRel(ctx *SubjectRelContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#wildcardRel.
+	// Visit a parse tree produced by AzmParser#WildcardRel.
 	VisitWildcardRel(ctx *WildcardRelContext) interface{}
 
-	// Visit a parse tree produced by AzmParser#arrowRel.
+	// Visit a parse tree produced by AzmParser#SubjectRel.
+	VisitSubjectRel(ctx *SubjectRelContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#ArrowRel.
 	VisitArrowRel(ctx *ArrowRelContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#SinglePerm.
+	VisitSinglePerm(ctx *SinglePermContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#ArrowPerm.
+	VisitArrowPerm(ctx *ArrowPermContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#single.
+	VisitSingle(ctx *SingleContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#subject.
+	VisitSubject(ctx *SubjectContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#wildcard.
+	VisitWildcard(ctx *WildcardContext) interface{}
+
+	// Visit a parse tree produced by AzmParser#arrow.
+	VisitArrow(ctx *ArrowContext) interface{}
 }

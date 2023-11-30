@@ -11,19 +11,7 @@ func (v *BaseAzmVisitor) VisitRelation(ctx *RelationContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitToUnionPerm(ctx *ToUnionPermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToIntersectionPerm(ctx *ToIntersectionPermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToExclusionPerm(ctx *ToExclusionPermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitUnionRel(ctx *UnionRelContext) interface{} {
+func (v *BaseAzmVisitor) VisitPermission(ctx *PermissionContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -39,35 +27,7 @@ func (v *BaseAzmVisitor) VisitExclusionPerm(ctx *ExclusionPermContext) interface
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseAzmVisitor) VisitToSingleRel(ctx *ToSingleRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToWildcardRel(ctx *ToWildcardRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToSubjectRel(ctx *ToSubjectRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToArrowRel(ctx *ToArrowRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToSinglePerm(ctx *ToSinglePermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitToArrowPerm(ctx *ToArrowPermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *BaseAzmVisitor) VisitSingleRel(ctx *SingleRelContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitSubjectRel(ctx *SubjectRelContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -75,6 +35,34 @@ func (v *BaseAzmVisitor) VisitWildcardRel(ctx *WildcardRelContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseAzmVisitor) VisitSubjectRel(ctx *SubjectRelContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseAzmVisitor) VisitArrowRel(ctx *ArrowRelContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitSinglePerm(ctx *SinglePermContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitArrowPerm(ctx *ArrowPermContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitSingle(ctx *SingleContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitSubject(ctx *SubjectContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitWildcard(ctx *WildcardContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseAzmVisitor) VisitArrow(ctx *ArrowContext) interface{} {
 	return v.VisitChildren(ctx)
 }

@@ -10,17 +10,8 @@ type AzmListener interface {
 	// EnterRelation is called when entering the relation production.
 	EnterRelation(c *RelationContext)
 
-	// EnterToUnionPerm is called when entering the ToUnionPerm production.
-	EnterToUnionPerm(c *ToUnionPermContext)
-
-	// EnterToIntersectionPerm is called when entering the ToIntersectionPerm production.
-	EnterToIntersectionPerm(c *ToIntersectionPermContext)
-
-	// EnterToExclusionPerm is called when entering the ToExclusionPerm production.
-	EnterToExclusionPerm(c *ToExclusionPermContext)
-
-	// EnterUnionRel is called when entering the unionRel production.
-	EnterUnionRel(c *UnionRelContext)
+	// EnterPermission is called when entering the permission production.
+	EnterPermission(c *PermissionContext)
 
 	// EnterUnionPerm is called when entering the unionPerm production.
 	EnterUnionPerm(c *UnionPermContext)
@@ -31,50 +22,41 @@ type AzmListener interface {
 	// EnterExclusionPerm is called when entering the exclusionPerm production.
 	EnterExclusionPerm(c *ExclusionPermContext)
 
-	// EnterToSingleRel is called when entering the ToSingleRel production.
-	EnterToSingleRel(c *ToSingleRelContext)
-
-	// EnterToWildcardRel is called when entering the ToWildcardRel production.
-	EnterToWildcardRel(c *ToWildcardRelContext)
-
-	// EnterToSubjectRel is called when entering the ToSubjectRel production.
-	EnterToSubjectRel(c *ToSubjectRelContext)
-
-	// EnterToArrowRel is called when entering the ToArrowRel production.
-	EnterToArrowRel(c *ToArrowRelContext)
-
-	// EnterToSinglePerm is called when entering the ToSinglePerm production.
-	EnterToSinglePerm(c *ToSinglePermContext)
-
-	// EnterToArrowPerm is called when entering the ToArrowPerm production.
-	EnterToArrowPerm(c *ToArrowPermContext)
-
-	// EnterSingleRel is called when entering the singleRel production.
+	// EnterSingleRel is called when entering the SingleRel production.
 	EnterSingleRel(c *SingleRelContext)
 
-	// EnterSubjectRel is called when entering the subjectRel production.
-	EnterSubjectRel(c *SubjectRelContext)
-
-	// EnterWildcardRel is called when entering the wildcardRel production.
+	// EnterWildcardRel is called when entering the WildcardRel production.
 	EnterWildcardRel(c *WildcardRelContext)
 
-	// EnterArrowRel is called when entering the arrowRel production.
+	// EnterSubjectRel is called when entering the SubjectRel production.
+	EnterSubjectRel(c *SubjectRelContext)
+
+	// EnterArrowRel is called when entering the ArrowRel production.
 	EnterArrowRel(c *ArrowRelContext)
+
+	// EnterSinglePerm is called when entering the SinglePerm production.
+	EnterSinglePerm(c *SinglePermContext)
+
+	// EnterArrowPerm is called when entering the ArrowPerm production.
+	EnterArrowPerm(c *ArrowPermContext)
+
+	// EnterSingle is called when entering the single production.
+	EnterSingle(c *SingleContext)
+
+	// EnterSubject is called when entering the subject production.
+	EnterSubject(c *SubjectContext)
+
+	// EnterWildcard is called when entering the wildcard production.
+	EnterWildcard(c *WildcardContext)
+
+	// EnterArrow is called when entering the arrow production.
+	EnterArrow(c *ArrowContext)
 
 	// ExitRelation is called when exiting the relation production.
 	ExitRelation(c *RelationContext)
 
-	// ExitToUnionPerm is called when exiting the ToUnionPerm production.
-	ExitToUnionPerm(c *ToUnionPermContext)
-
-	// ExitToIntersectionPerm is called when exiting the ToIntersectionPerm production.
-	ExitToIntersectionPerm(c *ToIntersectionPermContext)
-
-	// ExitToExclusionPerm is called when exiting the ToExclusionPerm production.
-	ExitToExclusionPerm(c *ToExclusionPermContext)
-
-	// ExitUnionRel is called when exiting the unionRel production.
-	ExitUnionRel(c *UnionRelContext)
+	// ExitPermission is called when exiting the permission production.
+	ExitPermission(c *PermissionContext)
 
 	// ExitUnionPerm is called when exiting the unionPerm production.
 	ExitUnionPerm(c *UnionPermContext)
@@ -85,33 +67,33 @@ type AzmListener interface {
 	// ExitExclusionPerm is called when exiting the exclusionPerm production.
 	ExitExclusionPerm(c *ExclusionPermContext)
 
-	// ExitToSingleRel is called when exiting the ToSingleRel production.
-	ExitToSingleRel(c *ToSingleRelContext)
-
-	// ExitToWildcardRel is called when exiting the ToWildcardRel production.
-	ExitToWildcardRel(c *ToWildcardRelContext)
-
-	// ExitToSubjectRel is called when exiting the ToSubjectRel production.
-	ExitToSubjectRel(c *ToSubjectRelContext)
-
-	// ExitToArrowRel is called when exiting the ToArrowRel production.
-	ExitToArrowRel(c *ToArrowRelContext)
-
-	// ExitToSinglePerm is called when exiting the ToSinglePerm production.
-	ExitToSinglePerm(c *ToSinglePermContext)
-
-	// ExitToArrowPerm is called when exiting the ToArrowPerm production.
-	ExitToArrowPerm(c *ToArrowPermContext)
-
-	// ExitSingleRel is called when exiting the singleRel production.
+	// ExitSingleRel is called when exiting the SingleRel production.
 	ExitSingleRel(c *SingleRelContext)
 
-	// ExitSubjectRel is called when exiting the subjectRel production.
-	ExitSubjectRel(c *SubjectRelContext)
-
-	// ExitWildcardRel is called when exiting the wildcardRel production.
+	// ExitWildcardRel is called when exiting the WildcardRel production.
 	ExitWildcardRel(c *WildcardRelContext)
 
-	// ExitArrowRel is called when exiting the arrowRel production.
+	// ExitSubjectRel is called when exiting the SubjectRel production.
+	ExitSubjectRel(c *SubjectRelContext)
+
+	// ExitArrowRel is called when exiting the ArrowRel production.
 	ExitArrowRel(c *ArrowRelContext)
+
+	// ExitSinglePerm is called when exiting the SinglePerm production.
+	ExitSinglePerm(c *SinglePermContext)
+
+	// ExitArrowPerm is called when exiting the ArrowPerm production.
+	ExitArrowPerm(c *ArrowPermContext)
+
+	// ExitSingle is called when exiting the single production.
+	ExitSingle(c *SingleContext)
+
+	// ExitSubject is called when exiting the subject production.
+	ExitSubject(c *SubjectContext)
+
+	// ExitWildcard is called when exiting the wildcard production.
+	ExitWildcard(c *WildcardContext)
+
+	// ExitArrow is called when exiting the arrow production.
+	ExitArrow(c *ArrowContext)
 }
