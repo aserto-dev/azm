@@ -1,22 +1,24 @@
 grammar Azm;
 
-prog:   stat+ ;
-
-stat:   unionRel NEWLINE
-    |   intersectRel NEWLINE
-    |   exclusionRel NEWLINE
-    |   NEWLINE
+relation
+    :   union EOF
+    ;
+    
+permission
+    :   union EOF
+    |   intersection EOF
+    |   exclusion EOF
     ;
 
-unionRel
+union
     :   rel ('|' rel)*
     ;
 
-intersectRel
+intersection
     :   rel ('&' rel)*
     ;
 
-exclusionRel
+exclusion
     :   rel '-' rel
     ;
 
@@ -56,8 +58,5 @@ ASTERISK:
     '*';
 
 ID: [a-z][a-z0-9._]*[a-z0-9] ;
-
-NEWLINE:
-    '\r'? '\n' ;
 
 WS: [ \t\n\r\f]+ -> skip ;

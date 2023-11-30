@@ -7,20 +7,20 @@ import "github.com/antlr4-go/antlr/v4"
 type AzmListener interface {
 	antlr.ParseTreeListener
 
-	// EnterProg is called when entering the prog production.
-	EnterProg(c *ProgContext)
+	// EnterRelation is called when entering the relation production.
+	EnterRelation(c *RelationContext)
 
-	// EnterStat is called when entering the stat production.
-	EnterStat(c *StatContext)
+	// EnterPermission is called when entering the permission production.
+	EnterPermission(c *PermissionContext)
 
-	// EnterUnionRel is called when entering the unionRel production.
-	EnterUnionRel(c *UnionRelContext)
+	// EnterUnion is called when entering the union production.
+	EnterUnion(c *UnionContext)
 
-	// EnterIntersectRel is called when entering the intersectRel production.
-	EnterIntersectRel(c *IntersectRelContext)
+	// EnterIntersection is called when entering the intersection production.
+	EnterIntersection(c *IntersectionContext)
 
-	// EnterExclusionRel is called when entering the exclusionRel production.
-	EnterExclusionRel(c *ExclusionRelContext)
+	// EnterExclusion is called when entering the exclusion production.
+	EnterExclusion(c *ExclusionContext)
 
 	// EnterRel is called when entering the rel production.
 	EnterRel(c *RelContext)
@@ -37,20 +37,20 @@ type AzmListener interface {
 	// EnterArrowRel is called when entering the arrowRel production.
 	EnterArrowRel(c *ArrowRelContext)
 
-	// ExitProg is called when exiting the prog production.
-	ExitProg(c *ProgContext)
+	// ExitRelation is called when exiting the relation production.
+	ExitRelation(c *RelationContext)
 
-	// ExitStat is called when exiting the stat production.
-	ExitStat(c *StatContext)
+	// ExitPermission is called when exiting the permission production.
+	ExitPermission(c *PermissionContext)
 
-	// ExitUnionRel is called when exiting the unionRel production.
-	ExitUnionRel(c *UnionRelContext)
+	// ExitUnion is called when exiting the union production.
+	ExitUnion(c *UnionContext)
 
-	// ExitIntersectRel is called when exiting the intersectRel production.
-	ExitIntersectRel(c *IntersectRelContext)
+	// ExitIntersection is called when exiting the intersection production.
+	ExitIntersection(c *IntersectionContext)
 
-	// ExitExclusionRel is called when exiting the exclusionRel production.
-	ExitExclusionRel(c *ExclusionRelContext)
+	// ExitExclusion is called when exiting the exclusion production.
+	ExitExclusion(c *ExclusionContext)
 
 	// ExitRel is called when exiting the rel production.
 	ExitRel(c *RelContext)
