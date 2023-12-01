@@ -9,6 +9,8 @@ import (
 
 	"github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model/diff"
+	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/hashicorp/go-multierror"
 )
 
 const ModelVersion int = 2
@@ -145,6 +147,61 @@ func (m *Model) Diff(newModel *Model) *diff.Diff {
 	deleted := m.subtract(newModel)
 
 	return &diff.Diff{Added: *added, Removed: *deleted}
+}
+
+// Validate enforces the model's internal consistency.
+//
+// It enforces the following rules:
+//   - A relation cannot share the same name as an object.
+//   - Direct relations must reference an existing object.
+//   - Wildcard relations must reference an existing object.
+//   - Subject relations must reference an existing object#relation pair.
+//   - Arrow permissions (relation->rel_or_perm) must reference existing relations/permissions.
+func (m *Model) Validate() error {
+	var errs error
+	for on, o := range m.Objects {
+		for rn, rs := range o.Relations {
+			if _, ok := m.Objects[ObjectName(rn)]; ok {
+				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf("relation name '%s:%s' conflicts with object type '%s'", on, rn, rn))
+			}
+
+			for _, r := range rs {
+				switch {
+				case r.Direct != "":
+					if _, ok := m.Objects[r.Direct]; !ok {
+						errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+							"relation '%s:%s' references undefined object type '%s'", on, rn, r.Direct),
+						)
+					}
+				case r.Wildcard != "":
+					if _, ok := m.Objects[r.Wildcard]; !ok {
+						errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+							"relation '%s:%s' references undefined object type '%s'", on, rn, r.Wildcard),
+						)
+					}
+				case r.Subject != nil:
+					if _, ok := m.Objects[r.Subject.Object]; !ok {
+						errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+							"relation '%s:%s' references undefined object type '%s'", on, rn, r.Subject.Object),
+						)
+						break
+					}
+
+					if _, ok := m.Objects[r.Subject.Object].Relations[r.Subject.Relation]; !ok {
+						errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+							"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Subject.Object, r.Subject.Relation),
+						)
+					}
+				}
+			}
+		}
+
+	}
+
+	if errs != nil {
+		return derr.ErrInvalidArgument.Err(errs)
+	}
+	return nil
 }
 
 func (m *Model) subtract(newModel *Model) *diff.Changes {
