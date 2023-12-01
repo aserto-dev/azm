@@ -11,7 +11,7 @@ import (
 )
 
 var m1 = model.Model{
-	Version: 1,
+	Version: 2,
 	Objects: map[model.ObjectName]*model.Object{
 		model.ObjectName("user"): {},
 		model.ObjectName("group"): {
@@ -139,12 +139,12 @@ func TestModel(t *testing.T) {
 
 func TestDiff(t *testing.T) {
 	m2 := model.Model{
-		Version: 1,
+		Version: 2,
 		Objects: nil,
 	}
 
 	m3 := model.Model{
-		Version: 1,
+		Version: 2,
 		Objects: map[model.ObjectName]*model.Object{
 			model.ObjectName("new_user"): {},
 			model.ObjectName("group"): {
@@ -169,7 +169,7 @@ func TestDiff(t *testing.T) {
 				},
 				Permissions: map[model.PermissionName]*model.Permission{
 					model.PermissionName("read"): {
-						Union: []string{"owner"},
+						Union: []*model.RelationRef{{RelOrPerm: "owner"}},
 					},
 				},
 			},
@@ -226,7 +226,7 @@ func TestDiff(t *testing.T) {
 
 func TestGraph(t *testing.T) {
 	m := model.Model{
-		Version: 1,
+		Version: 2,
 		Objects: map[model.ObjectName]*model.Object{
 			model.ObjectName("user"): {
 				Relations: map[model.RelationName][]*model.Relation{

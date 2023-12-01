@@ -45,8 +45,7 @@ func TestPathMap(t *testing.T) {
 	c := cache.New(m)
 	require.NotNil(t, c)
 
-	pm, err := createPathMap(m)
-	require.NoError(t, err)
+	pm := createPathMap(m)
 	require.NotNil(t, pm)
 
 	// plot all paths for all roots.
@@ -88,7 +87,7 @@ func (pm PathMap) plotPaths(w io.Writer, or *model.ObjectRelation) {
 	}
 }
 
-func createPathMap(m *model.Model) (*PathMap, error) {
+func createPathMap(m *model.Model) *PathMap {
 	pm := PathMap{}
 
 	// create roots
@@ -125,7 +124,7 @@ func createPathMap(m *model.Model) (*PathMap, error) {
 		}
 	}
 
-	return &pm, nil
+	return &pm
 }
 
 func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []*model.ObjectRelation {
@@ -137,18 +136,14 @@ func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []
 	}
 
 	for _, r := range p.Union {
-		result = append(result, resolve(m, on, model.RelationName(r)))
+		result = append(result, resolve(m, on, model.RelationName(r.RelOrPerm)))
 	}
 
-	for _, _ = range p.Intersection {
+	for range p.Intersection {
 		panic("not implemented")
 	}
 
 	if p.Exclusion != nil {
-		panic("not implemented")
-	}
-
-	if p.Arrow != nil {
 		panic("not implemented")
 	}
 
@@ -166,7 +161,7 @@ func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*mo
 	for _, r := range relations {
 		if r.Direct != "" {
 			result = append(result, &model.ObjectRelation{
-				Object:   model.ObjectName(r.Direct),
+				Object:   r.Direct,
 				Relation: "",
 			})
 		}
@@ -180,7 +175,7 @@ func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*mo
 
 		if r.Wildcard != "" {
 			result = append(result, &model.ObjectRelation{
-				Object:   model.ObjectName(r.Wildcard),
+				Object:   r.Wildcard,
 				Relation: "*",
 			})
 		}
@@ -199,7 +194,7 @@ func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.
 			for _, rel := range m.Objects[on].Relations[rn] {
 				if rel.Direct != "" {
 					return &model.ObjectRelation{
-						Object:   model.ObjectName(rel.Direct),
+						Object:   rel.Direct,
 						Relation: model.RelationName(parts[1]),
 					}
 				}
@@ -213,7 +208,7 @@ func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.
 
 				if rel.Wildcard != "" {
 					return &model.ObjectRelation{
-						Object:   model.ObjectName(rel.Wildcard),
+						Object:   rel.Wildcard,
 						Relation: "*",
 					}
 				}
