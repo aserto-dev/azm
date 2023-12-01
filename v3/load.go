@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/parser"
+	"github.com/samber/lo"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
@@ -30,21 +31,17 @@ func Load(r io.Reader) (*model.Model, error) {
 	for on, o := range manifest.ObjectTypes {
 		log.Debug().Str("object", string(on)).Msg("loading object")
 
-		relations := make(map[model.RelationName][]*model.Relation, len(o.Relations))
-
-		for rn, rd := range o.Relations {
+		relations := lo.MapEntries(o.Relations, func(rn RelationName, rd string) (model.RelationName, []*model.Relation) {
 			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
 
-			relations[model.RelationName(rn)] = parser.ParseRelation(rd)
-		}
+			return model.RelationName(rn), parser.ParseRelation(rd)
+		})
 
-		permissions := make(map[model.PermissionName]*model.Permission, len(o.Permissions))
-
-		for pn, pd := range o.Permissions {
+		permissions := lo.MapEntries(o.Permissions, func(pn PermissionName, pd string) (model.PermissionName, *model.Permission) {
 			log.Debug().Str("object", string(on)).Str("permission", string(pn)).Msg("loading permission")
 
-			permissions[model.PermissionName(pn)] = parser.ParsePermission(pd)
-		}
+			return model.PermissionName(pn), parser.ParsePermission(pd)
+		})
 
 		m.Objects[model.ObjectName(on)] = &model.Object{
 			Relations:   relations,
@@ -52,5 +49,5 @@ func Load(r io.Reader) (*model.Model, error) {
 		}
 	}
 
-	return &m, nil
+	return &m, m.Validate()
 }

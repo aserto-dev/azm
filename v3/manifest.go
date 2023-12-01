@@ -10,12 +10,7 @@ import (
 const SupportedSchemaVersion int = 3
 
 const (
-	UnionIdentifier        string = "|"
-	IntersectionIdentifier string = "&"
-	ExclusionIdentifier    string = " - "
-	RelationIdentifier     string = "#"
-	WildcardIdentifier     string = ":*"
-	ArrowIdentifier        string = "->"
+	ArrowIdentifier string = "->"
 )
 
 type Manifest struct {

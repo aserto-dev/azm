@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/aserto-dev/azm/model"
+	v3 "github.com/aserto-dev/azm/v3"
+	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/nsf/jsondiff"
 	stretch "github.com/stretchr/testify/require"
 )
@@ -89,7 +91,7 @@ func TestProgrammaticModel(t *testing.T) {
 		stretch.NoError(t, err)
 	}
 
-	b2, err := os.ReadFile("./model.json")
+	b2, err := os.ReadFile("./testdata/model.json")
 	stretch.NoError(t, err)
 
 	m2 := model.Model{}
@@ -104,7 +106,7 @@ func TestProgrammaticModel(t *testing.T) {
 }
 
 func TestModel(t *testing.T) {
-	buf, err := os.ReadFile("./model.json")
+	buf, err := os.ReadFile("./testdata/model.json")
 	stretch.NoError(t, err)
 
 	m := model.Model{}
@@ -307,4 +309,57 @@ func TestGraph(t *testing.T) {
 	for _, expected := range groupExtObjResults {
 		stretch.Contains(t, search, expected)
 	}
+}
+
+func TestValidation(t *testing.T) {
+	tests := []struct {
+		name     string
+		manifest string
+		validate func(error, *stretch.Assertions)
+	}{
+		{
+			"object/relation collision",
+			"./testdata/obj_rel_collision.yaml",
+			func(err error, assert *stretch.Assertions) {
+				assert.ErrorContains(err, "relation name 'file:folder' conflicts with object type 'folder'")
+			},
+		},
+		{
+			"relation to undefined object",
+			"./testdata/rel_to_missing_object.yaml",
+			func(err error, assert *stretch.Assertions) {
+				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'user'")
+				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'team'")
+				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'project'")
+				assert.ErrorContains(err, "relation 'file:writer' references undefined object type 'team'")
+				assert.ErrorContains(err, "relation 'file:admin' references undefined relation type 'group#admin'")
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			assert := stretch.New(tt)
+			_, err := loadManifest(test.manifest)
+			assert.Error(err)
+
+			// verify that the error is of type ErrInvalidArgument
+			aErr := derr.ErrInvalidArgument
+			assert.ErrorAs(err, &aErr)
+			assert.Equal("E20015", aErr.Code)
+
+			test.validate(err, assert)
+		})
+	}
+}
+
+func loadManifest(path string) (*model.Model, error) {
+	r, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer r.Close()
+
+	return v3.Load(r)
 }
