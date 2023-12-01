@@ -189,10 +189,6 @@ func (m *Model) Validate() error {
 func (m *Model) validateUniqueNames() error {
 	var errs error
 
-	objs := lo.Map(lo.Keys(m.Objects), func(on ObjectName, _ int) string {
-		return string(on)
-	})
-
 	for on, o := range m.Objects {
 		rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
 			return string(rn)
@@ -205,13 +201,6 @@ func (m *Model) validateUniqueNames() error {
 		for _, collision := range rpCollisions {
 			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 				"permission name '%[1]s:%[2]s' conflicts with '%[1]s:%[2]s' relation", on, collision),
-			)
-		}
-
-		roCollisions := lo.Intersect(rels, objs)
-		for _, collision := range roCollisions {
-			errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
-				"relation name '%s:%s' conflicts with object type '%[2]s'", on, collision),
 			)
 		}
 	}

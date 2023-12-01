@@ -318,13 +318,6 @@ func TestValidation(t *testing.T) {
 		validate func(error, *stretch.Assertions)
 	}{
 		{
-			"object/relation collision",
-			"./testdata/obj_rel_collision.yaml",
-			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "relation name 'file:folder' conflicts with object type 'folder'")
-			},
-		},
-		{
 			"relation/permission collision",
 			"./testdata/rel_perm_collision.yaml",
 			func(err error, assert *stretch.Assertions) {
