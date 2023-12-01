@@ -3,7 +3,6 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/antlr4-go/antlr/v4"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/parser"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +19,16 @@ func TestRelationParser(t *testing.T) {
 				assert.Len(rel, 1)
 				term := rel[0]
 				assert.Equal(model.ObjectName("user"), term.Direct)
+				assert.Nil(term.Subject)
+				assert.Empty(term.Wildcard)
+			},
+		},
+		{
+			"name-with-dashes",
+			func(rel []*model.Relation, assert *assert.Assertions) {
+				assert.Len(rel, 1)
+				term := rel[0]
+				assert.Equal(model.ObjectName("name-with-dashes"), term.Direct)
 				assert.Nil(term.Subject)
 				assert.Empty(term.Wildcard)
 			},
@@ -68,7 +77,7 @@ func TestRelationParser(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(tt *testing.T) {
-			rel := parseRelation(test.input)
+			rel := parser.ParseRelation(test.input)
 			test.validate(rel, assert.New(tt))
 		})
 	}
@@ -130,33 +139,9 @@ func TestPermissionParser(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(tt *testing.T) {
-			perm := parsePermission(test.input)
+			perm := parser.ParsePermission(test.input)
 			test.validate(perm, assert.New(tt))
 		})
 	}
 
-}
-
-func parseRelation(input string) []*model.Relation {
-	p := newParser(input)
-	rTree := p.Relation()
-
-	var v parser.RelationVisitor
-	return v.Visit(rTree).([]*model.Relation)
-}
-
-func parsePermission(input string) *model.Permission {
-	p := newParser(input)
-	pTree := p.Permission()
-
-	var v parser.PermissionVisitor
-	return v.Visit(pTree).(*model.Permission)
-}
-
-func newParser(input string) *parser.AzmParser {
-	lexer := parser.NewAzmLexer(antlr.NewInputStream(input))
-	stream := antlr.NewCommonTokenStream(lexer, 0)
-	p := parser.NewAzmParser(stream)
-	p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
-	return p
 }

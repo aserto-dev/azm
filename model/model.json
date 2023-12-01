@@ -1,37 +1,48 @@
 {
-    "version": 1,
-    "metadata": null,
-    "types": {
-        "user": {},
-        "group": {
-            "relations": {
-                "member": [
-                    {"direct": "user"},
-                    {"subject": {"object": "group", "relation": "member"}}
-                ]
-            }
+  "version": 2,
+  "types": {
+    "document": {
+      "relations": {
+        "parent_folder": [{ "direct": "folder" }],
+        "reader": [{ "direct": "user" }, { "wildcard": "user" }],
+        "writer": [{ "direct": "user" }]
+      },
+      "permissions": {
+        "can_only_read": {
+          "exclusion": {
+            "include": { "rel_or_perm": "reader" },
+            "exclude": { "rel_or_perm": "writer" }
+          }
         },
-        "folder": {
-            "relations": {
-                "owner": [{"direct": "user"}]
-            },
-            "permissions": {
-                "read": {"union": ["owner"]}
-            }
+        "edit": { "union": [{ "rel_or_perm": "writer" }] },
+        "read": {
+          "union": [{ "base": "parent_folder", "rel_or_perm": "read" }]
         },
-        "document": {
-            "relations": {
-                "parent_folder": [{"direct": "folder"}],
-                "writer": [{"direct": "user"}],
-                "reader": [{"direct": "user"}, {"wildcard": "user"}]
-            },
-            "permissions": {
-                "edit": {"union": ["writer"]},
-                "view": {"union": ["reader", "writer"]},
-                "read_and_write": {"intersection": ["reader", "writer"]},
-                "can_only_read": {"exclusion": {"base": "reader", "subtract": "writer"}},
-                "read": {"arrow": {"relation": "parent_folder","permission": "read"}}
-            }
+        "read_and_write": {
+          "intersection": [
+            { "rel_or_perm": "reader" },
+            { "rel_or_perm": "writer" }
+          ]
+        },
+        "view": {
+          "union": [{ "rel_or_perm": "reader" }, { "rel_or_perm": "writer" }]
         }
-    }
+      }
+    },
+    "folder": {
+      "relations": { "owner": [{ "direct": "user" }] },
+      "permissions": { "read": { "union": [{ "rel_or_perm": "owner" }] } }
+    },
+    "group": {
+      "relations": {
+        "member": [
+          { "direct": "user" },
+          { "subject": { "object": "group", "relation": "member" } }
+        ]
+      }
+    },
+    "user": {}
+  },
+  "metadata": null
 }
+
