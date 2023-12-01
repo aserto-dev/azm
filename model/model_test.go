@@ -325,7 +325,14 @@ func TestValidation(t *testing.T) {
 			},
 		},
 		{
-			"relation to undefined object",
+			"relation/permission collision",
+			"./testdata/rel_perm_collision.yaml",
+			func(err error, assert *stretch.Assertions) {
+				assert.ErrorContains(err, "permission name 'file:writer' conflicts with 'file:writer' relation")
+			},
+		},
+		{
+			"relation to undefined subject",
 			"./testdata/rel_to_missing_object.yaml",
 			func(err error, assert *stretch.Assertions) {
 				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'user'")
@@ -333,6 +340,16 @@ func TestValidation(t *testing.T) {
 				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'project'")
 				assert.ErrorContains(err, "relation 'file:writer' references undefined object type 'team'")
 				assert.ErrorContains(err, "relation 'file:admin' references undefined relation type 'group#admin'")
+			},
+		},
+		{
+			"permissions with invalid targets",
+			"./testdata/invalid_perms.yaml",
+			func(err error, assert *stretch.Assertions) {
+				assert.ErrorContains(err, "permission 'file:read' references undefined relation type 'file:viewer'")
+				assert.ErrorContains(err, "permission 'file:read' references undefined relation or permission 'file:editor'")
+				assert.ErrorContains(err, "permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'")
+
 			},
 		},
 	}

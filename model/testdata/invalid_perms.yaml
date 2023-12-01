@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=manifest.json
+---
+
+# model
+model:
+  version: 3
+
+types:
+  user: {}
+  file:
+    relations:
+      owner: user
+      writer: user
+      reader: user
+
+    permissions:
+      # invliad: viewer and editor are undefined
+      read: viewer->read | editor
+
+      # invalid: owner has subject type 'user' which has no `write' relation of permission.`
+      write: owner->write
