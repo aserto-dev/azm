@@ -97,7 +97,7 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []string {
 	permissions := []string{}
 	for pn, p := range o.Permissions {
-		union := lo.Map(p.Union, func(r *model.RelationRef, _ int) string {
+		union := lo.Map(p.Union, func(r *model.PermissionRef, _ int) string {
 			if r.Base != "" {
 				panic("arrow permissions not supported yet")
 			}
@@ -112,9 +112,9 @@ func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []s
 
 func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.RelationName) []string {
 	unions := []string{}
-	for name, rs := range o.Relations {
-		for _, r := range rs {
-			if r.Subject != nil && r.Subject.Object == on && r.Subject.Relation == rn {
+	for name, r := range o.Relations {
+		for _, rt := range r.Union {
+			if rt.Subject != nil && rt.Subject.Object == on && rt.Subject.Relation == rn {
 				unions = append(unions, string(name))
 			}
 		}

@@ -153,12 +153,12 @@ func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []
 func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*model.ObjectRelation {
 	result := []*model.ObjectRelation{}
 
-	relations, ok := m.Objects[on].Relations[rn]
+	relation, ok := m.Objects[on].Relations[rn]
 	if !ok {
 		return result
 	}
 
-	for _, r := range relations {
+	for _, r := range relation.Union {
 		if r.Direct != "" {
 			result = append(result, &model.ObjectRelation{
 				Object:   r.Direct,
@@ -188,10 +188,10 @@ func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.
 	if strings.Contains(rn.String(), v3.ArrowIdentifier) {
 		parts := strings.Split(rn.String(), v3.ArrowIdentifier)
 
-		rn := model.RelationName(parts[0])
+		rn = model.RelationName(parts[0])
 
 		if _, ok := m.Objects[on].Relations[rn]; ok { // 	if c.RelationExists(on, rn) {
-			for _, rel := range m.Objects[on].Relations[rn] {
+			for _, rel := range m.Objects[on].Relations[rn].Union {
 				if rel.Direct != "" {
 					return &model.ObjectRelation{
 						Object:   rel.Direct,

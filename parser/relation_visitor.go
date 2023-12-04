@@ -20,22 +20,25 @@ func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
 }
 
 func (v *RelationVisitor) VisitRelation(c *RelationContext) interface{} {
-	return lo.Map(c.AllRel(), func(rel IRelContext, _ int) *model.Relation {
-		return rel.Accept(v).(*model.Relation)
+	return lo.Map(c.AllRel(), func(rel IRelContext, _ int) *model.RelationTerm {
+		return rel.Accept(v).(*model.RelationTerm)
 	})
 }
 
 func (v *RelationVisitor) VisitDirectRel(c *DirectRelContext) interface{} {
-	return &model.Relation{Direct: model.ObjectName(c.Direct().ID().GetText())}
+	return &model.RelationTerm{Direct: model.ObjectName(c.Direct().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitWildcardRel(c *WildcardRelContext) interface{} {
-	return &model.Relation{Wildcard: model.ObjectName(c.Wildcard().ID().GetText())}
+	return &model.RelationTerm{Wildcard: model.ObjectName(c.Wildcard().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitSubjectRel(c *SubjectRelContext) interface{} {
-	return &model.Relation{Subject: &model.SubjectRelation{
-		Object:   model.ObjectName(c.Subject().ID(0).GetText()),
-		Relation: model.RelationName(c.Subject().ID(1).GetText()),
+	return &model.RelationTerm{Subject: &model.SubjectRelation{
+		RelationRef: &model.RelationRef{
+			Object:   model.ObjectName(c.Subject().ID(0).GetText()),
+			Relation: model.RelationName(c.Subject().ID(1).GetText()),
+		},
+		SubjectTypes: []model.ObjectName{},
 	}}
 }

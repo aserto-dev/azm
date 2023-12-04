@@ -10,6 +10,7 @@ import (
 	"github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model/diff"
 	"github.com/aserto-dev/go-directory/pkg/derr"
+	set "github.com/deckarep/golang-set/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 )
@@ -48,36 +49,57 @@ func (pn PermissionName) RN() RelationName {
 }
 
 type Object struct {
-	Relations   map[RelationName][]*Relation   `json:"relations,omitempty"`
+	Relations   map[RelationName]*Relation     `json:"relations,omitempty"`
 	Permissions map[PermissionName]*Permission `json:"permissions,omitempty"`
 }
 
+func (o *Object) HasRelOrPerm(name string) bool {
+	if o == nil {
+		return false
+	}
+	if _, foundRelation := o.Relations[RelationName(name)]; foundRelation {
+		return true
+	}
+	_, foundPermission := o.Permissions[PermissionName(name)]
+	return foundPermission
+}
+
 type Relation struct {
+	Union        []*RelationTerm `json:"union,omitempty"`
+	SubjectTypes []ObjectName    `json:"subject_types,omitempty"`
+}
+
+type RelationTerm struct {
 	Direct   ObjectName       `json:"direct,omitempty"`
 	Subject  *SubjectRelation `json:"subject,omitempty"`
 	Wildcard ObjectName       `json:"wildcard,omitempty"`
 }
 
-type SubjectRelation struct {
+type RelationRef struct {
 	Object   ObjectName   `json:"object,omitempty"`
 	Relation RelationName `json:"relation,omitempty"`
 }
 
+type SubjectRelation struct {
+	*RelationRef
+	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+}
+
 type Permission struct {
-	Union        []*RelationRef       `json:"union,omitempty"`
-	Intersection []*RelationRef       `json:"intersection,omitempty"`
+	Union        []*PermissionRef     `json:"union,omitempty"`
+	Intersection []*PermissionRef     `json:"intersection,omitempty"`
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 }
 
-type RelationRef struct {
+type PermissionRef struct {
 	Base      RelationName `json:"base,omitempty"`
 	RelOrPerm string       `json:"rel_or_perm"`
 	BaseTypes []ObjectName `json:"base_types,omitempty"`
 }
 
 type ExclusionPermission struct {
-	Include *RelationRef `json:"include,omitempty"`
-	Exclude *RelationRef `json:"exclude,omitempty"`
+	Include *PermissionRef `json:"include,omitempty"`
+	Exclude *PermissionRef `json:"exclude,omitempty"`
 }
 
 type ArrowPermission struct {
@@ -115,7 +137,7 @@ func (m *Model) GetGraph() *graph.Graph {
 	}
 	for objectName, obj := range m.Objects {
 		for relName, rel := range obj.Relations {
-			for _, rl := range rel {
+			for _, rl := range rel.Union {
 				if string(rl.Direct) != "" {
 					grph.AddEdge(string(objectName), string(rl.Direct), string(relName))
 				} else if rl.Subject != nil {
@@ -154,67 +176,77 @@ func (m *Model) Diff(newModel *Model) *diff.Diff {
 // Validate enforces the model's internal consistency.
 //
 // It enforces the following rules:
-//   - A relation cannot share the same name as an object.
 //   - Within an object, a permission cannot share the same name as a relation.
 //   - Direct relations must reference existing objects .
 //   - Wildcard relations must reference existing objects.
 //   - Subject relations must reference existing object#relation pairs.
 //   - Arrow permissions (relation->rel_or_perm) must reference existing relations/permissions.
 func (m *Model) Validate() error {
-	if err := m.validateUniqueNames(); err != nil {
-		// if there are name collisions, we can't validate relations or permissions.
-		return err
+	// Pass 1 (syntax): ensure no name collisions and all relations reference existing objects/relations.
+	if err := m.validateReferences(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
 	}
 
-	var errs error
-	for on, o := range m.Objects {
-		if err := m.validateObjectRels(on, o); err != nil {
-			errs = multierror.Append(errs, err)
-
-			// if there are relation errors, we can't validate permissions.
-			continue
-		}
-
-		if err := m.validateObjectPerms(on, o); err != nil {
-			errs = multierror.Append(errs, err)
-		}
+	// Pass 2: resolve all relations to a set of possible subject types.
+	if err := m.resolveRelations(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
 	}
 
-	if errs != nil {
-		return derr.ErrInvalidArgument.Err(errs)
-	}
+	// if err := m.resolvePermissions(); err != nil {
+	//     return derr.ErrInvalidArgument.Err(err)
+	// }
+
 	return nil
 }
 
-func (m *Model) validateUniqueNames() error {
+func (m *Model) validateReferences() error {
 	var errs error
 
 	for on, o := range m.Objects {
-		rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
-			return string(rn)
-		})
-		perms := lo.Map(lo.Keys(o.Permissions), func(pn PermissionName, _ int) string {
-			return string(pn)
-		})
+		validatePerms := true
+		if err := m.validateUniqueNames(on, o); err != nil {
+			errs = multierror.Append(errs, err)
+			validatePerms = false
+		}
 
-		rpCollisions := lo.Intersect(rels, perms)
-		for _, collision := range rpCollisions {
-			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-				"permission name '%[1]s:%[2]s' conflicts with '%[1]s:%[2]s' relation", on, collision),
-			)
+		if err := m.validateObjectRels(on, o); err != nil {
+			errs = multierror.Append(errs, err)
+		}
+
+		if validatePerms {
+			if err := m.validateObjectPerms(on, o); err != nil {
+				errs = multierror.Append(errs, err)
+			}
 		}
 	}
 
-	if errs != nil {
-		return derr.ErrInvalidArgument.Err(errs)
+	return errs
+}
+
+func (m *Model) validateUniqueNames(on ObjectName, o *Object) error {
+	rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
+		return string(rn)
+	})
+	perms := lo.Map(lo.Keys(o.Permissions), func(pn PermissionName, _ int) string {
+		return string(pn)
+	})
+
+	rpCollisions := lo.Intersect(rels, perms)
+
+	var errs error
+	for _, collision := range rpCollisions {
+		errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+			"permission name '%[1]s:%[2]s' conflicts with '%[1]s:%[2]s' relation", on, collision),
+		)
 	}
-	return nil
+
+	return errs
 }
 
 func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 	var errs error
 	for rn, rs := range o.Relations {
-		for _, r := range rs {
+		for _, r := range rs.Union {
 			switch {
 			case r.Direct != "":
 				if _, ok := m.Objects[r.Direct]; !ok {
@@ -251,7 +283,7 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 	var errs error
 	for pn, p := range o.Permissions {
-		var refs []*RelationRef
+		var refs []*PermissionRef
 
 		switch {
 		case p.Union != nil:
@@ -259,73 +291,102 @@ func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 		case p.Intersection != nil:
 			refs = p.Intersection
 		case p.Exclusion != nil:
-			refs = []*RelationRef{p.Exclusion.Include, p.Exclusion.Exclude}
+			refs = []*PermissionRef{p.Exclusion.Include, p.Exclusion.Exclude}
 		}
 
 		for _, ref := range refs {
-			var bases []ObjectName
 			switch ref.Base {
 			case "":
-				bases = []ObjectName{on}
+				if !o.HasRelOrPerm(ref.RelOrPerm) {
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, on, ref.RelOrPerm),
+					)
+				}
 			default:
-				rel := o.Relations[ref.Base]
-				if rel == nil {
+				// validate that base relation exists on this object type.
+				// at this stage we don't yet resolve the relation to a set of subject types.
+				if _, hasRelation := o.Relations[ref.Base]; !hasRelation {
 					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 						"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, ref.Base),
 					)
-					continue
-				}
-
-				for _, r := range rel {
-					bases = lo.Uniq(append(bases, m.relationSubjectTypes(r)...))
 				}
 			}
 
-			for _, base := range bases {
-				_, foundRelation := m.Objects[base].Relations[RelationName(ref.RelOrPerm)]
-				_, foundPermission := m.Objects[base].Permissions[PermissionName(ref.RelOrPerm)]
-				if !(foundRelation || foundPermission) {
-					switch base {
-					case on:
-						errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-							"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, base, ref.RelOrPerm),
-						)
-					default:
-						arrow := fmt.Sprintf("%s->%s", ref.Base, ref.RelOrPerm)
-						errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-							"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
-							on, pn, arrow, base, ref.RelOrPerm,
-						))
-					}
+			// for _, base := range bases {
+			//     _, foundRelation := m.Objects[base].Relations[RelationName(ref.RelOrPerm)]
+			//     _, foundPermission := m.Objects[base].Permissions[PermissionName(ref.RelOrPerm)]
+			//     if !(foundRelation || foundPermission) {
+			//         switch base {
+			//         case on:
+			//             errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+			//                 "permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, base, ref.RelOrPerm),
+			//             )
+			//         default:
+			//             arrow := fmt.Sprintf("%s->%s", ref.Base, ref.RelOrPerm)
+			//             errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+			//                 "permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
+			//                 on, pn, arrow, base, ref.RelOrPerm,
+			//             ))
+			//         }
 
-					continue
-				}
-			}
+			//         continue
+			//     }
+			// }
 
-			ref.BaseTypes = bases
+			// ref.BaseTypes = bases
 		}
 	}
 
 	return errs
 }
 
-// relationSubjectTypes returns a list of all object types that can be the subject of the given relation.
-func (m *Model) relationSubjectTypes(r *Relation) []ObjectName {
-	switch {
-	case r.Direct != "":
-		return []ObjectName{r.Direct}
-	case r.Wildcard != "":
-		return []ObjectName{r.Wildcard}
-	case r.Subject != nil:
-		subjRel := m.Objects[r.Subject.Object].Relations[r.Subject.Relation]
-		return lo.Uniq(
-			lo.FlatMap(subjRel, func(r *Relation, _ int) []ObjectName {
-				return m.relationSubjectTypes(r)
-			}),
-		)
+func (m *Model) resolveRelations() error {
+	var errs error
+	for on, o := range m.Objects {
+		for rn, r := range o.Relations {
+			seen := set.NewSet(RelationRef{Object: on, Relation: rn})
+			subs := m.resolveRelation(r, seen)
+			switch len(subs) {
+			case 0:
+				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+					"relation '%s:%s' is circular and does not resolve to any object types", on, rn),
+				)
+			default:
+				r.SubjectTypes = subs
+			}
+		}
 	}
 
-	return []ObjectName{}
+	return errs
+}
+
+type RelSet set.Set[RelationRef]
+
+func (m *Model) resolveRelation(r *Relation, seen RelSet) []ObjectName {
+	if len(r.SubjectTypes) > 0 {
+		// already resolved
+		return r.SubjectTypes
+	}
+
+	subjectTypes := []ObjectName{}
+	for _, rt := range r.Union {
+		switch {
+		case rt.Direct != "":
+			subjectTypes = append(subjectTypes, rt.Direct)
+		case rt.Wildcard != "":
+			subjectTypes = append(subjectTypes, rt.Wildcard)
+		case rt.Subject != nil:
+			if !seen.Contains(*rt.Subject.RelationRef) {
+				seen.Add(*rt.Subject.RelationRef)
+				subjectTypes = append(subjectTypes, m.resolveRelation(
+					m.Objects[rt.Subject.Object].Relations[rt.Subject.Relation],
+					seen)...,
+				)
+			}
+
+		}
+	}
+	return subjectTypes
 }
 
 func (m *Model) subtract(newModel *Model) *diff.Changes {

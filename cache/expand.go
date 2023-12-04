@@ -21,18 +21,18 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 	}
 
 	// get relation set for given object:relation.
-	rs := c.model.Objects[on].Relations[rn]
+	r := c.model.Objects[on].Relations[rn]
 
 	// include given permission in result set
 	results = append(results, rn)
 
 	// iterate through relation set, determine if it "unions" with the given relation.
-	for _, r := range rs {
+	for _, rt := range r.Union {
 		switch {
-		case r.Subject != nil && r.Subject.Object == on:
-			results = append(results, r.Subject.Relation)
-		case r.Direct != "":
-			results = append(results, c.ExpandRelation(on, model.RelationName(r.Direct))...)
+		case rt.Subject != nil && rt.Subject.Object == on:
+			results = append(results, rt.Subject.Relation)
+		case rt.Direct != "":
+			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Direct))...)
 		}
 	}
 
@@ -70,7 +70,7 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 }
 
 // convert union []string to []model.RelationName.
-func (c *Cache) expandUnion(o *model.Object, u ...*model.RelationRef) []model.RelationName {
+func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionRef) []model.RelationName {
 	result := []model.RelationName{}
 	for _, ref := range u {
 		if ref.Base != "" {
@@ -79,12 +79,12 @@ func (c *Cache) expandUnion(o *model.Object, u ...*model.RelationRef) []model.Re
 		rn := model.RelationName(ref.RelOrPerm)
 		result = append(result, rn)
 
-		exp := lo.FilterMap(o.Relations[rn], func(r *model.Relation, _ int) (*model.RelationRef, bool) {
+		exp := lo.FilterMap(o.Relations[rn].Union, func(r *model.RelationTerm, _ int) (*model.PermissionRef, bool) {
 			if r.Direct == "" {
-				return &model.RelationRef{}, false
+				return &model.PermissionRef{}, false
 			}
 			_, ok := o.Relations[model.RelationName(r.Direct)]
-			return &model.RelationRef{RelOrPerm: string(r.Direct)}, ok
+			return &model.PermissionRef{RelOrPerm: string(r.Direct)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

@@ -31,10 +31,14 @@ func Load(r io.Reader) (*model.Model, error) {
 	for on, o := range manifest.ObjectTypes {
 		log.Debug().Str("object", string(on)).Msg("loading object")
 
-		relations := lo.MapEntries(o.Relations, func(rn RelationName, rd string) (model.RelationName, []*model.Relation) {
+		relationTerms := lo.MapEntries(o.Relations, func(rn RelationName, rd string) (model.RelationName, []*model.RelationTerm) {
 			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
 
 			return model.RelationName(rn), parser.ParseRelation(rd)
+		})
+
+		relations := lo.MapEntries(relationTerms, func(rn model.RelationName, rts []*model.RelationTerm) (model.RelationName, *model.Relation) {
+			return rn, &model.Relation{Union: rts}
 		})
 
 		permissions := lo.MapEntries(o.Permissions, func(pn PermissionName, pd string) (model.PermissionName, *model.Permission) {

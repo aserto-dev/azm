@@ -11,11 +11,11 @@ import (
 func TestRelationParser(t *testing.T) {
 	tests := []struct {
 		input    string
-		validate func([]*model.Relation, *assert.Assertions)
+		validate func([]*model.RelationTerm, *assert.Assertions)
 	}{
 		{
 			"user",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
 				assert.Equal(model.ObjectName("user"), term.Direct)
@@ -25,7 +25,7 @@ func TestRelationParser(t *testing.T) {
 		},
 		{
 			"name-with-dashes",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
 				assert.Equal(model.ObjectName("name-with-dashes"), term.Direct)
@@ -35,7 +35,7 @@ func TestRelationParser(t *testing.T) {
 		},
 		{
 			"group#member",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
 				assert.Equal(model.ObjectName("group"), term.Subject.Object)
@@ -46,7 +46,7 @@ func TestRelationParser(t *testing.T) {
 		},
 		{
 			"user:*",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
 				assert.Equal(model.ObjectName("user"), term.Wildcard)
@@ -56,7 +56,7 @@ func TestRelationParser(t *testing.T) {
 		},
 		{
 			"user | group",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 2)
 				assert.Equal(model.ObjectName("user"), rel[0].Direct)
 				assert.Equal(model.ObjectName("group"), rel[1].Direct)
@@ -64,7 +64,7 @@ func TestRelationParser(t *testing.T) {
 		},
 		{
 			"user | group | user:* | group#member",
-			func(rel []*model.Relation, assert *assert.Assertions) {
+			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 4)
 				assert.Equal(model.ObjectName("user"), rel[0].Direct)
 				assert.Equal(model.ObjectName("group"), rel[1].Direct)

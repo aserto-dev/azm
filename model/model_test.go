@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/nsf/jsondiff"
 	stretch "github.com/stretchr/testify/require"
 )
@@ -17,59 +19,68 @@ var m1 = model.Model{
 	Objects: map[model.ObjectName]*model.Object{
 		model.ObjectName("user"): {},
 		model.ObjectName("group"): {
-			Relations: map[model.RelationName][]*model.Relation{
+			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("member"): {
-					&model.Relation{Direct: model.ObjectName("user")},
-					&model.Relation{Subject: &model.SubjectRelation{
-						Object:   model.ObjectName("group"),
-						Relation: model.RelationName("member"),
-					}},
+					Union: []*model.RelationTerm{
+						{Direct: model.ObjectName("user")},
+						{Subject: &model.SubjectRelation{
+							RelationRef: &model.RelationRef{
+								Object:   model.ObjectName("group"),
+								Relation: model.RelationName("member"),
+							},
+							SubjectTypes: []model.ObjectName{},
+						}},
+					},
 				},
 			},
 		},
+
 		model.ObjectName("folder"): {
-			Relations: map[model.RelationName][]*model.Relation{
+			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("owner"): {
-					&model.Relation{Direct: model.ObjectName("user")},
+					Union: []*model.RelationTerm{
+						{Direct: model.ObjectName("user")},
+					},
 				},
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
 				model.PermissionName("read"): {
-					Union: []*model.RelationRef{{RelOrPerm: "owner"}},
+					Union: []*model.PermissionRef{{RelOrPerm: "owner"}},
 				},
 			},
 		},
 		model.ObjectName("document"): {
-			Relations: map[model.RelationName][]*model.Relation{
+			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("parent_folder"): {
-					{Direct: model.ObjectName("folder")},
+					Union: []*model.RelationTerm{{Direct: model.ObjectName("folder")}},
 				},
 				model.RelationName("writer"): {
-					{Direct: model.ObjectName("user")},
+					Union: []*model.RelationTerm{{Direct: model.ObjectName("user")}},
 				},
 				model.RelationName("reader"): {
-					{Direct: model.ObjectName("user")},
-					{Wildcard: model.ObjectName("user")},
-				},
+					Union: []*model.RelationTerm{
+						{Direct: model.ObjectName("user")},
+						{Wildcard: model.ObjectName("user")},
+					}},
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
 				model.PermissionName("edit"): {
-					Union: []*model.RelationRef{{RelOrPerm: "writer"}},
+					Union: []*model.PermissionRef{{RelOrPerm: "writer"}},
 				},
 				model.PermissionName("view"): {
-					Union: []*model.RelationRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
+					Union: []*model.PermissionRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
 				},
 				model.PermissionName("read_and_write"): {
-					Intersection: []*model.RelationRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
+					Intersection: []*model.PermissionRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
 				},
 				model.PermissionName("can_only_read"): {
 					Exclusion: &model.ExclusionPermission{
-						Include: &model.RelationRef{RelOrPerm: "reader"},
-						Exclude: &model.RelationRef{RelOrPerm: "writer"},
+						Include: &model.PermissionRef{RelOrPerm: "reader"},
+						Exclude: &model.PermissionRef{RelOrPerm: "writer"},
 					},
 				},
 				model.PermissionName("read"): {
-					Union: []*model.RelationRef{{Base: "parent_folder", RelOrPerm: "read"}},
+					Union: []*model.PermissionRef{{Base: "parent_folder", RelOrPerm: "read"}},
 				},
 			},
 		},
@@ -150,39 +161,46 @@ func TestDiff(t *testing.T) {
 		Objects: map[model.ObjectName]*model.Object{
 			model.ObjectName("new_user"): {},
 			model.ObjectName("group"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("member"): {
-						&model.Relation{Direct: model.ObjectName("new_user")},
-						&model.Relation{Subject: &model.SubjectRelation{
-							Object:   model.ObjectName("group"),
-							Relation: model.RelationName("member"),
-						}},
+						Union: []*model.RelationTerm{
+							{Direct: model.ObjectName("new_user")},
+							{Subject: &model.SubjectRelation{
+								RelationRef: &model.RelationRef{
+									Object:   model.ObjectName("group"),
+									Relation: model.RelationName("member"),
+								},
+								SubjectTypes: []model.ObjectName{},
+							}},
+						},
 					},
 				},
 			},
 			model.ObjectName("folder"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("owner"): {
-						&model.Relation{Direct: model.ObjectName("new_user")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("new_user")}},
 					},
 					model.RelationName("viewer"): {
-						&model.Relation{Direct: model.ObjectName("new_user")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("new_user")}},
 					},
 				},
 				Permissions: map[model.PermissionName]*model.Permission{
 					model.PermissionName("read"): {
-						Union: []*model.RelationRef{{RelOrPerm: "owner"}},
+						Union: []*model.PermissionRef{{RelOrPerm: "owner"}},
 					},
 				},
 			},
 			model.ObjectName("document"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("writer"): {
-						{Direct: model.ObjectName("new_user")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("new_user")}},
 					},
 					model.RelationName("reader"): {
-						{Direct: model.ObjectName("new_user")},
-						{Wildcard: model.ObjectName("new_user")},
+						Union: []*model.RelationTerm{
+							{Direct: model.ObjectName("new_user")},
+							{Wildcard: model.ObjectName("new_user")},
+						},
 					},
 				},
 			},
@@ -231,42 +249,49 @@ func TestGraph(t *testing.T) {
 		Version: 2,
 		Objects: map[model.ObjectName]*model.Object{
 			model.ObjectName("user"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("rel_name"): {
-						&model.Relation{Direct: model.ObjectName("ext_obj")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("ext_obj")}},
 					},
 				},
 			},
 			model.ObjectName("ext_obj"): {},
 			model.ObjectName("group"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("member"): {
-						&model.Relation{Direct: model.ObjectName("user")},
-						&model.Relation{Subject: &model.SubjectRelation{
-							Object:   model.ObjectName("group"),
-							Relation: model.RelationName("member"),
-						}},
+						Union: []*model.RelationTerm{
+							{Direct: model.ObjectName("user")},
+							{Subject: &model.SubjectRelation{
+								RelationRef: &model.RelationRef{
+									Object:   model.ObjectName("group"),
+									Relation: model.RelationName("member"),
+								},
+								SubjectTypes: []model.ObjectName{},
+							}},
+						},
 					},
 				},
 			},
 			model.ObjectName("folder"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("owner"): {
-						&model.Relation{Direct: model.ObjectName("user")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("user")}},
 					},
 				},
 			},
 			model.ObjectName("document"): {
-				Relations: map[model.RelationName][]*model.Relation{
+				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("parent_folder"): {
-						{Direct: model.ObjectName("folder")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("folder")}},
 					},
 					model.RelationName("writer"): {
-						{Direct: model.ObjectName("user")},
+						Union: []*model.RelationTerm{{Direct: model.ObjectName("user")}},
 					},
 					model.RelationName("reader"): {
-						{Direct: model.ObjectName("user")},
-						{Wildcard: model.ObjectName("user")},
+						Union: []*model.RelationTerm{
+							{Direct: model.ObjectName("user")},
+							{Wildcard: model.ObjectName("user")},
+						},
 					},
 				},
 			},
@@ -311,54 +336,93 @@ func TestGraph(t *testing.T) {
 	}
 }
 
+type expectedErrors int
+
 func TestValidation(t *testing.T) {
 	tests := []struct {
-		name     string
-		manifest string
-		validate func(error, *stretch.Assertions)
+		name           string
+		manifest       string
+		expectedErrors expectedErrors
+		validate       func(error, *stretch.Assertions)
 	}{
 		{
 			"relation/permission collision",
 			"./testdata/rel_perm_collision.yaml",
+			expectedErrors(1),
 			func(err error, assert *stretch.Assertions) {
 				assert.ErrorContains(err, "permission name 'file:writer' conflicts with 'file:writer' relation")
 			},
 		},
 		{
-			"relation to undefined subject",
-			"./testdata/rel_to_missing_object.yaml",
+			"relation/permissions to undefined targets",
+			"./testdata/undefined_targets.yaml",
+			expectedErrors(8),
 			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'user'")
+				// relations
+				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'person'")
 				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'team'")
 				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'project'")
 				assert.ErrorContains(err, "relation 'file:writer' references undefined object type 'team'")
 				assert.ErrorContains(err, "relation 'file:admin' references undefined relation type 'group#admin'")
+
+				// permissions
+				assert.ErrorContains(err, "permission 'folder:read' references undefined relation type 'folder:viewer'")
+				assert.ErrorContains(err, "permission 'folder:read' references undefined relation or permission 'folder:editor'")
+				assert.ErrorContains(err, "permission 'folder:write' references 'owner->write', which references undefined "+
+					"relation or permission 'user:write'")
 			},
 		},
 		{
-			"permissions with invalid targets",
-			"./testdata/invalid_perms.yaml",
+			"cyclic relation definitions",
+			"./testdata/cycles.yaml",
+			expectedErrors(3),
 			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "permission 'file:read' references undefined relation type 'file:viewer'")
-				assert.ErrorContains(err, "permission 'file:read' references undefined relation or permission 'file:editor'")
-				assert.ErrorContains(err, "permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'")
-
+				assert.ErrorContains(err, "relation 'team:member' is circular and does not resolve to any object types")
+				assert.ErrorContains(err, "relation 'team:owner' is circular and does not resolve to any object types")
+				assert.ErrorContains(err, "relation 'project:owner' is circular and does not resolve to any object types")
 			},
 		},
+		// {
+		//     "permissions with invalid targets",
+		//     "./testdata/invalid_perms.yaml",
+		//     expectedErrors(3),
+		//     func(err error, assert *stretch.Assertions) {
+		//         assert.ErrorContains(err, "permission 'folder:read' references undefined relation type 'folder:viewer'")
+		//         assert.ErrorContains(err, "permission 'folder:read' references undefined relation or permission 'folder:editor'")
+		//         assert.ErrorContains(err, "permission 'folder:write' references 'owner->write', which can resolve to undefined "+
+		//             "relation or permission 'user:write'")
+		//     },
+		// },
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := stretch.New(tt)
-			_, err := loadManifest(test.manifest)
-			assert.Error(err)
+			m, err := loadManifest(test.manifest)
+
+			// Log the model for debugging purposes.
+			var b bytes.Buffer
+			enc := json.NewEncoder(&b)
+			enc.SetIndent("", "  ")
+			assert.NoError(enc.Encode(m))
+			tt.Logf("model: %s", b.String())
+
+			// verify that we got a load error.
+			if test.expectedErrors > 0 {
+				assert.Error(err)
+			}
 
 			// verify that the error is of type ErrInvalidArgument
-			aErr := derr.ErrInvalidArgument
-			assert.ErrorAs(err, &aErr)
-			assert.Equal("E20015", aErr.Code)
+			aerr := derr.ErrInvalidArgument
+			assert.ErrorAs(err, &aerr)
+			assert.Equal("E20015", aerr.Code)
 
-			test.validate(err, assert)
+			merr := aerr.Unwrap().(*multierror.Error)
+			assert.NotNil(merr)
+			test.validate(merr, assert)
+
+			// verify that we got the expected number of errors.
+			assert.Len(merr.Errors, int(test.expectedErrors))
 		})
 	}
 }

@@ -6,6 +6,7 @@ model:
   version: 3
 
 types:
+  user: {}
   group:
     relations:
       member: group
@@ -13,7 +14,7 @@ types:
   file:
     relations:
       # invalid: type 'user' undefined
-      owner: user
+      owner: person
 
       # invalid: types 'team' and 'project' undefined
       reader: project | team:*
@@ -25,3 +26,15 @@ types:
       admin: group#admin
 
 
+  folder:
+    relations:
+      owner: user
+      writer: user
+      reader: user
+
+    permissions:
+      # invliad: viewer and editor are undefined
+      read: viewer->read | editor
+
+      # invalid: owner has subject type 'user' which has no `write' relation of permission.`
+      write: owner->write

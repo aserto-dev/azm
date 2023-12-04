@@ -9,6 +9,7 @@ require (
 	github.com/aserto-dev/go-aserto v0.30.0
 	github.com/aserto-dev/go-directory v0.30.2
 	github.com/davecgh/go-spew v1.1.1
+	github.com/deckarep/golang-set/v2 v2.5.0
 	github.com/golang/mock v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/magefile/mage v1.15.0
