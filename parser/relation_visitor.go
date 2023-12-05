@@ -21,7 +21,11 @@ func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
 
 func (v *RelationVisitor) VisitRelation(c *RelationContext) interface{} {
 	return lo.Map(c.AllRel(), func(rel IRelContext, _ int) *model.RelationTerm {
-		return rel.Accept(v).(*model.RelationTerm)
+		if term, ok := rel.Accept(v).(*model.RelationTerm); ok {
+			return term
+		}
+
+		return &model.RelationTerm{}
 	})
 }
 

@@ -13,9 +13,11 @@ types:
       writer: user
       reader: user
 
+      # invalid: no relation definition.
+      bad:
+
     permissions:
       read: reader | writer
 
         # invalid: 'writer' is already defined as a relation.
       writer: owner
-

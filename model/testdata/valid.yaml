@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=manifest.json
+---
+
+# model
+model:
+  version: 3
+
+types:
+  user: {}
+
+  team:
+    relations:
+      # valid: mutually recursive relation that can resolve to "user" or "team:*"
+      member: team#member | group#member
+      owner: user
+
+  group:
+    relations:
+      owner: team
+      parent: group
+      manager: user | group#member
+      member: user | group#member | team:*
+
+    permissions:
+      manage: owner->member | manager
+      delete: manage - member
+      purge: owner & delete & parent->manage

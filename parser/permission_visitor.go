@@ -14,6 +14,8 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 	switch t := tree.(type) {
 	case *UnionPermContext, *IntersectionPermContext, *ExclusionPermContext:
 		return t.Accept(v)
+	case *PermissionContext:
+		return &model.Permission{}
 	default:
 		panic("PermissionVisitor can only visit permissions")
 	}

@@ -25,16 +25,9 @@ types:
       # invalid: type 'group' has no 'admin' relation
       admin: group#admin
 
-
-  folder:
-    relations:
-      owner: user
-      writer: user
-      reader: user
+      # valid
+      viewer: user
 
     permissions:
-      # invliad: viewer and editor are undefined
-      read: viewer->read | editor
-
-      # invalid: owner has subject type 'user' which has no `write' relation of permission.`
-      write: owner->write
+      # invalid: viewer is a user and has no reader permission or relation
+      reader: viewer->reader

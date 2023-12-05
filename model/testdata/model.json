@@ -3,9 +3,15 @@
   "types": {
     "document": {
       "relations": {
-        "parent_folder": [{ "direct": "folder" }],
-        "reader": [{ "direct": "user" }, { "wildcard": "user" }],
-        "writer": [{ "direct": "user" }]
+        "parent_folder": {
+          "union": [{ "direct": "folder" }],
+          "subject_types": ["folder"]
+        },
+        "reader": {
+          "union": [{ "direct": "user" }, { "wildcard": "user" }],
+          "subject_types": ["user"]
+        },
+        "writer": { "union": [{ "direct": "user" }], "subject_types": ["user"] }
       },
       "permissions": {
         "can_only_read": {
@@ -30,19 +36,23 @@
       }
     },
     "folder": {
-      "relations": { "owner": [{ "direct": "user" }] },
+      "relations": {
+        "owner": { "union": [{ "direct": "user" }], "subject_types": ["user"] }
+      },
       "permissions": { "read": { "union": [{ "rel_or_perm": "owner" }] } }
     },
     "group": {
       "relations": {
-        "member": [
-          { "direct": "user" },
-          { "subject": { "object": "group", "relation": "member" } }
-        ]
+        "member": {
+          "union": [
+            { "direct": "user" },
+            { "subject": { "object": "group", "relation": "member" } }
+          ],
+          "subject_types": ["user"]
+        }
       }
     },
     "user": {}
   },
   "metadata": null
 }
-

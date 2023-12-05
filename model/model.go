@@ -91,6 +91,22 @@ type Permission struct {
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 }
 
+func (p *Permission) Refs() []*PermissionRef {
+	var refs []*PermissionRef
+
+	switch {
+	case p.Union != nil:
+		refs = p.Union
+	case p.Intersection != nil:
+		refs = p.Intersection
+	case p.Exclusion != nil:
+		refs = []*PermissionRef{p.Exclusion.Include, p.Exclusion.Exclude}
+	}
+
+	return refs
+
+}
+
 type PermissionRef struct {
 	Base      RelationName `json:"base,omitempty"`
 	RelOrPerm string       `json:"rel_or_perm"`
@@ -192,9 +208,9 @@ func (m *Model) Validate() error {
 		return derr.ErrInvalidArgument.Err(err)
 	}
 
-	// if err := m.resolvePermissions(); err != nil {
-	//     return derr.ErrInvalidArgument.Err(err)
-	// }
+	if err := m.resolvePermissions(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
 
 	return nil
 }
@@ -273,6 +289,10 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 						"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Subject.Object, r.Subject.Relation),
 					)
 				}
+			default:
+				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+					"relation '%s:%s' has no definition", on, rn),
+				)
 			}
 		}
 	}
@@ -283,27 +303,17 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 	var errs error
 	for pn, p := range o.Permissions {
-		var refs []*PermissionRef
-
-		switch {
-		case p.Union != nil:
-			refs = p.Union
-		case p.Intersection != nil:
-			refs = p.Intersection
-		case p.Exclusion != nil:
-			refs = []*PermissionRef{p.Exclusion.Include, p.Exclusion.Exclude}
+		refs := p.Refs()
+		if len(refs) == 0 {
+			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+				"permission '%s:%s' has no definition", on, pn),
+			)
+			continue
 		}
 
 		for _, ref := range refs {
-			switch ref.Base {
-			case "":
-				if !o.HasRelOrPerm(ref.RelOrPerm) {
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, on, ref.RelOrPerm),
-					)
-				}
-			default:
-				// validate that base relation exists on this object type.
+			if ref.Base != "" {
+				// validate that the base relation exists on this object type.
 				// at this stage we don't yet resolve the relation to a set of subject types.
 				if _, hasRelation := o.Relations[ref.Base]; !hasRelation {
 					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
@@ -311,29 +321,6 @@ func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 					)
 				}
 			}
-
-			// for _, base := range bases {
-			//     _, foundRelation := m.Objects[base].Relations[RelationName(ref.RelOrPerm)]
-			//     _, foundPermission := m.Objects[base].Permissions[PermissionName(ref.RelOrPerm)]
-			//     if !(foundRelation || foundPermission) {
-			//         switch base {
-			//         case on:
-			//             errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-			//                 "permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, base, ref.RelOrPerm),
-			//             )
-			//         default:
-			//             arrow := fmt.Sprintf("%s->%s", ref.Base, ref.RelOrPerm)
-			//             errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-			//                 "permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
-			//                 on, pn, arrow, base, ref.RelOrPerm,
-			//             ))
-			//         }
-
-			//         continue
-			//     }
-			// }
-
-			// ref.BaseTypes = bases
 		}
 	}
 
@@ -352,7 +339,7 @@ func (m *Model) resolveRelations() error {
 					"relation '%s:%s' is circular and does not resolve to any object types", on, rn),
 				)
 			default:
-				r.SubjectTypes = subs
+				r.SubjectTypes = lo.Uniq(subs)
 			}
 		}
 	}
@@ -387,6 +374,55 @@ func (m *Model) resolveRelation(r *Relation, seen RelSet) []ObjectName {
 		}
 	}
 	return subjectTypes
+}
+
+func (m *Model) resolvePermissions() error {
+	var errs error
+
+	for on, o := range m.Objects {
+		for pn, p := range o.Permissions {
+			if err := m.resolvePermission(on, pn, p); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+
+	return errs
+}
+
+func (m *Model) resolvePermission(on ObjectName, pn PermissionName, p *Permission) error {
+	var errs error
+	for _, ref := range p.Refs() {
+		bases := []ObjectName{}
+		switch ref.Base {
+		case "":
+			bases = append(bases, on)
+		default:
+			// relations are already resolved at this point.
+			bases = append(bases, m.Objects[on].Relations[ref.Base].SubjectTypes...)
+		}
+
+		for _, base := range bases {
+			if !m.Objects[base].HasRelOrPerm(ref.RelOrPerm) {
+				switch base {
+				case on:
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, base, ref.RelOrPerm),
+					)
+				default:
+					arrow := fmt.Sprintf("%s->%s", ref.Base, ref.RelOrPerm)
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
+						on, pn, arrow, base, ref.RelOrPerm,
+					))
+				}
+
+				continue
+			}
+		}
+	}
+
+	return errs
 }
 
 func (m *Model) subtract(newModel *Model) *diff.Changes {

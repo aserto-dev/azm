@@ -33,7 +33,7 @@ types:
     relations:
       owner: user
       parent: folder
-      viewer: user | user:* | group#member | owner | parent->viewer
+      viewer: user | user:* | group#member
     permissions:
       can_create_file: owner
 

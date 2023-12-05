@@ -28,9 +28,9 @@ var m1 = model.Model{
 								Object:   model.ObjectName("group"),
 								Relation: model.RelationName("member"),
 							},
-							SubjectTypes: []model.ObjectName{},
 						}},
 					},
+					SubjectTypes: []model.ObjectName{"user"},
 				},
 			},
 		},
@@ -41,6 +41,7 @@ var m1 = model.Model{
 					Union: []*model.RelationTerm{
 						{Direct: model.ObjectName("user")},
 					},
+					SubjectTypes: []model.ObjectName{"user"},
 				},
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
@@ -52,16 +53,20 @@ var m1 = model.Model{
 		model.ObjectName("document"): {
 			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("parent_folder"): {
-					Union: []*model.RelationTerm{{Direct: model.ObjectName("folder")}},
+					Union:        []*model.RelationTerm{{Direct: model.ObjectName("folder")}},
+					SubjectTypes: []model.ObjectName{"folder"},
 				},
 				model.RelationName("writer"): {
-					Union: []*model.RelationTerm{{Direct: model.ObjectName("user")}},
+					Union:        []*model.RelationTerm{{Direct: model.ObjectName("user")}},
+					SubjectTypes: []model.ObjectName{"user"},
 				},
 				model.RelationName("reader"): {
 					Union: []*model.RelationTerm{
 						{Direct: model.ObjectName("user")},
 						{Wildcard: model.ObjectName("user")},
-					}},
+					},
+					SubjectTypes: []model.ObjectName{"user"},
+				},
 			},
 			Permissions: map[model.PermissionName]*model.Permission{
 				model.PermissionName("edit"): {
@@ -346,17 +351,24 @@ func TestValidation(t *testing.T) {
 		validate       func(error, *stretch.Assertions)
 	}{
 		{
+			"valid manifest",
+			"./testdata/valid.yaml",
+			expectedErrors(0),
+			func(_ error, _ *stretch.Assertions) {},
+		},
+		{
 			"relation/permission collision",
 			"./testdata/rel_perm_collision.yaml",
-			expectedErrors(1),
+			expectedErrors(2),
 			func(err error, assert *stretch.Assertions) {
 				assert.ErrorContains(err, "permission name 'file:writer' conflicts with 'file:writer' relation")
+				assert.ErrorContains(err, "relation 'file:bad' has no definition")
 			},
 		},
 		{
-			"relation/permissions to undefined targets",
+			"relation to undefined targets",
 			"./testdata/undefined_targets.yaml",
-			expectedErrors(8),
+			expectedErrors(6),
 			func(err error, assert *stretch.Assertions) {
 				// relations
 				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'person'")
@@ -364,17 +376,12 @@ func TestValidation(t *testing.T) {
 				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'project'")
 				assert.ErrorContains(err, "relation 'file:writer' references undefined object type 'team'")
 				assert.ErrorContains(err, "relation 'file:admin' references undefined relation type 'group#admin'")
-
-				// permissions
-				assert.ErrorContains(err, "permission 'folder:read' references undefined relation type 'folder:viewer'")
-				assert.ErrorContains(err, "permission 'folder:read' references undefined relation or permission 'folder:editor'")
-				assert.ErrorContains(err, "permission 'folder:write' references 'owner->write', which references undefined "+
-					"relation or permission 'user:write'")
+				assert.ErrorContains(err, "permission name 'file:reader' conflicts with 'file:reader' relation")
 			},
 		},
 		{
 			"cyclic relation definitions",
-			"./testdata/cycles.yaml",
+			"./testdata/invalid_cycles.yaml",
 			expectedErrors(3),
 			func(err error, assert *stretch.Assertions) {
 				assert.ErrorContains(err, "relation 'team:member' is circular and does not resolve to any object types")
@@ -382,17 +389,15 @@ func TestValidation(t *testing.T) {
 				assert.ErrorContains(err, "relation 'project:owner' is circular and does not resolve to any object types")
 			},
 		},
-		// {
-		//     "permissions with invalid targets",
-		//     "./testdata/invalid_perms.yaml",
-		//     expectedErrors(3),
-		//     func(err error, assert *stretch.Assertions) {
-		//         assert.ErrorContains(err, "permission 'folder:read' references undefined relation type 'folder:viewer'")
-		//         assert.ErrorContains(err, "permission 'folder:read' references undefined relation or permission 'folder:editor'")
-		//         assert.ErrorContains(err, "permission 'folder:write' references 'owner->write', which can resolve to undefined "+
-		//             "relation or permission 'user:write'")
-		//     },
-		// },
+		{
+			"permissions with invalid targets",
+			"./testdata/invalid_perms.yaml",
+			expectedErrors(2),
+			func(err error, assert *stretch.Assertions) {
+				assert.ErrorContains(err, "permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'")
+				assert.ErrorContains(err, "permission 'file:write' references undefined relation or permission 'file:editor'")
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -407,11 +412,12 @@ func TestValidation(t *testing.T) {
 			assert.NoError(enc.Encode(m))
 			tt.Logf("model: %s", b.String())
 
-			// verify that we got a load error.
-			if test.expectedErrors > 0 {
-				assert.Error(err)
+			if test.expectedErrors == 0 {
+				return
 			}
 
+			// verify that we got a load error.
+			assert.Error(err)
 			// verify that the error is of type ErrInvalidArgument
 			aerr := derr.ErrInvalidArgument
 			assert.ErrorAs(err, &aerr)

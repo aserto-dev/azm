@@ -7,15 +7,28 @@ model:
 
 types:
   user: {}
-  file:
+  folder:
     relations:
       owner: user
+  file:
+    relations:
+      parent: folder
+      owner: user | file
       writer: user
       reader: user
 
     permissions:
-      # invliad: viewer and editor are undefined
-      read: viewer->read | editor
+      # valid union: two relations
+      read: reader | writer
 
-      # invalid: owner has subject type 'user' which has no `write' relation of permission.`
-      write: owner->write
+      # valid union: one relation and one permission
+      share: read | parent->owner
+
+      # valid exclusion
+      delete: owner - share
+
+      # invalid:
+      #   1. owner may resolve to 'user' which has no `write' relation of permission.`
+      #   2. no relation or permission called editor.
+      write: owner->write | editor
+
