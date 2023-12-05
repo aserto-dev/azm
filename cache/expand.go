@@ -31,8 +31,8 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 		switch {
 		case rt.Subject != nil && rt.Subject.Object == on:
 			results = append(results, rt.Subject.Relation)
-		case rt.Direct != "":
-			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Direct))...)
+		case rt.Direct != nil:
+			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Direct.Object))...)
 		}
 	}
 
@@ -80,11 +80,11 @@ func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionRef) []model.
 		result = append(result, rn)
 
 		exp := lo.FilterMap(o.Relations[rn].Union, func(r *model.RelationTerm, _ int) (*model.PermissionRef, bool) {
-			if r.Direct == "" {
+			if r.Direct == nil {
 				return &model.PermissionRef{}, false
 			}
-			_, ok := o.Relations[model.RelationName(r.Direct)]
-			return &model.PermissionRef{RelOrPerm: string(r.Direct)}, ok
+			_, ok := o.Relations[model.RelationName(r.Direct.Object)]
+			return &model.PermissionRef{RelOrPerm: string(r.Direct.Object)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

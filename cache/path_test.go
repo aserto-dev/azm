@@ -13,25 +13,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type PathMap map[model.ObjectName]map[model.RelationName][]*model.ObjectRelation
+type PathMap map[model.ObjectName]map[model.RelationName][]*model.RelationRef
 
-func (pm PathMap) GetPath(or *model.ObjectRelation) []*model.ObjectRelation {
+func (pm PathMap) GetPath(or *model.RelationRef) []*model.RelationRef {
 	if or == nil {
-		return []*model.ObjectRelation{}
+		return []*model.RelationRef{}
 	}
 
 	p1, ok := pm[or.Object]
 	if !ok {
-		return []*model.ObjectRelation{}
+		return []*model.RelationRef{}
 	}
 
 	p2, ok := p1[or.Relation]
 	if !ok {
-		return []*model.ObjectRelation{}
+		return []*model.RelationRef{}
 	}
 
 	return p2
 }
+
+// func walkPath(m *model.Model, rr *model.RelationRef, path []string) []string {
+
+// }
 
 func TestPathMap(t *testing.T) {
 	r, err := os.Open("./path_test.yaml")
@@ -49,20 +53,15 @@ func TestPathMap(t *testing.T) {
 	require.NotNil(t, pm)
 
 	// plot all paths for all roots.
-	roots := []*model.ObjectRelation{}
 	for on, rns := range *pm {
 		for rn := range rns {
-			roots = append(roots, model.NewObjectRelation(on, rn))
+			path := pm.WalkPath(model.NewRelationRef(on, rn), []string{})
+			fmt.Printf("%s:%s: %s\n", on, rn, strings.Join(path, " -> "))
 		}
-	}
-
-	for i := 0; i < len(roots); i++ {
-		path := pm.WalkPath(roots[i], []string{})
-		fmt.Println(strings.Join(path, " -> "))
 	}
 }
 
-func (pm PathMap) WalkPath(or *model.ObjectRelation, path []string) []string {
+func (pm PathMap) WalkPath(or *model.RelationRef, path []string) []string {
 	paths := pm.GetPath(or)
 	for i := 0; i < len(paths); i++ {
 		path = append(path, paths[i].String())
@@ -71,7 +70,7 @@ func (pm PathMap) WalkPath(or *model.ObjectRelation, path []string) []string {
 	return path
 }
 
-func (pm PathMap) plotPaths(w io.Writer, or *model.ObjectRelation) {
+func (pm PathMap) plotPaths(w io.Writer, or *model.RelationRef) {
 	paths := pm.GetPath(or)
 
 	for _, p := range paths {
@@ -93,20 +92,20 @@ func createPathMap(m *model.Model) *PathMap {
 	// create roots
 	for on, o := range m.Objects {
 		if _, ok := pm[on]; !ok {
-			pm[on] = map[model.RelationName][]*model.ObjectRelation{}
+			pm[on] = map[model.RelationName][]*model.RelationRef{}
 		}
 
 		p1 := pm[on]
 
 		for pn := range o.Permissions {
 			if _, ok := p1[pn.RN()]; !ok {
-				p1[pn.RN()] = []*model.ObjectRelation{}
+				p1[pn.RN()] = []*model.RelationRef{}
 			}
 		}
 
 		for rn := range o.Relations {
 			if _, ok := p1[rn]; !ok {
-				p1[rn] = []*model.ObjectRelation{}
+				p1[rn] = []*model.RelationRef{}
 			}
 		}
 	}
@@ -127,8 +126,8 @@ func createPathMap(m *model.Model) *PathMap {
 	return &pm
 }
 
-func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []*model.ObjectRelation {
-	result := []*model.ObjectRelation{}
+func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []*model.RelationRef {
+	result := []*model.RelationRef{}
 
 	p, ok := m.Objects[on].Permissions[pn]
 	if !ok {
@@ -150,8 +149,8 @@ func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []
 	return result
 }
 
-func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*model.ObjectRelation {
-	result := []*model.ObjectRelation{}
+func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*model.RelationRef {
+	result := []*model.RelationRef{}
 
 	relation, ok := m.Objects[on].Relations[rn]
 	if !ok {
@@ -159,32 +158,26 @@ func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*mo
 	}
 
 	for _, r := range relation.Union {
-		if r.Direct != "" {
-			result = append(result, &model.ObjectRelation{
-				Object:   r.Direct,
-				Relation: "",
-			})
+		if r.Direct != nil {
+			result = append(result, r.Direct)
 		}
 
 		if r.Subject != nil {
-			result = append(result, &model.ObjectRelation{
+			result = append(result, &model.RelationRef{
 				Object:   r.Subject.Object,
 				Relation: r.Subject.Relation,
 			})
 		}
 
-		if r.Wildcard != "" {
-			result = append(result, &model.ObjectRelation{
-				Object:   r.Wildcard,
-				Relation: "*",
-			})
+		if r.Wildcard != nil {
+			result = append(result, r.Wildcard)
 		}
 	}
 
 	return result
 }
 
-func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.ObjectRelation {
+func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.RelationRef {
 	if strings.Contains(rn.String(), v3.ArrowIdentifier) {
 		parts := strings.Split(rn.String(), v3.ArrowIdentifier)
 
@@ -192,31 +185,22 @@ func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.
 
 		if _, ok := m.Objects[on].Relations[rn]; ok { // 	if c.RelationExists(on, rn) {
 			for _, rel := range m.Objects[on].Relations[rn].Union {
-				if rel.Direct != "" {
-					return &model.ObjectRelation{
-						Object:   rel.Direct,
-						Relation: model.RelationName(parts[1]),
-					}
+				if rel.Direct != nil {
+					return rel.Direct
 				}
 
 				if rel.Subject != nil {
-					return &model.ObjectRelation{
-						Object:   rel.Subject.Object,
-						Relation: rel.Subject.Relation,
-					}
+					return rel.Subject.RelationRef
 				}
 
-				if rel.Wildcard != "" {
-					return &model.ObjectRelation{
-						Object:   rel.Wildcard,
-						Relation: "*",
-					}
+				if rel.Wildcard != nil {
+					return rel.Wildcard
 				}
 			}
 		}
 	}
 
-	return &model.ObjectRelation{
+	return &model.RelationRef{
 		Object:   on,
 		Relation: rn,
 	}

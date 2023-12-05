@@ -18,9 +18,11 @@ func TestRelationParser(t *testing.T) {
 			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
-				assert.Equal(model.ObjectName("user"), term.Direct)
+				assert.NotNil(term.Direct)
+				assert.Empty(term.Direct.Relation)
+				assert.Equal(model.ObjectName("user"), term.Direct.Object)
 				assert.Nil(term.Subject)
-				assert.Empty(term.Wildcard)
+				assert.Nil(term.Wildcard)
 			},
 		},
 		{
@@ -28,9 +30,11 @@ func TestRelationParser(t *testing.T) {
 			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
-				assert.Equal(model.ObjectName("name-with-dashes"), term.Direct)
+				assert.NotNil(term.Direct)
+				assert.Empty(term.Direct.Relation)
+				assert.Equal(model.ObjectName("name-with-dashes"), term.Direct.Object)
 				assert.Nil(term.Subject)
-				assert.Empty(term.Wildcard)
+				assert.Nil(term.Wildcard)
 			},
 		},
 		{
@@ -40,8 +44,8 @@ func TestRelationParser(t *testing.T) {
 				term := rel[0]
 				assert.Equal(model.ObjectName("group"), term.Subject.Object)
 				assert.Equal(model.RelationName("member"), term.Subject.Relation)
-				assert.Empty(term.Direct)
-				assert.Empty(term.Wildcard)
+				assert.Nil(term.Direct)
+				assert.Nil(term.Wildcard)
 			},
 		},
 		{
@@ -49,28 +53,54 @@ func TestRelationParser(t *testing.T) {
 			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 1)
 				term := rel[0]
-				assert.Equal(model.ObjectName("user"), term.Wildcard)
+				assert.NotNil(term.Wildcard)
+				assert.Equal(model.ObjectName("user"), term.Wildcard.Object)
+				assert.Equal(model.RelationName("*"), term.Wildcard.Relation)
 				assert.Nil(term.Subject)
-				assert.Empty(term.Direct)
+				assert.Nil(term.Direct)
 			},
 		},
 		{
 			"user | group",
 			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 2)
-				assert.Equal(model.ObjectName("user"), rel[0].Direct)
-				assert.Equal(model.ObjectName("group"), rel[1].Direct)
+
+				assert.NotNil(rel[0].Direct)
+				assert.Equal(model.ObjectName("user"), rel[0].Direct.Object)
+				assert.Empty(rel[0].Direct.Relation)
+
+				assert.NotNil(rel[1].Direct)
+				assert.Equal(model.ObjectName("group"), rel[1].Direct.Object)
+				assert.Empty(rel[1].Direct.Relation)
 			},
 		},
 		{
 			"user | group | user:* | group#member",
 			func(rel []*model.RelationTerm, assert *assert.Assertions) {
 				assert.Len(rel, 4)
-				assert.Equal(model.ObjectName("user"), rel[0].Direct)
-				assert.Equal(model.ObjectName("group"), rel[1].Direct)
-				assert.Equal(model.ObjectName("user"), rel[2].Wildcard)
+
+				assert.NotNil(rel[0].Direct)
+				assert.Equal(model.ObjectName("user"), rel[0].Direct.Object)
+				assert.Empty(rel[0].Direct.Relation)
+				assert.Nil(rel[0].Wildcard)
+				assert.Nil(rel[0].Subject)
+
+				assert.NotNil(rel[1].Direct)
+				assert.Equal(model.ObjectName("group"), rel[1].Direct.Object)
+				assert.Empty(rel[1].Direct.Relation)
+				assert.Nil(rel[1].Wildcard)
+				assert.Nil(rel[1].Subject)
+
+				assert.NotNil(rel[2].Wildcard)
+				assert.Equal(model.ObjectName("user"), rel[2].Wildcard.Object)
+				assert.Nil(rel[2].Direct)
+				assert.Nil(rel[2].Subject)
+
+				assert.NotNil(rel[3].Subject)
 				assert.Equal(model.ObjectName("group"), rel[3].Subject.Object)
 				assert.Equal(model.RelationName("member"), rel[3].Subject.Relation)
+				assert.Nil(rel[3].Direct)
+				assert.Nil(rel[3].Wildcard)
 			},
 		},
 	}

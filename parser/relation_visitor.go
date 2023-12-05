@@ -30,11 +30,14 @@ func (v *RelationVisitor) VisitRelation(c *RelationContext) interface{} {
 }
 
 func (v *RelationVisitor) VisitDirectRel(c *DirectRelContext) interface{} {
-	return &model.RelationTerm{Direct: model.ObjectName(c.Direct().ID().GetText())}
+	return &model.RelationTerm{Direct: &model.RelationRef{Object: model.ObjectName(c.Direct().ID().GetText())}}
 }
 
 func (v *RelationVisitor) VisitWildcardRel(c *WildcardRelContext) interface{} {
-	return &model.RelationTerm{Wildcard: model.ObjectName(c.Wildcard().ID().GetText())}
+	return &model.RelationTerm{Wildcard: &model.RelationRef{
+		Object:   model.ObjectName(c.Wildcard().ID().GetText()),
+		Relation: "*",
+	}}
 }
 
 func (v *RelationVisitor) VisitSubjectRel(c *SubjectRelContext) interface{} {
