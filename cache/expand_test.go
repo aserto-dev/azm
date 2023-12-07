@@ -9,7 +9,7 @@ import (
 
 	"github.com/aserto-dev/azm/cache"
 	"github.com/aserto-dev/azm/model"
-	v3 "github.com/aserto-dev/azm/v3"
+	v2 "github.com/aserto-dev/azm/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +35,7 @@ func loadFromManifest(t *testing.T, path string) *cache.Cache { // nolint:unused
 	require.NoError(t, err)
 	defer r.Close()
 
-	m, err := v3.Load(r)
+	m, err := v2.Load(r)
 	require.NoError(t, err)
 
 	cachefile := strings.TrimSuffix(path, filepath.Ext(path)) + ".json"

@@ -4,21 +4,23 @@ import (
 	"io"
 
 	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/parser"
+	"github.com/samber/lo"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
 func Load(r io.Reader) (*model.Model, error) {
-	manifest := Manifest{}
-	dec := yaml.NewDecoder(r)
-	dec.KnownFields(true)
-
 	m := model.Model{
 		Version: model.ModelVersion,
 		Objects: map[model.ObjectName]*model.Object{},
 	}
 
+	dec := yaml.NewDecoder(r)
+	dec.KnownFields(true)
+
+	manifest := Manifest{}
 	if err := dec.Decode(&manifest); err != nil {
 		if err == io.EOF {
 			return &m, nil
@@ -29,79 +31,21 @@ func Load(r io.Reader) (*model.Model, error) {
 	for on, o := range manifest.ObjectTypes {
 		log.Debug().Str("object", string(on)).Msg("loading object")
 
-		relations := map[model.RelationName][]*model.Relation{}
-
-		if o.Relations == nil {
-			o.Relations = map[RelationName]RelationDefinition{}
-		}
-
-		for rn, rd := range o.Relations {
+		relationTerms := lo.MapEntries(o.Relations, func(rn RelationName, rd string) (model.RelationName, []*model.RelationTerm) {
 			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
 
-			for _, v := range rd.Definition {
-				if _, ok := relations[model.RelationName(rn)]; !ok {
-					relations[model.RelationName(rn)] = []*model.Relation{}
-				}
+			return model.RelationName(rn), parser.ParseRelation(rd)
+		})
 
-				rs := relations[model.RelationName(rn)]
-				r := &model.Relation{}
+		relations := lo.MapEntries(relationTerms, func(rn model.RelationName, rts []*model.RelationTerm) (model.RelationName, *model.Relation) {
+			return rn, &model.Relation{Union: rts}
+		})
 
-				switch x := v.(type) {
-				case *DirectRelation:
-					r.Direct = model.ObjectName(x.ObjectType)
-
-				case *SubjectRelation:
-					r.Subject = &model.SubjectRelation{
-						Object:   model.ObjectName(x.ObjectType),
-						Relation: model.RelationName(x.Relation),
-					}
-
-				case *WildcardRelation:
-					r.Wildcard = model.ObjectName(x.ObjectType)
-				}
-
-				rs = append(rs, r)
-				relations[model.RelationName(rn)] = rs
-			}
-		}
-
-		permissions := map[model.PermissionName]*model.Permission{}
-
-		if o.Permissions == nil {
-			o.Permissions = map[PermissionName]PermissionOperator{}
-		}
-
-		for pn, pd := range o.Permissions {
+		permissions := lo.MapEntries(o.Permissions, func(pn PermissionName, pd string) (model.PermissionName, *model.Permission) {
 			log.Debug().Str("object", string(on)).Str("permission", string(pn)).Msg("loading permission")
 
-			if _, ok := permissions[model.PermissionName(pn)]; !ok {
-				permissions[model.PermissionName(pn)] = &model.Permission{}
-			}
-
-			p := permissions[model.PermissionName(pn)]
-
-			switch x := pd.Operator.(type) {
-			case *UnionOperator:
-				p.Union = x.Union
-
-			case *IntersectionOperator:
-				p.Intersection = x.Intersection
-
-			case *ExclusionOperator:
-				p.Exclusion = &model.ExclusionPermission{
-					Base:     x.Base,
-					Subtract: x.Subtract,
-				}
-
-			case *ArrowOperator:
-				p.Arrow = &model.ArrowPermission{
-					Relation:   x.Relation,
-					Permission: x.Permission,
-				}
-			}
-
-			permissions[model.PermissionName(pn)] = p
-		}
+			return model.PermissionName(pn), parser.ParsePermission(pd)
+		})
 
 		m.Objects[model.ObjectName(on)] = &model.Object{
 			Relations:   relations,
@@ -109,5 +53,5 @@ func Load(r io.Reader) (*model.Model, error) {
 		}
 	}
 
-	return &m, nil
+	return &m, m.Validate()
 }

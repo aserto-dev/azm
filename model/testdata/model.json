@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "types": {
+    "document": {
+      "relations": {
+        "parent_folder": {
+          "union": [{ "direct": { "object": "folder" } }],
+          "subject_types": ["folder"]
+        },
+        "reader": {
+          "union": [
+            { "direct": { "object": "user" } },
+            { "wildcard": { "object": "user", "relation": "*" } }
+          ],
+          "subject_types": ["user"]
+        },
+        "writer": {
+          "union": [{ "direct": { "object": "user" } }],
+          "subject_types": ["user"]
+        }
+      },
+      "permissions": {
+        "can_only_read": {
+          "exclusion": {
+            "include": { "rel_or_perm": "reader" },
+            "exclude": { "rel_or_perm": "writer" }
+          }
+        },
+        "edit": { "union": [{ "rel_or_perm": "writer" }] },
+        "read": {
+          "union": [{ "base": "parent_folder", "rel_or_perm": "read" }]
+        },
+        "read_and_write": {
+          "intersection": [
+            { "rel_or_perm": "reader" },
+            { "rel_or_perm": "writer" }
+          ]
+        },
+        "view": {
+          "union": [{ "rel_or_perm": "reader" }, { "rel_or_perm": "writer" }]
+        }
+      }
+    },
+    "folder": {
+      "relations": {
+        "owner": {
+          "union": [{ "direct": { "object": "user" } }],
+          "subject_types": ["user"]
+        }
+      },
+      "permissions": { "read": { "union": [{ "rel_or_perm": "owner" }] } }
+    },
+    "group": {
+      "relations": {
+        "member": {
+          "union": [
+            { "direct": { "object": "user" } },
+            { "subject": { "object": "group", "relation": "member" } }
+          ],
+          "subject_types": ["user"]
+        }
+      }
+    },
+    "user": {}
+  },
+  "metadata": null
+}
