@@ -2,7 +2,6 @@ package cache_test
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"testing"
@@ -68,22 +67,6 @@ func (pm PathMap) WalkPath(or *model.RelationRef, path []string) []string {
 		pm.WalkPath(paths[i], path)
 	}
 	return path
-}
-
-func (pm PathMap) plotPaths(w io.Writer, or *model.RelationRef) {
-	paths := pm.GetPath(or)
-
-	for _, p := range paths {
-		fmt.Fprintf(w, "%s:%s ", or.Object, or.Relation)
-
-		fmt.Fprintf(w, "-> %s:%s ", p.Object, p.Relation)
-
-		for _, v := range pm.GetPath(p) {
-			fmt.Fprintf(w, "-> %s:%s ", v.Object, v.Relation)
-		}
-
-		fmt.Fprintf(w, "\n")
-	}
 }
 
 func createPathMap(m *model.Model) *PathMap {
