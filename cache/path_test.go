@@ -42,7 +42,6 @@ func (r RelationsReader) GetRelations(ctx context.Context, req *dsr.GetRelations
 			rel.ObjectID == req.ObjectId &&
 			rel.Relation == model.RelationName(req.Relation) &&
 			rel.SubjectType == model.ObjectName(req.SubjectType) &&
-			rel.SubjectID == req.SubjectId &&
 			rel.SubjectRelation == model.RelationName(req.SubjectRelation)
 	})
 
@@ -60,6 +59,14 @@ func TestCheckRelation(t *testing.T) {
 		{"group", "doc1_viewers", "member", "user", "user2", ""},     // group member
 		{"doc", "doc2", "viewer", "user", "*", ""},                   // wildcard
 
+		{"group", "doc1_viewers", "member", "group", "d1_subviewers", "member"},
+		{"group", "d1_subviewers", "member", "user", "user3", ""},
+
+		// mutually recursive groups
+		{"group", "yin", "member", "group", "yang", "member"},
+		{"group", "yang", "member", "group", "yin", "member"},
+		{"group", "yin", "member", "user", "yin_user", ""},
+		{"group", "yang", "member", "user", "yang_user", ""},
 	}
 
 	tests := []struct {
@@ -69,9 +76,16 @@ func TestCheckRelation(t *testing.T) {
 	}{
 		{name: "no assignment", check: check("doc", "doc1", "owner", "user", "user1"), expected: false},
 		{name: "direct assignment", check: check("doc", "doc1", "viewer", "user", "user1"), expected: true},
-		{name: "subject relation", check: check("doc", "doc1", "viewer", "user", "user2"), expected: true},
 		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "user1"), expected: true},
 		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "userX"), expected: true},
+		{name: "subject relation", check: check("doc", "doc1", "viewer", "user", "user2"), expected: true},
+		{name: "nested groups", check: check("doc", "doc1", "viewer", "user", "user3"), expected: true},
+		{name: "container not in set", check: check("doc", "doc1", "viewer", "group", "doc1_viewers"), expected: false},
+
+		{name: "recursive groups - yin/yin", check: check("group", "yin", "member", "user", "yin_user"), expected: true},
+		{name: "recursive groups - yin/yang", check: check("group", "yin", "member", "user", "yang_user"), expected: true},
+		{name: "recursive groups - yang/yin", check: check("group", "yang", "member", "user", "yin_user"), expected: true},
+		{name: "recursive groups - yang/yang", check: check("group", "yang", "member", "user", "yang_user"), expected: true},
 	}
 
 	r, err := os.Open("./path_test.yaml")
