@@ -62,11 +62,15 @@ func TestCheckRelation(t *testing.T) {
 		{"group", "doc1_viewers", "member", "group", "d1_subviewers", "member"},
 		{"group", "d1_subviewers", "member", "user", "user3", ""},
 
-		// mutually recursive groups
+		// mutually recursive groups with users
 		{"group", "yin", "member", "group", "yang", "member"},
 		{"group", "yang", "member", "group", "yin", "member"},
 		{"group", "yin", "member", "user", "yin_user", ""},
 		{"group", "yang", "member", "user", "yang_user", ""},
+
+		// mutually recursive groups with no users
+		{"group", "alpha", "member", "group", "omega", "member"},
+		{"group", "omega", "member", "group", "alpha", "member"},
 	}
 
 	tests := []struct {
@@ -86,6 +90,8 @@ func TestCheckRelation(t *testing.T) {
 		{name: "recursive groups - yin/yang", check: check("group", "yin", "member", "user", "yang_user"), expected: true},
 		{name: "recursive groups - yang/yin", check: check("group", "yang", "member", "user", "yin_user"), expected: true},
 		{name: "recursive groups - yang/yang", check: check("group", "yang", "member", "user", "yang_user"), expected: true},
+
+		{name: "recursive groups - alpha/omega", check: check("group", "alpha", "member", "user", "user1"), expected: false},
 	}
 
 	r, err := os.Open("./path_test.yaml")
