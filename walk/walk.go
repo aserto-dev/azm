@@ -51,7 +51,7 @@ func New(m *model.Model, stats *Stats, req *dsr.CheckRequest, reader RelationRea
 }
 
 func (w *Walker) Check() (bool, error) {
-	o := w.m.Objects[model.ObjectName(w.obj.Type)]
+	o := w.m.Objects[w.obj.Type]
 	if o == nil {
 		return false, derr.ErrObjectTypeNotFound.Msg(w.obj.Type.String())
 	}
@@ -80,13 +80,13 @@ func (w *Walker) checkRelation(
 		w.visited[*rr] = visited
 	}
 
-	objID := ObjectID(object.ID)
+	objID := object.ID
 	if visited.Contains(objID) {
 		// We already checked this relation and it didn't resolve to the subject.
 		return false, nil
 	}
 
-	visited.Add(ObjectID(object.ID))
+	visited.Add(object.ID)
 
 	steps := w.step(rr, subject.Type)
 
