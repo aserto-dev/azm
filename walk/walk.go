@@ -1,10 +1,10 @@
 package walk
 
 import (
-	"context"
 	"sort"
 
 	"github.com/aserto-dev/azm/model"
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 
@@ -25,17 +25,15 @@ type Object struct {
 	ID   ObjectID
 }
 
-type RelationReader interface {
-	GetRelations(context.Context, *dsr.GetRelationsRequest) (*dsr.GetRelationsResponse, error)
-}
+type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
 
 type Walker struct {
-	m      *model.Model
-	stats  *Stats
-	obj    *Object
-	rel    model.RelationName
-	subj   *Object
-	reader RelationReader
+	m       *model.Model
+	stats   *Stats
+	obj     *Object
+	rel     model.RelationName
+	subj    *Object
+	getRels RelationReader
 
 	visited map[model.RelationRef]ObjectIDs
 }
@@ -47,19 +45,19 @@ func New(m *model.Model, stats *Stats, req *dsr.CheckRequest, reader RelationRea
 		obj:     &Object{Type: model.ObjectName(req.ObjectType), ID: ObjectID(req.ObjectId)},
 		rel:     model.RelationName(req.Relation),
 		subj:    &Object{Type: model.ObjectName(req.SubjectType), ID: ObjectID(req.SubjectId)},
-		reader:  reader,
+		getRels: reader,
 		visited: map[model.RelationRef]ObjectIDs{},
 	}
 }
 
-func (w *Walker) Check(ctx context.Context) (bool, error) {
+func (w *Walker) Check() (bool, error) {
 	o := w.m.Objects[model.ObjectName(w.obj.Type)]
 	if o == nil {
 		return false, derr.ErrObjectTypeNotFound.Msg(w.obj.Type.String())
 	}
 
 	if o.HasRelation(w.rel) {
-		return w.checkRelation(ctx, w.obj, w.rel, w.subj)
+		return w.checkRelation(w.obj, w.rel, w.subj)
 	}
 
 	if o.HasPermission(model.PermissionName(w.rel)) {
@@ -70,7 +68,6 @@ func (w *Walker) Check(ctx context.Context) (bool, error) {
 }
 
 func (w *Walker) checkRelation(
-	ctx context.Context,
 	object *Object,
 	relation model.RelationName,
 	subject *Object,
@@ -99,27 +96,26 @@ func (w *Walker) checkRelation(
 			return true, nil
 		}
 
-		req := &dsr.GetRelationsRequest{
+		rels, err := w.getRels(&dsc.Relation{
 			ObjectType:      object.Type.String(),
 			ObjectId:        object.ID.String(),
 			Relation:        relation.String(),
 			SubjectType:     step.Object.String(),
 			SubjectRelation: step.Relation.String(),
-		}
-		resp, err := w.reader.GetRelations(ctx, req)
+		})
 		if err != nil {
 			return false, err
 		}
 		switch {
 		case step.IsDirect():
-			for _, rel := range resp.Results {
+			for _, rel := range rels {
 				if rel.SubjectId == subject.ID.String() {
 					return true, nil
 				}
 			}
 		case step.IsSubject():
-			for _, rel := range resp.Results {
-				if ok, err := w.checkRelation(ctx, &Object{Type: step.Object, ID: ObjectID(rel.SubjectId)}, step.Relation, subject); err != nil {
+			for _, rel := range rels {
+				if ok, err := w.checkRelation(&Object{Type: step.Object, ID: ObjectID(rel.SubjectId)}, step.Relation, subject); err != nil {
 					return false, err
 				} else if ok {
 					return true, nil

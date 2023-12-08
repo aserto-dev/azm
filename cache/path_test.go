@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -36,7 +35,7 @@ func (r *relation) AsProto() *dsc.Relation {
 
 type RelationsReader []*relation
 
-func (r RelationsReader) GetRelations(ctx context.Context, req *dsr.GetRelationsRequest) (*dsr.GetRelationsResponse, error) {
+func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error) {
 	matches := lo.Filter(r, func(rel *relation, _ int) bool {
 		return rel.ObjectType == model.ObjectName(req.ObjectType) &&
 			rel.ObjectID == req.ObjectId &&
@@ -45,11 +44,9 @@ func (r RelationsReader) GetRelations(ctx context.Context, req *dsr.GetRelations
 			rel.SubjectRelation == model.RelationName(req.SubjectRelation)
 	})
 
-	return &dsr.GetRelationsResponse{
-		Results: lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
-			return r.AsProto()
-		}),
-	}, nil
+	return lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
+		return r.AsProto()
+	}), nil
 }
 
 func TestCheckRelation(t *testing.T) {
@@ -102,15 +99,13 @@ func TestCheckRelation(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, m)
 
-	ctx := context.Background()
-
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := require.New(tt)
 
-			walker := walk.New(m, nil, test.check, rels)
+			walker := walk.New(m, nil, test.check, rels.GetRelations)
 
-			res, err := walker.Check(ctx)
+			res, err := walker.Check()
 			assert.NoError(err)
 			assert.Equal(test.expected, res)
 		})
