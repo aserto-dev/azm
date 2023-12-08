@@ -1,42 +1,79 @@
 package cache_test
 
 import (
-	"fmt"
+	"context"
 	"os"
-	"strings"
 	"testing"
 
-	"github.com/aserto-dev/azm/cache"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
+	"github.com/aserto-dev/azm/walk"
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 )
 
-type PathMap map[model.ObjectName]map[model.RelationName][]*model.RelationRef
-
-func (pm PathMap) GetPath(or *model.RelationRef) []*model.RelationRef {
-	if or == nil {
-		return []*model.RelationRef{}
-	}
-
-	p1, ok := pm[or.Object]
-	if !ok {
-		return []*model.RelationRef{}
-	}
-
-	p2, ok := p1[or.Relation]
-	if !ok {
-		return []*model.RelationRef{}
-	}
-
-	return p2
+type relation struct {
+	ObjectType      model.ObjectName
+	ObjectID        string
+	Relation        model.RelationName
+	SubjectType     model.ObjectName
+	SubjectID       string
+	SubjectRelation model.RelationName
 }
 
-// func walkPath(m *model.Model, rr *model.RelationRef, path []string) []string {
+func (r *relation) AsProto() *dsc.Relation {
+	return &dsc.Relation{
+		ObjectType:      r.ObjectType.String(),
+		ObjectId:        r.ObjectID,
+		Relation:        r.Relation.String(),
+		SubjectType:     r.SubjectType.String(),
+		SubjectId:       r.SubjectID,
+		SubjectRelation: r.SubjectRelation.String(),
+	}
+}
 
-// }
+type RelationsReader []*relation
 
-func TestPathMap(t *testing.T) {
+func (r RelationsReader) GetRelations(ctx context.Context, req *dsr.GetRelationsRequest) (*dsr.GetRelationsResponse, error) {
+	matches := lo.Filter(r, func(rel *relation, _ int) bool {
+		return rel.ObjectType == model.ObjectName(req.ObjectType) &&
+			rel.ObjectID == req.ObjectId &&
+			rel.Relation == model.RelationName(req.Relation) &&
+			rel.SubjectType == model.ObjectName(req.SubjectType) &&
+			rel.SubjectID == req.SubjectId &&
+			rel.SubjectRelation == model.RelationName(req.SubjectRelation)
+	})
+
+	return &dsr.GetRelationsResponse{
+		Results: lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
+			return r.AsProto()
+		}),
+	}, nil
+}
+
+func TestCheckRelation(t *testing.T) {
+	rels := RelationsReader{
+		{"doc", "doc1", "viewer", "group", "doc1_viewers", "member"}, // viewers group
+		{"doc", "doc1", "viewer", "user", "user1", ""},               // direct viewer
+		{"group", "doc1_viewers", "member", "user", "user2", ""},     // group member
+		{"doc", "doc2", "viewer", "user", "*", ""},                   // wildcard
+
+	}
+
+	tests := []struct {
+		name     string
+		check    *dsr.CheckRequest
+		expected bool
+	}{
+		{name: "no assignment", check: check("doc", "doc1", "owner", "user", "user1"), expected: false},
+		{name: "direct assignment", check: check("doc", "doc1", "viewer", "user", "user1"), expected: true},
+		{name: "subject relation", check: check("doc", "doc1", "viewer", "user", "user2"), expected: true},
+		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "user1"), expected: true},
+		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "userX"), expected: true},
+	}
+
 	r, err := os.Open("./path_test.yaml")
 	require.NoError(t, err)
 	require.NotNil(t, r)
@@ -45,146 +82,33 @@ func TestPathMap(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, m)
 
-	c := cache.New(m)
-	require.NotNil(t, c)
+	ctx := context.Background()
 
-	pm := createPathMap(m)
-	require.NotNil(t, pm)
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			assert := require.New(tt)
 
-	// plot all paths for all roots.
-	for on, rns := range *pm {
-		for rn := range rns {
-			path := pm.WalkPath(model.NewRelationRef(on, rn), []string{})
-			fmt.Printf("%s:%s: %s\n", on, rn, strings.Join(path, " -> "))
-		}
+			walker := walk.New(m, nil, test.check, rels)
+
+			res, err := walker.Check(ctx)
+			assert.NoError(err)
+			assert.Equal(test.expected, res)
+		})
 	}
+
 }
 
-func (pm PathMap) WalkPath(or *model.RelationRef, path []string) []string {
-	paths := pm.GetPath(or)
-	for i := 0; i < len(paths); i++ {
-		path = append(path, paths[i].String())
-		pm.WalkPath(paths[i], path)
-	}
-	return path
-}
-
-func createPathMap(m *model.Model) *PathMap {
-	pm := PathMap{}
-
-	// create roots
-	for on, o := range m.Objects {
-		if _, ok := pm[on]; !ok {
-			pm[on] = map[model.RelationName][]*model.RelationRef{}
-		}
-
-		p1 := pm[on]
-
-		for pn := range o.Permissions {
-			if _, ok := p1[pn.RN()]; !ok {
-				p1[pn.RN()] = []*model.RelationRef{}
-			}
-		}
-
-		for rn := range o.Relations {
-			if _, ok := p1[rn]; !ok {
-				p1[rn] = []*model.RelationRef{}
-			}
-		}
+func check(
+	objectType model.ObjectName, objectID string,
+	relation model.RelationName,
+	subjectType model.ObjectName, subjectID string,
+) *dsr.CheckRequest {
+	return &dsr.CheckRequest{
+		ObjectType:  objectType.String(),
+		ObjectId:    objectID,
+		Relation:    relation.String(),
+		SubjectType: subjectType.String(),
+		SubjectId:   subjectID,
 	}
 
-	// set leaves
-	for on, o := range m.Objects {
-		p1 := pm[on]
-
-		for pn := range o.Permissions {
-			p1[pn.RN()] = expandPerm(m, on, pn)
-		}
-
-		for rn := range o.Relations {
-			p1[rn] = expandRel(m, on, rn)
-		}
-	}
-
-	return &pm
-}
-
-func expandPerm(m *model.Model, on model.ObjectName, pn model.PermissionName) []*model.RelationRef {
-	result := []*model.RelationRef{}
-
-	p, ok := m.Objects[on].Permissions[pn]
-	if !ok {
-		return result
-	}
-
-	for _, r := range p.Union {
-		result = append(result, resolve(m, on, model.RelationName(r.RelOrPerm)))
-	}
-
-	for range p.Intersection {
-		panic("not implemented")
-	}
-
-	if p.Exclusion != nil {
-		panic("not implemented")
-	}
-
-	return result
-}
-
-func expandRel(m *model.Model, on model.ObjectName, rn model.RelationName) []*model.RelationRef {
-	result := []*model.RelationRef{}
-
-	relation, ok := m.Objects[on].Relations[rn]
-	if !ok {
-		return result
-	}
-
-	for _, r := range relation.Union {
-		if r.Direct != nil {
-			result = append(result, r.Direct)
-		}
-
-		if r.Subject != nil {
-			result = append(result, &model.RelationRef{
-				Object:   r.Subject.Object,
-				Relation: r.Subject.Relation,
-			})
-		}
-
-		if r.Wildcard != nil {
-			result = append(result, r.Wildcard)
-		}
-	}
-
-	return result
-}
-
-func resolve(m *model.Model, on model.ObjectName, rn model.RelationName) *model.RelationRef {
-	if strings.Contains(rn.String(), v3.ArrowIdentifier) {
-		parts := strings.Split(rn.String(), v3.ArrowIdentifier)
-
-		rn = model.RelationName(parts[0])
-
-		if _, ok := m.Objects[on].Relations[rn]; ok { // 	if c.RelationExists(on, rn) {
-			for _, rel := range m.Objects[on].Relations[rn].Union {
-				if rel.Direct != nil {
-					return rel.Direct
-				}
-
-				if rel.Subject != nil {
-					return rel.Subject.RelationRef
-				}
-
-				if rel.Wildcard != nil {
-					return rel.Wildcard
-				}
-			}
-		}
-	}
-
-	return &model.RelationRef{
-		Object:   on,
-		Relation: rn,
-	}
 }

@@ -29,10 +29,10 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 	// iterate through relation set, determine if it "unions" with the given relation.
 	for _, rt := range r.Union {
 		switch {
-		case rt.Subject != nil && rt.Subject.Object == on:
-			results = append(results, rt.Subject.Relation)
-		case rt.Direct != nil:
-			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Direct.Object))...)
+		case rt.IsSubject() && rt.Object == on:
+			results = append(results, rt.Relation)
+		case rt.IsDirect():
+			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Object))...)
 		}
 	}
 
@@ -80,11 +80,11 @@ func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionRef) []model.
 		result = append(result, rn)
 
 		exp := lo.FilterMap(o.Relations[rn].Union, func(r *model.RelationTerm, _ int) (*model.PermissionRef, bool) {
-			if r.Direct == nil {
+			if !r.IsDirect() {
 				return &model.PermissionRef{}, false
 			}
-			_, ok := o.Relations[model.RelationName(r.Direct.Object)]
-			return &model.PermissionRef{RelOrPerm: string(r.Direct.Object)}, ok
+			_, ok := o.Relations[model.RelationName(r.Object)]
+			return &model.PermissionRef{RelOrPerm: string(r.Object)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

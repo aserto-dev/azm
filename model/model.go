@@ -28,124 +28,6 @@ type Metadata struct {
 	ETag      string    `json:"etag"`
 }
 
-type ObjectName Identifier
-type RelationName Identifier
-type PermissionName Identifier
-
-func (on ObjectName) String() string {
-	return string(on)
-}
-
-func (rn RelationName) String() string {
-	return string(rn)
-}
-
-func (pn PermissionName) String() string {
-	return string(pn)
-}
-
-func (pn PermissionName) RN() RelationName {
-	return RelationName(pn)
-}
-
-type Object struct {
-	Relations   map[RelationName]*Relation     `json:"relations,omitempty"`
-	Permissions map[PermissionName]*Permission `json:"permissions,omitempty"`
-}
-
-func (o *Object) HasRelOrPerm(name string) bool {
-	if o == nil {
-		return false
-	}
-	if _, foundRelation := o.Relations[RelationName(name)]; foundRelation {
-		return true
-	}
-	_, foundPermission := o.Permissions[PermissionName(name)]
-	return foundPermission
-}
-
-type Relation struct {
-	Union        []*RelationTerm `json:"union,omitempty"`
-	SubjectTypes []ObjectName    `json:"subject_types,omitempty"`
-}
-
-type RelationTerm struct {
-	Direct   *RelationRef     `json:"direct,omitempty"`
-	Subject  *SubjectRelation `json:"subject,omitempty"`
-	Wildcard *RelationRef     `json:"wildcard,omitempty"`
-}
-
-func (rt *RelationTerm) Ref() *RelationRef {
-	switch {
-	case rt.Direct != nil:
-		return rt.Direct
-	case rt.Subject != nil:
-		return rt.Subject.RelationRef
-	case rt.Wildcard != nil:
-		return rt.Wildcard
-	default:
-		return nil
-	}
-}
-
-type RelationRef struct {
-	Object   ObjectName   `json:"object,omitempty"`
-	Relation RelationName `json:"relation,omitempty"`
-}
-
-func NewRelationRef(on ObjectName, rn RelationName) *RelationRef {
-	return &RelationRef{Object: on, Relation: rn}
-}
-
-func (rr *RelationRef) String() string {
-	if rr.Relation == "" {
-		return string(rr.Object)
-	}
-	return fmt.Sprintf("%s:%s", rr.Object, rr.Relation)
-}
-
-type SubjectRelation struct {
-	*RelationRef
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
-}
-
-type Permission struct {
-	Union        []*PermissionRef     `json:"union,omitempty"`
-	Intersection []*PermissionRef     `json:"intersection,omitempty"`
-	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
-}
-
-func (p *Permission) Refs() []*PermissionRef {
-	var refs []*PermissionRef
-
-	switch {
-	case p.Union != nil:
-		refs = p.Union
-	case p.Intersection != nil:
-		refs = p.Intersection
-	case p.Exclusion != nil:
-		refs = []*PermissionRef{p.Exclusion.Include, p.Exclusion.Exclude}
-	}
-
-	return refs
-}
-
-type PermissionRef struct {
-	Base      RelationName `json:"base,omitempty"`
-	RelOrPerm string       `json:"rel_or_perm"`
-	BaseTypes []ObjectName `json:"base_types,omitempty"`
-}
-
-type ExclusionPermission struct {
-	Include *PermissionRef `json:"include,omitempty"`
-	Exclude *PermissionRef `json:"exclude,omitempty"`
-}
-
-type ArrowPermission struct {
-	Relation   string `json:"relation,omitempty"`
-	Permission string `json:"permission,omitempty"`
-}
-
 func New(r io.Reader) (*Model, error) {
 	m := Model{}
 	dec := json.NewDecoder(r)
@@ -164,10 +46,10 @@ func (m *Model) GetGraph() *graph.Graph {
 	for objectName, obj := range m.Objects {
 		for relName, rel := range obj.Relations {
 			for _, rl := range rel.Union {
-				if rl.Direct != nil {
-					grph.AddEdge(string(objectName), string(rl.Direct.Object), string(relName))
-				} else if rl.Subject != nil {
-					grph.AddEdge(string(objectName), string(rl.Subject.Object), string(relName))
+				if rl.IsDirect() {
+					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
+				} else if rl.IsSubject() {
+					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
 				}
 			}
 		}
@@ -273,26 +155,25 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 	var errs error
 	for rn, rs := range o.Relations {
 		for _, r := range rs.Union {
-			ref := r.Ref()
-			if ref == nil {
+			if r.Assignment() == RelationAssignmentUnknown {
 				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
 					"relation '%s:%s' has no definition", on, rn),
 				)
 				continue
 			}
 
-			o := m.Objects[ref.Object]
+			o := m.Objects[r.Object]
 			if o == nil {
 				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
-					"relation '%s:%s' references undefined object type '%s'", on, rn, ref.Object),
+					"relation '%s:%s' references undefined object type '%s'", on, rn, r.Object),
 				)
 				continue
 			}
 
-			if r.Subject != nil {
-				if _, ok := o.Relations[ref.Relation]; !ok {
+			if r.IsSubject() {
+				if _, ok := o.Relations[r.Relation]; !ok {
 					errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
-						"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, ref.Object, ref.Relation),
+						"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Object, r.Relation),
 					)
 				}
 			}
@@ -360,16 +241,16 @@ func (m *Model) resolveRelation(r *Relation, seen RelSet) []ObjectName {
 	subjectTypes := []ObjectName{}
 	for _, rt := range r.Union {
 		switch {
-		case rt.Subject != nil:
-			if !seen.Contains(*rt.Subject.RelationRef) {
-				seen.Add(*rt.Subject.RelationRef)
+		case rt.IsSubject():
+			if !seen.Contains(*rt.RelationRef) {
+				seen.Add(*rt.RelationRef)
 				subjectTypes = append(subjectTypes, m.resolveRelation(
-					m.Objects[rt.Subject.Object].Relations[rt.Subject.Relation],
+					m.Objects[rt.Object].Relations[rt.Relation],
 					seen)...,
 				)
 			}
 		default:
-			subjectTypes = append(subjectTypes, rt.Ref().Object)
+			subjectTypes = append(subjectTypes, rt.Object)
 		}
 	}
 	return subjectTypes

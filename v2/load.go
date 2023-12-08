@@ -55,13 +55,13 @@ func Load(r io.Reader) (*model.Model, error) {
 					return nil, azm.ErrRelationNotFound.Msg(v)
 				}
 
-				rs.Union = append(rs.Union, &model.RelationTerm{Subject: &model.SubjectRelation{
+				rs.Union = append(rs.Union, &model.RelationTerm{
 					RelationRef: &model.RelationRef{
 						Object:   on,
 						Relation: model.RelationName(relName),
 					},
 					SubjectTypes: []model.ObjectName{},
-				}})
+				})
 
 				o.Relations[model.RelationName(v)] = rs
 			}

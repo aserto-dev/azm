@@ -22,12 +22,10 @@ var m1 = model.Model{
 			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("member"): {
 					Union: []*model.RelationTerm{
-						{Direct: &model.RelationRef{Object: model.ObjectName("user")}},
-						{Subject: &model.SubjectRelation{
-							RelationRef: &model.RelationRef{
-								Object:   model.ObjectName("group"),
-								Relation: model.RelationName("member"),
-							},
+						{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
+						{RelationRef: &model.RelationRef{
+							Object:   model.ObjectName("group"),
+							Relation: model.RelationName("member"),
 						}},
 					},
 					SubjectTypes: []model.ObjectName{"user"},
@@ -39,7 +37,7 @@ var m1 = model.Model{
 			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("owner"): {
 					Union: []*model.RelationTerm{
-						{Direct: &model.RelationRef{Object: model.ObjectName("user")}},
+						{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
 					},
 					SubjectTypes: []model.ObjectName{"user"},
 				},
@@ -53,17 +51,17 @@ var m1 = model.Model{
 		model.ObjectName("document"): {
 			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("parent_folder"): {
-					Union:        []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("folder")}}},
+					Union:        []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("folder")}}},
 					SubjectTypes: []model.ObjectName{"folder"},
 				},
 				model.RelationName("writer"): {
-					Union:        []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("user")}}},
+					Union:        []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}}},
 					SubjectTypes: []model.ObjectName{"user"},
 				},
 				model.RelationName("reader"): {
 					Union: []*model.RelationTerm{
-						{Direct: &model.RelationRef{Object: model.ObjectName("user")}},
-						{Wildcard: &model.RelationRef{Object: model.ObjectName("user"), Relation: "*"}},
+						{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
+						{RelationRef: &model.RelationRef{Object: model.ObjectName("user"), Relation: "*"}},
 					},
 					SubjectTypes: []model.ObjectName{"user"},
 				},
@@ -169,14 +167,13 @@ func TestDiff(t *testing.T) {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("member"): {
 						Union: []*model.RelationTerm{
-							{Direct: &model.RelationRef{Object: model.ObjectName("new_user")}},
-							{Subject: &model.SubjectRelation{
-								RelationRef: &model.RelationRef{
-									Object:   model.ObjectName("group"),
-									Relation: model.RelationName("member"),
-								},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}},
+							{RelationRef: &model.RelationRef{
+								Object:   model.ObjectName("group"),
+								Relation: model.RelationName("member"),
+							},
 								SubjectTypes: []model.ObjectName{},
-							}},
+							},
 						},
 					},
 				},
@@ -184,10 +181,10 @@ func TestDiff(t *testing.T) {
 			model.ObjectName("folder"): {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("owner"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("new_user")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}}},
 					},
 					model.RelationName("viewer"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("new_user")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}}},
 					},
 				},
 				Permissions: map[model.PermissionName]*model.Permission{
@@ -199,12 +196,12 @@ func TestDiff(t *testing.T) {
 			model.ObjectName("document"): {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("writer"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("new_user")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}}},
 					},
 					model.RelationName("reader"): {
 						Union: []*model.RelationTerm{
-							{Direct: &model.RelationRef{Object: model.ObjectName("new_user")}},
-							{Wildcard: &model.RelationRef{Object: model.ObjectName("new_user"), Relation: "*"}},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user"), Relation: "*"}},
 						},
 					},
 				},
@@ -256,7 +253,7 @@ func TestGraph(t *testing.T) {
 			model.ObjectName("user"): {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("rel_name"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("ext_obj")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("ext_obj")}}},
 					},
 				},
 			},
@@ -265,13 +262,10 @@ func TestGraph(t *testing.T) {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("member"): {
 						Union: []*model.RelationTerm{
-							{Direct: &model.RelationRef{Object: model.ObjectName("user")}},
-							{Subject: &model.SubjectRelation{
-								RelationRef: &model.RelationRef{
-									Object:   model.ObjectName("group"),
-									Relation: model.RelationName("member"),
-								},
-								SubjectTypes: []model.ObjectName{},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
+							{RelationRef: &model.RelationRef{
+								Object:   model.ObjectName("group"),
+								Relation: model.RelationName("member"),
 							}},
 						},
 					},
@@ -280,22 +274,22 @@ func TestGraph(t *testing.T) {
 			model.ObjectName("folder"): {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("owner"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("user")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}}},
 					},
 				},
 			},
 			model.ObjectName("document"): {
 				Relations: map[model.RelationName]*model.Relation{
 					model.RelationName("parent_folder"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("folder")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("folder")}}},
 					},
 					model.RelationName("writer"): {
-						Union: []*model.RelationTerm{{Direct: &model.RelationRef{Object: model.ObjectName("user")}}},
+						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}}},
 					},
 					model.RelationName("reader"): {
 						Union: []*model.RelationTerm{
-							{Direct: &model.RelationRef{Object: model.ObjectName("user")}},
-							{Wildcard: &model.RelationRef{Object: model.ObjectName("user"), Relation: "*"}},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
+							{RelationRef: &model.RelationRef{Object: model.ObjectName("user"), Relation: "*"}},
 						},
 					},
 				},

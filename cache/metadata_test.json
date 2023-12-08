@@ -1,9 +1,21 @@
 {
   "version": 2,
   "types": {
-    "application": { "relations": { "user": {} } },
-    "group": { "relations": { "member": {} } },
-    "identity": { "relations": { "identifier": {} } },
+    "application": {
+      "relations": {
+        "user": {}
+      }
+    },
+    "group": {
+      "relations": {
+        "member": {}
+      }
+    },
+    "identity": {
+      "relations": {
+        "identifier": {}
+      }
+    },
     "machine": {},
     "resource": {},
     "service": {},
@@ -13,17 +25,16 @@
         "directory-reader": {
           "union": [
             {
-              "subject": { "object": "system", "relation": "directory-writer" }
+              "object": "system",
+              "relation": "directory-writer"
             }
           ]
         },
         "directory-store-reader": {
           "union": [
             {
-              "subject": {
-                "object": "system",
-                "relation": "directory-store-writer"
-              }
+              "object": "system",
+              "relation": "directory-store-writer"
             }
           ]
         },
@@ -35,822 +46,1758 @@
       },
       "permissions": {
         "aserto.authorizer.authorizer.v1.authorizer.decisiontree": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.authorizer.v1.authorizer.is": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.authorizer.v1.authorizer.query": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.directory.v1.directory.createtenant": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.createuser": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplpermission": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplproperty": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplrole": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteresource": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deletetenant": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuser": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserapplication": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserpermission": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserproperty": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserrole": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplpermissions": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplproperties": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplroles": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getidentity": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getresource": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuser": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserpermissions": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserproperties": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserroles": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getvalue": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listresources": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listtenants": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listuserapplications": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listusers": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-reader" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.loadusers": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplpermission": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplpermissions": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplproperties": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplproperty": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplrole": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplroles": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setresource": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserpermission": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserpermissions": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserproperties": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserproperty": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserrole": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserroles": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.updateuser": {
           "union": [
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "directory-writer" }
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-writer"
+            }
           ]
         },
         "aserto.authorizer.policy.v1.policy.getmodule": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.policy.v1.policy.getpolicies": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.policy.v1.policy.listpolicies": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.system.v1.system.getruntime": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.system.v1.system.setloglevel": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.system.v1.system.setupruntime": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.system.v1.system.tenantconfig": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.authorizer.system.v1.system.unloadruntime": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.common.info.v1.config.get": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.common.info.v1.info.info": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.executequery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.getdecisionlog": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.getdecisions": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.getuser": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.listdecisionlogs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v1.decisionlogs.listusers": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.executequery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.getdecisionlog": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.getdecisions": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.getuser": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.listdecisionlogs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.decision_logs.v2.decisionlogs.listusers": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.directory.exporter.v2.exporter.export": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.importer.v2.importer.import": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.checkpermission": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.checkrelation": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getgraph": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getobject": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getobjectmany": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getobjects": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getobjecttype": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getobjecttypes": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getpermission": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getpermissions": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getrelation": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getrelations": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getrelationtype": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.reader.v2.reader.getrelationtypes": {
-          "union": [{ "rel_or_perm": "directory-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-reader"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.createtenant": {
-          "union": [{ "rel_or_perm": "directory-store-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-writer"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.deletetenant": {
-          "union": [{ "rel_or_perm": "directory-store-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-writer"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.gettenant": {
-          "union": [{ "rel_or_perm": "directory-store-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-reader"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.info": {
-          "union": [{ "rel_or_perm": "directory-store-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-writer"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.listtenants": {
-          "union": [{ "rel_or_perm": "directory-store-reader" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-reader"
+            }
+          ]
         },
         "aserto.directory.store.v2.store.migrateschema": {
-          "union": [{ "rel_or_perm": "directory-store-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-store-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.deleteobject": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.deleteobjecttype": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.deletepermission": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.deleterelation": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.deleterelationtype": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.setobject": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.setobjecttype": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.setpermission": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.setrelation": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.directory.writer.v2.writer.setrelationtype": {
-          "union": [{ "rel_or_perm": "directory-writer" }]
+          "union": [
+            {
+              "rel_or_perm": "directory-writer"
+            }
+          ]
         },
         "aserto.discovery.policy.v1.discovery.opadiscovery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.discovery.policy.v2.discovery.opainstancediscovery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.funnel.v1.funnel.runworkflow": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.funnel.v1.funnel.startworkflow": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.funnel.v1.funnel.stopworkflow": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.maestro.system.aonadeleteorg": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.maestro.system.authorizerdeleteorg": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.maestro.system.harddeleteorg": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.maestro.system.tenantdeleteorg": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.maestro.user.getpolicystate": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
-        "aserto.maestro.user.policy": { "union": [{ "rel_or_perm": "admin" }] },
-        "aserto.maestro.user.testwf": { "union": [{ "rel_or_perm": "admin" }] },
+        "aserto.maestro.user.policy": {
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
+        },
+        "aserto.maestro.user.testwf": {
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
+        },
         "aserto.management.v2.controller.commandstream": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.management.v2.controlplane.execcommand": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.management.v2.controlplane.listinstanceregistrations": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.createimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.getreadaccesstoken": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.getwriteaccesstoken": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listdigests": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listimages": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listorgs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listpublicimages": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listpublicorgs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.listtagswithdetails": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.removeimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.repoavailable": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.setimagevisibility": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.createpolicyimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.deletepolicyimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.getpolicyimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.listpolicyimages": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.listpublicpolicyimages": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.updatepolicyimage": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.createpolicyrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.deletepolicyrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.getpolicyrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.listpolicyrepos": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.listpublicpolicyrepos": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policyrepo.updatepolicyrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.tenant.listpublictenants": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.tenant.listtenants": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.system.v2.tenantcache.invalidatesecretskey": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.task.handler.v1.handler.handlejob": {
-          "union": [{ "rel_or_perm": "task-handler" }]
+          "union": [
+            {
+              "rel_or_perm": "task-handler"
+            }
+          ]
         },
         "aserto.task.handler.v1.handler.handletask": {
-          "union": [{ "rel_or_perm": "task-handler" }]
+          "union": [
+            {
+              "rel_or_perm": "task-handler"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.createjob": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.createtask": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.deletejob": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.deletetask": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.execjob": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.exectask": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.getjob": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.task.manager.v1.manager.gettask": {
-          "union": [{ "rel_or_perm": "task-manager" }]
+          "union": [
+            {
+              "rel_or_perm": "task-manager"
+            }
+          ]
         },
         "aserto.tenant.account.v1.account.getaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.account.v1.account.listinvites": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.account.v1.account.signupaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.account.v1.account.updateaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.connectionavailable": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.createconnection": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.deleteconnection": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.getconnection": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.listconnections": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.rotatesecret": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.updateconnection": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.verifyconnection": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.onboarding.v1.onboarding.claimtenant": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.onboarding.v1.onboarding.inviteuser": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.onboarding.v1.onboarding.tenantavailable": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.createpolicyref": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.deletepolicyref": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.listpolicyrefs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.opadiscovery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.opainstancediscovery": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.updatepolicyref": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.createpolicybuilder": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.deletepolicybuilder": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.listpolicybuilders": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.getinvites": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.getprofile": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.inviteuser": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.removemember": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.respondtoinvite": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.provider.v1.provider.getprovider": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.provider.v1.provider.listproviderkinds": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.provider.v1.provider.listproviders": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.clonerepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.createregistryrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.deleteregistryrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.getregistryrepotag": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.listorgs": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepodigests": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepos": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepotags": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.registryrepoavailable": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.registry.v1.registry.validpolicyregistryrepotag": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.createrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.getprofile": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.getrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.isrepoconnected": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listorg": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listrepo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listtemplates": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.deleteaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.deletetenant": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.getaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.getmachineaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.listaccounts": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.listdeletedtenants": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.listtenants": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.restoredeletedtenant": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.setaccountdeleted": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.setloglevel": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.system.v1.system.settenantdeleted": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.account.deleteaccount": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.instance.createinstance": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.instance.deleteinstance": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.instance.listinstance": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.instance.updateinstance": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.createpolicy": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.deletepolicy": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.getpolicy": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.listpolicy": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.policynameavailable": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policy.updatepolicy": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policystate.getpolicystate": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.policystate.setpolicystate": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.repository.createrepository": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.repository.deleterepository": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.repository.getrepository": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.repository.updaterepository": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.source.createsource": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.source.deletesource": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.source.getsource": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.source.updatesource": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.tenant.deletetenant": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "grpc.reflection.v1alpha.serverreflection.serverreflectioninfo": {
-          "union": [{ "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         }
       }
     },
@@ -858,16 +1805,19 @@
       "relations": {
         "account": {},
         "admin": {
-          "union": [{ "subject": { "object": "tenant", "relation": "owner" } }]
+          "union": [
+            {
+              "object": "tenant",
+              "relation": "owner"
+            }
+          ]
         },
         "decision-log-reader": {},
         "directory-client-reader": {
           "union": [
             {
-              "subject": {
-                "object": "tenant",
-                "relation": "directory-client-writer"
-              }
+              "object": "tenant",
+              "relation": "directory-client-writer"
             }
           ]
         },
@@ -876,1358 +1826,2639 @@
         "edge-authorizer": {},
         "member": {
           "union": [
-            { "subject": { "object": "tenant", "relation": "owner" } },
-            { "subject": { "object": "tenant", "relation": "admin" } }
+            {
+              "object": "tenant",
+              "relation": "owner"
+            },
+            {
+              "object": "tenant",
+              "relation": "admin"
+            }
           ]
         },
         "owner": {},
         "viewer": {
           "union": [
-            { "subject": { "object": "tenant", "relation": "owner" } },
-            { "subject": { "object": "tenant", "relation": "admin" } },
-            { "subject": { "object": "tenant", "relation": "member" } }
+            {
+              "object": "tenant",
+              "relation": "owner"
+            },
+            {
+              "object": "tenant",
+              "relation": "member"
+            },
+            {
+              "object": "tenant",
+              "relation": "admin"
+            }
           ]
         }
       },
       "permissions": {
         "aserto.authorizer.authorizer.v1.authorizer.decisiontree": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.authorizer.v1.authorizer.is": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.authorizer.v1.authorizer.query": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.createtenant": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.createuser": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplproperty": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteapplrole": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteresource": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deletetenant": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuser": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserapplication": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserproperty": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.deleteuserrole": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplpermissions": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplproperties": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getapplroles": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getidentity": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getresource": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuser": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserpermissions": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserproperties": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getuserroles": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.getvalue": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listresources": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listtenants": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listuserapplications": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.listusers": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.loadusers": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplpermissions": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplproperties": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplproperty": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplrole": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setapplroles": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setresource": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserpermissions": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserproperties": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserproperty": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserrole": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.setuserroles": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.directory.v1.directory.updateuser": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.authorizer.system.v1.system.unloadruntime": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.common.info.v1.info.info": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.executequery": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.getdecisionlog": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.getdecisions": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.getuser": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.listdecisionlogs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v1.decisionlogs.listusers": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.executequery": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.getdecisionlog": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.getdecisions": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.getuser": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.listdecisionlogs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.decision_logs.v2.decisionlogs.listusers": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "decision-log-reader" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "decision-log-reader"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.exporter.v2.exporter.export": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.importer.v2.importer.import": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.checkpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.checkrelation": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getgraph": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getobject": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getobjectmany": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getobjects": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getobjecttype": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getobjecttypes": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getpermissions": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getrelation": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getrelations": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getrelationtype": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.reader.v2.reader.getrelationtypes": {
           "union": [
-            { "rel_or_perm": "directory-client-reader" },
-            { "rel_or_perm": "viewer" }
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "directory-client-reader"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.deleteobject": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.deleteobjecttype": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.deletepermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.deleterelation": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.deleterelationtype": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.setobject": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.setobjecttype": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.setpermission": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.setrelation": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.directory.writer.v2.writer.setrelationtype": {
           "union": [
-            { "rel_or_perm": "directory-client-writer" },
-            { "rel_or_perm": "admin" }
+            {
+              "rel_or_perm": "directory-client-writer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.discovery.policy.v1.discovery.opadiscovery": {
           "union": [
-            { "rel_or_perm": "discovery-client" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "discovery-client"
+            }
           ]
         },
         "aserto.discovery.policy.v2.discovery.opainstancediscovery": {
           "union": [
-            { "rel_or_perm": "discovery-client" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "discovery-client"
+            }
           ]
         },
         "aserto.funnel.v1.funnel.runworkflow": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.funnel.v1.funnel.startworkflow": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.funnel.v1.funnel.stopworkflow": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.maestro.user.getpolicystate": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.maestro.user.policy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.maestro.user.testwf": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.management.v2.controller.commandstream": {
-          "union": [{ "rel_or_perm": "edge-authorizer" }]
+          "union": [
+            {
+              "rel_or_perm": "edge-authorizer"
+            }
+          ]
         },
         "aserto.management.v2.controlplane.execcommand": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.management.v2.controlplane.listinstanceregistrations": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry.v1.registry.createimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.getreadaccesstoken": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.getwriteaccesstoken": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listdigests": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listimages": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listorgs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listpublicimages": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listpublicorgs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.listtagswithdetails": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.removeimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.repoavailable": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry.v1.registry.setimagevisibility": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.registry_tenant.v1.policy.createpolicyimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policy.deletepolicyimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policy.getpolicyimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policy.listpolicyimages": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policy.listpublicpolicyimages": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policy.updatepolicyimage": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policyrepo.createpolicyrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policyrepo.deletepolicyrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policyrepo.getpolicyrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policyrepo.listpolicyrepos": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.policyrepo.updatepolicyrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.tenant.listpublictenants": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.registry_tenant.v1.tenant.listtenants": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.account.v1.account.getaccount": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.account.v1.account.listinvites": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.account.v1.account.signupaccount": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.account.v1.account.updateaccount": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.connectionavailable": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.createconnection": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.deleteconnection": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.getconnection": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.listconnections": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.rotatesecret": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.connection.v1.connection.updateconnection": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.connection.v1.connection.verifyconnection": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.onboarding.v1.onboarding.claimtenant": {
-          "union": [{ "rel_or_perm": "owner" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            }
+          ]
         },
         "aserto.tenant.onboarding.v1.onboarding.inviteuser": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.onboarding.v1.onboarding.tenantavailable": {
-          "union": [{ "rel_or_perm": "owner" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            }
+          ]
         },
         "aserto.tenant.policy.v1.policy.createpolicyref": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy.v1.policy.deletepolicyref": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy.v1.policy.listpolicyrefs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy.v1.policy.opadiscovery": {
           "union": [
-            { "rel_or_perm": "discovery-client" },
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            },
+            {
+              "rel_or_perm": "discovery-client"
+            }
           ]
         },
         "aserto.tenant.policy.v1.policy.opainstancediscovery": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy.v1.policy.updatepolicyref": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.createpolicybuilder": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.deletepolicybuilder": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.policy_builder.v1.policybuilder.listpolicybuilders": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.profile.v1.profile.getinvites": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.profile.v1.profile.getprofile": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.profile.v1.profile.inviteuser": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.removemember": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.profile.v1.profile.respondtoinvite": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.provider.v1.provider.getprovider": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.provider.v1.provider.listproviderkinds": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.provider.v1.provider.listproviders": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.clonerepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.createregistryrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.deleteregistryrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.getregistryrepotag": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.listorgs": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepodigests": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepos": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.listregistryrepotags": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.registryrepoavailable": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.registry.v1.registry.validpolicyregistryrepotag": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.createrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.getprofile": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.getrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.isrepoconnected": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listorg": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listrepo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.scc.v1.sourcecodectl.listtemplates": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.account.deleteaccount": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "aserto.tenant.v2.instance.createinstance": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.instance.deleteinstance": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.instance.listinstance": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.instance.updateinstance": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.createpolicy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.deletepolicy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.getpolicy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.listpolicy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.policynameavailable": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policy.updatepolicy": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policystate.getpolicystate": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.policystate.setpolicystate": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.repository.createrepository": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.repository.deleterepository": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.repository.getrepository": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.repository.updaterepository": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.source.createsource": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.source.deletesource": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.source.getsource": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.source.updatesource": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         },
         "aserto.tenant.v2.tenant.deletetenant": {
-          "union": [{ "rel_or_perm": "owner" }, { "rel_or_perm": "admin" }]
+          "union": [
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
+          ]
         },
         "grpc.reflection.v1alpha.serverreflection.serverreflectioninfo": {
           "union": [
-            { "rel_or_perm": "owner" },
-            { "rel_or_perm": "viewer" },
-            { "rel_or_perm": "admin" },
-            { "rel_or_perm": "member" }
+            {
+              "rel_or_perm": "owner"
+            },
+            {
+              "rel_or_perm": "member"
+            },
+            {
+              "rel_or_perm": "viewer"
+            },
+            {
+              "rel_or_perm": "admin"
+            }
           ]
         }
       }
     },
-    "tenant-name": { "relations": { "tenant": {} } },
-    "user": { "relations": { "manager": {} } },
+    "tenant-name": {
+      "relations": {
+        "tenant": {}
+      }
+    },
+    "user": {
+      "relations": {
+        "manager": {}
+      }
+    },
     "user-v1": {}
   },
   "metadata": null

@@ -114,7 +114,7 @@ func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.R
 	unions := []string{}
 	for name, r := range o.Relations {
 		for _, rt := range r.Union {
-			if rt.Subject != nil && rt.Subject.Object == on && rt.Subject.Relation == rn {
+			if rt.IsSubject() && rt.Object == on && rt.Relation == rn {
 				unions = append(unions, string(name))
 			}
 		}

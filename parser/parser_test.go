@@ -43,11 +43,9 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
-			assert.NotNil(term.Direct)
-			assert.Empty(term.Direct.Relation)
-			assert.Equal(model.ObjectName("user"), term.Direct.Object)
-			assert.Nil(term.Subject)
-			assert.Nil(term.Wildcard)
+			assert.True(term.IsDirect())
+			assert.Equal(model.ObjectName("user"), term.Object)
+			assert.Empty(term.Relation)
 		},
 	},
 	{
@@ -55,11 +53,9 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
-			assert.NotNil(term.Direct)
-			assert.Empty(term.Direct.Relation)
-			assert.Equal(model.ObjectName("name-with-dashes"), term.Direct.Object)
-			assert.Nil(term.Subject)
-			assert.Nil(term.Wildcard)
+			assert.True(term.IsDirect())
+			assert.Equal(model.ObjectName("name-with-dashes"), term.Object)
+			assert.Empty(term.Relation)
 		},
 	},
 	{
@@ -67,10 +63,9 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
-			assert.Equal(model.ObjectName("group"), term.Subject.Object)
-			assert.Equal(model.RelationName("member"), term.Subject.Relation)
-			assert.Nil(term.Direct)
-			assert.Nil(term.Wildcard)
+			assert.True(term.IsSubject())
+			assert.Equal(model.ObjectName("group"), term.Object)
+			assert.Equal(model.RelationName("member"), term.Relation)
 		},
 	},
 	{
@@ -78,11 +73,9 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
-			assert.NotNil(term.Wildcard)
-			assert.Equal(model.ObjectName("user"), term.Wildcard.Object)
-			assert.Equal(model.RelationName("*"), term.Wildcard.Relation)
-			assert.Nil(term.Subject)
-			assert.Nil(term.Direct)
+			assert.True(term.IsWildcard())
+			assert.Equal(model.ObjectName("user"), term.Object)
+			assert.Equal(model.RelationName("*"), term.Relation)
 		},
 	},
 	{
@@ -90,13 +83,13 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 2)
 
-			assert.NotNil(rel[0].Direct)
-			assert.Equal(model.ObjectName("user"), rel[0].Direct.Object)
-			assert.Empty(rel[0].Direct.Relation)
+			assert.True(rel[0].IsDirect())
+			assert.Equal(model.ObjectName("user"), rel[0].Object)
+			assert.Empty(rel[0].Relation)
 
-			assert.NotNil(rel[1].Direct)
-			assert.Equal(model.ObjectName("group"), rel[1].Direct.Object)
-			assert.Empty(rel[1].Direct.Relation)
+			assert.True(rel[1].IsDirect())
+			assert.Equal(model.ObjectName("group"), rel[1].Object)
+			assert.Empty(rel[1].Relation)
 		},
 	},
 	{
@@ -104,28 +97,20 @@ var relationTests = []relationTest{
 		func(rel []*model.RelationTerm, assert *assert.Assertions) {
 			assert.Len(rel, 4)
 
-			assert.NotNil(rel[0].Direct)
-			assert.Equal(model.ObjectName("user"), rel[0].Direct.Object)
-			assert.Empty(rel[0].Direct.Relation)
-			assert.Nil(rel[0].Wildcard)
-			assert.Nil(rel[0].Subject)
+			assert.True(rel[0].IsDirect())
+			assert.Equal(model.ObjectName("user"), rel[0].Object)
+			assert.Empty(rel[0].Relation)
 
-			assert.NotNil(rel[1].Direct)
-			assert.Equal(model.ObjectName("group"), rel[1].Direct.Object)
-			assert.Empty(rel[1].Direct.Relation)
-			assert.Nil(rel[1].Wildcard)
-			assert.Nil(rel[1].Subject)
+			assert.True(rel[0].IsDirect())
+			assert.Equal(model.ObjectName("group"), rel[1].Object)
+			assert.Empty(rel[1].Relation)
 
-			assert.NotNil(rel[2].Wildcard)
-			assert.Equal(model.ObjectName("user"), rel[2].Wildcard.Object)
-			assert.Nil(rel[2].Direct)
-			assert.Nil(rel[2].Subject)
+			assert.True(rel[2].IsWildcard())
+			assert.Equal(model.ObjectName("user"), rel[2].Object)
 
-			assert.NotNil(rel[3].Subject)
-			assert.Equal(model.ObjectName("group"), rel[3].Subject.Object)
-			assert.Equal(model.RelationName("member"), rel[3].Subject.Relation)
-			assert.Nil(rel[3].Direct)
-			assert.Nil(rel[3].Wildcard)
+			assert.True(rel[3].IsSubject())
+			assert.Equal(model.ObjectName("group"), rel[3].Object)
+			assert.Equal(model.RelationName("member"), rel[3].Relation)
 		},
 	},
 }

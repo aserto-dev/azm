@@ -4,20 +4,17 @@
     "document": {
       "relations": {
         "parent_folder": {
-          "union": [{ "direct": { "object": "folder" } }],
+          "union": [{ "object": "folder" }],
           "subject_types": ["folder"]
         },
         "reader": {
           "union": [
-            { "direct": { "object": "user" } },
-            { "wildcard": { "object": "user", "relation": "*" } }
+            { "object": "user" },
+            { "object": "user", "relation": "*" }
           ],
           "subject_types": ["user"]
         },
-        "writer": {
-          "union": [{ "direct": { "object": "user" } }],
-          "subject_types": ["user"]
-        }
+        "writer": { "union": [{ "object": "user" }], "subject_types": ["user"] }
       },
       "permissions": {
         "can_only_read": {
@@ -43,10 +40,7 @@
     },
     "folder": {
       "relations": {
-        "owner": {
-          "union": [{ "direct": { "object": "user" } }],
-          "subject_types": ["user"]
-        }
+        "owner": { "union": [{ "object": "user" }], "subject_types": ["user"] }
       },
       "permissions": { "read": { "union": [{ "rel_or_perm": "owner" }] } }
     },
@@ -54,8 +48,8 @@
       "relations": {
         "member": {
           "union": [
-            { "direct": { "object": "user" } },
-            { "subject": { "object": "group", "relation": "member" } }
+            { "object": "user" },
+            { "object": "group", "relation": "member" }
           ],
           "subject_types": ["user"]
         }
