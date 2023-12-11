@@ -30,8 +30,8 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 
 // Returns a diff struct resulted between the old and the new model.
 func (c *Cache) Diff(other *model.Model) *diff.Diff {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return c.model.Diff(other)
 }
 
