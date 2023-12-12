@@ -19,22 +19,38 @@
       "permissions": {
         "can_only_read": {
           "exclusion": {
-            "include": { "rel_or_perm": "reader" },
-            "exclude": { "rel_or_perm": "writer" }
-          }
+            "include": { "rel_or_perm": "reader", "subject_types": ["user"] },
+            "exclude": { "rel_or_perm": "writer", "subject_types": ["user"] }
+          },
+          "subject_types": ["user"]
         },
-        "edit": { "union": [{ "rel_or_perm": "writer" }] },
+        "edit": {
+          "union": [{ "rel_or_perm": "writer", "subject_types": ["user"] }],
+          "subject_types": ["user"]
+        },
         "read": {
-          "union": [{ "base": "parent_folder", "rel_or_perm": "read" }]
+          "union": [
+            {
+              "base": "parent_folder",
+              "rel_or_perm": "read",
+              "subject_types": ["user"]
+            }
+          ],
+          "subject_types": ["user"]
         },
         "read_and_write": {
           "intersection": [
-            { "rel_or_perm": "reader" },
-            { "rel_or_perm": "writer" }
-          ]
+            { "rel_or_perm": "reader", "subject_types": ["user"] },
+            { "rel_or_perm": "writer", "subject_types": ["user"] }
+          ],
+          "subject_types": ["user"]
         },
         "view": {
-          "union": [{ "rel_or_perm": "reader" }, { "rel_or_perm": "writer" }]
+          "union": [
+            { "rel_or_perm": "reader", "subject_types": ["user"] },
+            { "rel_or_perm": "writer", "subject_types": ["user"] }
+          ],
+          "subject_types": ["user"]
         }
       }
     },
@@ -42,7 +58,12 @@
       "relations": {
         "owner": { "union": [{ "object": "user" }], "subject_types": ["user"] }
       },
-      "permissions": { "read": { "union": [{ "rel_or_perm": "owner" }] } }
+      "permissions": {
+        "read": {
+          "union": [{ "rel_or_perm": "owner", "subject_types": ["user"] }],
+          "subject_types": ["user"]
+        }
+      }
     },
     "group": {
       "relations": {

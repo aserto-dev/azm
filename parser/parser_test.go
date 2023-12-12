@@ -119,7 +119,7 @@ var permissionTests = []permissionTest{
 	{
 		"can_write",
 		func(perm *model.Permission, assert *assert.Assertions) {
-			assert.Equal("can_write", perm.Union[0].RelOrPerm)
+			assert.Equal(model.RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
 			assert.Empty(perm.Intersection)
 			assert.Nil(perm.Exclusion)
@@ -129,28 +129,28 @@ var permissionTests = []permissionTest{
 		"can_write | parent->can_read",
 		func(perm *model.Permission, assert *assert.Assertions) {
 			assert.Len(perm.Union, 2)
-			assert.Equal("can_write", perm.Union[0].RelOrPerm)
+			assert.Equal(model.RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
 			assert.Equal(model.RelationName("parent"), perm.Union[1].Base)
-			assert.Equal("can_read", perm.Union[1].RelOrPerm)
+			assert.Equal(model.RelationName("can_read"), perm.Union[1].RelOrPerm)
 		},
 	},
 	{
 		"can_write & can_read",
 		func(perm *model.Permission, assert *assert.Assertions) {
 			assert.Len(perm.Intersection, 2)
-			assert.Equal("can_write", perm.Intersection[0].RelOrPerm)
+			assert.Equal(model.RelationName("can_write"), perm.Intersection[0].RelOrPerm)
 			assert.Empty(perm.Intersection[0].Base)
-			assert.Equal("can_read", perm.Intersection[1].RelOrPerm)
+			assert.Equal(model.RelationName("can_read"), perm.Intersection[1].RelOrPerm)
 			assert.Empty(perm.Intersection[1].Base)
 		},
 	},
 	{
 		"can_write - can_read",
 		func(perm *model.Permission, assert *assert.Assertions) {
-			assert.Equal("can_write", perm.Exclusion.Include.RelOrPerm)
+			assert.Equal(model.RelationName("can_write"), perm.Exclusion.Include.RelOrPerm)
 			assert.Empty(perm.Exclusion.Include.Base)
-			assert.Equal("can_read", perm.Exclusion.Exclude.RelOrPerm)
+			assert.Equal(model.RelationName("can_read"), perm.Exclusion.Exclude.RelOrPerm)
 			assert.Empty(perm.Exclusion.Exclude.Base)
 		},
 	},
@@ -158,9 +158,9 @@ var permissionTests = []permissionTest{
 		"parent->can_read - parent->can_write",
 		func(perm *model.Permission, assert *assert.Assertions) {
 			assert.Equal(model.RelationName("parent"), perm.Exclusion.Include.Base)
-			assert.Equal("can_read", perm.Exclusion.Include.RelOrPerm)
+			assert.Equal(model.RelationName("can_read"), perm.Exclusion.Include.RelOrPerm)
 			assert.Equal(model.RelationName("parent"), perm.Exclusion.Exclude.Base)
-			assert.Equal("can_write", perm.Exclusion.Exclude.RelOrPerm)
+			assert.Equal(model.RelationName("can_write"), perm.Exclusion.Exclude.RelOrPerm)
 		},
 	},
 }

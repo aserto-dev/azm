@@ -27,7 +27,3 @@ types:
 
       # valid
       viewer: user
-
-    permissions:
-      # invalid: viewer is a user and has no reader permission or relation
-      reader: viewer->reader

@@ -57,7 +57,7 @@ func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(on model.ObjectName, pn model.PermissionName) bool {
+func (c *Cache) PermissionExists(on model.ObjectName, pn model.RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

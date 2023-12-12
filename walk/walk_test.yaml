@@ -36,6 +36,7 @@ types:
       viewer: user | user:* | group#member
     permissions:
       can_create_file: owner
+      can_read: viewer | owner | parent->can_read
 
   ### display_name: Document ###
   doc:
@@ -45,6 +46,6 @@ types:
       viewer: user | user:* | group#member
     permissions:
       can_change_owner: owner
-      can_read: viewer | owner | parent->viewer
+      can_read: viewer | can_write| parent->can_read
       can_share: owner | parent->owner
       can_write: owner | parent->owner

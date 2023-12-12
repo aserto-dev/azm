@@ -7,9 +7,11 @@ model:
 
 types:
   user: {}
+
   folder:
     relations:
       owner: user
+
   file:
     relations:
       parent: folder
@@ -27,8 +29,8 @@ types:
       # valid exclusion
       delete: owner - share
 
-      # invalid:
-      #   1. owner may resolve to 'user' which has no `write' relation of permission.`
-      #   2. no relation or permission called editor.
-      write: owner->write | editor
+      # invalid: owner may resolve to 'user' which has no `write' relation of permission.`
+      write: writer | owner->write
 
+      # invalid: parent is a folder and doesn't have a `write` permission or relation
+      update: write & parent->write

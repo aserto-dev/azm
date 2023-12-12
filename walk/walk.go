@@ -60,8 +60,8 @@ func (w *Walker) Check() (bool, error) {
 		return w.checkRelation(w.obj, w.rel, w.subj)
 	}
 
-	if o.HasPermission(model.PermissionName(w.rel)) {
-		return w.checkPermission()
+	if o.HasPermission(w.rel) {
+		return w.checkPermission(w.obj, w.rel, w.subj)
 	}
 
 	return false, derr.ErrRelationNotFound.Msg(w.rel.String())
@@ -127,7 +127,27 @@ func (w *Walker) checkRelation(
 	return false, nil
 }
 
-func (w *Walker) checkPermission() (bool, error) {
+func (w *Walker) checkPermission(
+	object *Object,
+	relation model.RelationName,
+	subject *Object,
+) (bool, error) {
+	rr := &model.RelationRef{Object: object.Type, Relation: relation}
+
+	visited := w.visited[*rr]
+	if visited == nil {
+		visited = set.NewSet[ObjectID]()
+		w.visited[*rr] = visited
+	}
+
+	objID := object.ID
+	if visited.Contains(objID) {
+		// We already checked this relation and it didn't resolve to the subject.
+		return false, nil
+	}
+
+	visited.Add(object.ID)
+
 	return false, nil
 }
 
@@ -142,10 +162,19 @@ func (w *Walker) step(rr *model.RelationRef, subjs ...model.ObjectName) []*model
 	}
 
 	r := o.Relations[rr.Relation]
-	if r == nil {
-		return []*model.RelationRef{}
+	if r != nil {
+		return w.stepRelation(r, subjs...)
 	}
 
+	p := o.Permissions[rr.Relation]
+	if p != nil {
+		return w.stepPermission(p, subjs...)
+	}
+
+	return []*model.RelationRef{}
+}
+
+func (w *Walker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
 	steps := lo.FilterMap(r.Union, func(rt *model.RelationTerm, _ int) (*model.RelationRef, bool) {
 		if lo.Contains([]model.RelationAssignment{
 			model.RelationAssignmentDirect, model.RelationAssignmentWildcard,
@@ -171,4 +200,8 @@ func (w *Walker) step(rr *model.RelationRef, subjs ...model.ObjectName) []*model
 	})
 
 	return steps
+}
+
+func (w *Walker) stepPermission(p *model.Permission, subjs ...model.ObjectName) []*model.RelationRef {
+	return nil
 }

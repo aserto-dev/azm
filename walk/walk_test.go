@@ -1,4 +1,4 @@
-package cache_test
+package walk_test
 
 import (
 	"os"
@@ -10,7 +10,7 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 type relation struct {
@@ -49,25 +49,28 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 	}), nil
 }
 
-func TestCheckRelation(t *testing.T) {
+func TestCheck(t *testing.T) {
 	rels := RelationsReader{
-		{"doc", "doc1", "viewer", "group", "doc1_viewers", "member"}, // viewers group
-		{"doc", "doc1", "viewer", "user", "user1", ""},               // direct viewer
-		{"group", "doc1_viewers", "member", "user", "user2", ""},     // group member
-		{"doc", "doc2", "viewer", "user", "*", ""},                   // wildcard
+		{"folder", "folder1", "owner", "user", "f1_owner", ""},     // folder:folder1#owner@user:f1_owner
+		{"doc", "doc1", "parent", "folder", "folder1", ""},         // doc:doc1#parent@folder:folder1
+		{"doc", "doc1", "owner", "user", "d1_owner", ""},           // doc:doc1#owner@user:d1_owner
+		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"}, // doc:doc1#viewer@group:d1_viewers#member
+		{"doc", "doc1", "viewer", "user", "user1", ""},             // doc:doc1#viewer@user:user1
+		{"group", "d1_viewers", "member", "user", "user2", ""},     // group:d1_viewers#member@user:user2
+		{"doc", "doc2", "viewer", "user", "*", ""},                 // doc:doc2#viewer@user:*
 
-		{"group", "doc1_viewers", "member", "group", "d1_subviewers", "member"},
-		{"group", "d1_subviewers", "member", "user", "user3", ""},
+		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
+		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
 
 		// mutually recursive groups with users
-		{"group", "yin", "member", "group", "yang", "member"},
-		{"group", "yang", "member", "group", "yin", "member"},
-		{"group", "yin", "member", "user", "yin_user", ""},
-		{"group", "yang", "member", "user", "yang_user", ""},
+		{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
+		{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
+		{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
+		{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
 
 		// mutually recursive groups with no users
-		{"group", "alpha", "member", "group", "omega", "member"},
-		{"group", "omega", "member", "group", "alpha", "member"},
+		{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
+		{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
 	}
 
 	tests := []struct {
@@ -75,13 +78,14 @@ func TestCheckRelation(t *testing.T) {
 		check    *dsr.CheckRequest
 		expected bool
 	}{
+		// Relations
 		{name: "no assignment", check: check("doc", "doc1", "owner", "user", "user1"), expected: false},
 		{name: "direct assignment", check: check("doc", "doc1", "viewer", "user", "user1"), expected: true},
 		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "user1"), expected: true},
 		{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "userX"), expected: true},
 		{name: "subject relation", check: check("doc", "doc1", "viewer", "user", "user2"), expected: true},
 		{name: "nested groups", check: check("doc", "doc1", "viewer", "user", "user3"), expected: true},
-		{name: "container not in set", check: check("doc", "doc1", "viewer", "group", "doc1_viewers"), expected: false},
+		{name: "container not in set", check: check("doc", "doc1", "viewer", "group", "d1_viewers"), expected: false},
 
 		{name: "recursive groups - yin/yin", check: check("group", "yin", "member", "user", "yin_user"), expected: true},
 		{name: "recursive groups - yin/yang", check: check("group", "yin", "member", "user", "yang_user"), expected: true},
@@ -89,19 +93,25 @@ func TestCheckRelation(t *testing.T) {
 		{name: "recursive groups - yang/yang", check: check("group", "yang", "member", "user", "yang_user"), expected: true},
 
 		{name: "recursive groups - alpha/omega", check: check("group", "alpha", "member", "user", "user1"), expected: false},
+
+		// Permissions
+		// {name: "owner can change owner", check: check("doc", "doc1", "can_change_owner", "user", "d1_owner"), expected: true},
+		// {name: "owner can read", check: check("doc", "doc1", "can_read", "user", "d1_owner"), expected: true},
+		// {name: "parent owner can read", check: check("doc", "doc1", "can_read", "user", "f1_owner"), expected: true},
+		// {name: "direct viewer can read", check: check("doc", "doc1", "can_read", "user", "user1"), expected: true},
 	}
 
-	r, err := os.Open("./path_test.yaml")
-	require.NoError(t, err)
-	require.NotNil(t, r)
+	r, err := os.Open("./walk_test.yaml")
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
 
 	m, err := v3.Load(r)
-	require.NoError(t, err)
-	require.NotNil(t, m)
+	assert.NoError(t, err)
+	assert.NotNil(t, m)
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			assert := require.New(tt)
+			assert := assert.New(tt)
 
 			walker := walk.New(m, nil, test.check, rels.GetRelations)
 

@@ -38,6 +38,9 @@ func New(r io.Reader) (*Model, error) {
 	return &m, nil
 }
 
+type objSet set.Set[ObjectName]
+type relSet set.Set[RelationRef]
+
 func (m *Model) GetGraph() *graph.Graph {
 	grph := graph.NewGraph()
 	for objectName := range m.Objects {
@@ -100,6 +103,12 @@ func (m *Model) Validate() error {
 		return derr.ErrInvalidArgument.Err(err)
 	}
 
+	// Pass 3: validate all arrow operators in permissions. This requires that all relations have already been resolved.
+	if err := m.validatePermissions(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
+
+	// Pass 4: resolve all permissions to a set of possible subject types.
 	if err := m.resolvePermissions(); err != nil {
 		return derr.ErrInvalidArgument.Err(err)
 	}
@@ -135,7 +144,7 @@ func (m *Model) validateUniqueNames(on ObjectName, o *Object) error {
 	rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
 		return string(rn)
 	})
-	perms := lo.Map(lo.Keys(o.Permissions), func(pn PermissionName, _ int) string {
+	perms := lo.Map(lo.Keys(o.Permissions), func(pn RelationName, _ int) string {
 		return string(pn)
 	})
 
@@ -186,24 +195,35 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 	var errs error
 	for pn, p := range o.Permissions {
-		refs := p.Refs()
-		if len(refs) == 0 {
+		terms := p.Terms()
+		if len(terms) == 0 {
 			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 				"permission '%s:%s' has no definition", on, pn),
 			)
 			continue
 		}
 
-		for _, ref := range refs {
-			if ref.Base != "" {
+		for _, term := range terms {
+			switch {
+			case term.IsArrow():
+				// this is an arrow operator.
 				// validate that the base relation exists on this object type.
 				// at this stage we don't yet resolve the relation to a set of subject types.
-				if _, hasRelation := o.Relations[ref.Base]; !hasRelation {
+				if _, hasRelation := o.Relations[term.Base]; !hasRelation {
 					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, ref.Base),
+						"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, term.Base),
+					)
+				}
+
+			default:
+				// validate that the relation/permission exists on this object type.
+				if !o.HasRelOrPerm(term.RelOrPerm) {
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, on, term.RelOrPerm),
 					)
 				}
 			}
+
 		}
 	}
 
@@ -222,7 +242,7 @@ func (m *Model) resolveRelations() error {
 					"relation '%s:%s' is circular and does not resolve to any object types", on, rn),
 				)
 			default:
-				r.SubjectTypes = lo.Uniq(subs)
+				r.SubjectTypes = subs
 			}
 		}
 	}
@@ -230,39 +250,79 @@ func (m *Model) resolveRelations() error {
 	return errs
 }
 
-type RelSet set.Set[RelationRef]
-
-func (m *Model) resolveRelation(r *Relation, seen RelSet) []ObjectName {
+func (m *Model) resolveRelation(r *Relation, seen relSet) []ObjectName {
 	if len(r.SubjectTypes) > 0 {
 		// already resolved
 		return r.SubjectTypes
 	}
 
-	subjectTypes := []ObjectName{}
+	subjectTypes := set.NewSet[ObjectName]()
 	for _, rt := range r.Union {
 		switch {
 		case rt.IsSubject():
 			if !seen.Contains(*rt.RelationRef) {
 				seen.Add(*rt.RelationRef)
-				subjectTypes = append(subjectTypes, m.resolveRelation(
-					m.Objects[rt.Object].Relations[rt.Relation],
-					seen)...,
-				)
+				subjectTypes.Append(m.resolveRelation(m.Objects[rt.Object].Relations[rt.Relation], seen)...)
 			}
 		default:
-			subjectTypes = append(subjectTypes, rt.Object)
+			subjectTypes.Add(rt.Object)
 		}
 	}
-	return subjectTypes
+	return subjectTypes.ToSlice()
+}
+
+func (m *Model) validatePermissions() error {
+	var errs error
+	for on, o := range m.Objects {
+		for pn, p := range o.Permissions {
+			if err := m.validatePermission(on, pn, p); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+	return errs
+}
+
+func (m *Model) validatePermission(on ObjectName, pn RelationName, p *Permission) error {
+	o := m.Objects[on]
+
+	var errs error
+	for _, term := range p.Terms() {
+		if term.IsArrow() {
+			// given a reference base->rel_or_perm, validate that all object types that `base` can resolve to
+			// have a permission or relation named `rel_or_perm`.
+			r := o.Relations[term.Base]
+			for _, st := range r.SubjectTypes {
+				if !m.Objects[st].HasRelOrPerm(term.RelOrPerm) {
+					arrow := fmt.Sprintf("%s->%s", term.Base, term.RelOrPerm)
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
+						on, pn, arrow, st, term.RelOrPerm,
+					))
+				}
+			}
+
+		}
+	}
+
+	return errs
 }
 
 func (m *Model) resolvePermissions() error {
 	var errs error
 
+	seen := set.NewSet[RelationRef]()
 	for on, o := range m.Objects {
 		for pn, p := range o.Permissions {
-			if err := m.resolvePermission(on, pn, p); err != nil {
-				errs = multierror.Append(errs, err)
+			subjs := m.resolvePermission(on, p, seen)
+
+			switch subjs.IsEmpty() {
+			case true:
+				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+					"permission '%s:%s' cannot be satisfied by any type", on, pn),
+				)
+			default:
+				p.SubjectTypes = subjs.ToSlice()
 			}
 		}
 	}
@@ -270,39 +330,72 @@ func (m *Model) resolvePermissions() error {
 	return errs
 }
 
-func (m *Model) resolvePermission(on ObjectName, pn PermissionName, p *Permission) error {
-	var errs error
-	for _, ref := range p.Refs() {
-		bases := []ObjectName{}
-		switch ref.Base {
-		case "":
-			bases = append(bases, on)
-		default:
-			// relations are already resolved at this point.
-			bases = append(bases, m.Objects[on].Relations[ref.Base].SubjectTypes...)
+func (m *Model) resolvePermission(on ObjectName, p *Permission, seen relSet) objSet {
+	if len(p.SubjectTypes) > 0 {
+		// already resolved
+		return set.NewSet(p.SubjectTypes...)
+	}
+
+	for _, term := range p.Terms() {
+		term.SubjectTypes = m.resolvePermissionTerm(on, term, seen)
+	}
+
+	switch {
+	case p.IsUnion():
+		return set.NewSet(lo.FlatMap(p.Terms(), func(term *PermissionTerm, _ int) []ObjectName {
+			return term.SubjectTypes
+		})...)
+
+	case p.IsIntersection():
+		return lo.Reduce(p.Terms(), func(acc objSet, term *PermissionTerm, i int) objSet {
+			subjs := set.NewSet(term.SubjectTypes...)
+
+			if i == 0 {
+				return subjs
+			}
+
+			return acc.Intersect(subjs)
+
+		}, nil)
+
+	case p.IsExclusion():
+		return set.NewSet(p.Exclusion.Include.SubjectTypes...)
+	}
+
+	return nil
+}
+
+func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) []ObjectName {
+	var refs set.Set[RelationRef]
+
+	switch {
+	case term.IsArrow():
+		sts := m.Objects[on].Relations[term.Base].SubjectTypes
+		refs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
+			return RelationRef{Object: st, Relation: term.RelOrPerm}
+		})...)
+
+	default:
+		refs = set.NewSet(RelationRef{Object: on, Relation: term.RelOrPerm})
+	}
+
+	subjectTypes := set.NewSet[ObjectName]()
+	for ref := range refs.Iterator().C {
+		o := m.Objects[ref.Object]
+
+		if o.HasRelation(ref.Relation) {
+			// Relations are already resolved to a set of subject types.
+			subjectTypes.Append(o.Relations[ref.Relation].SubjectTypes...)
+			continue
 		}
 
-		for _, base := range bases {
-			if !m.Objects[base].HasRelOrPerm(ref.RelOrPerm) {
-				switch base {
-				case on:
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, base, ref.RelOrPerm),
-					)
-				default:
-					arrow := fmt.Sprintf("%s->%s", ref.Base, ref.RelOrPerm)
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
-						on, pn, arrow, base, ref.RelOrPerm,
-					))
-				}
-
-				continue
-			}
+		if !seen.Contains(ref) {
+			seen.Add(ref)
+			subjectTypes = subjectTypes.Union(m.resolvePermission(ref.Object, o.Permissions[ref.Relation], seen))
 		}
 	}
 
-	return errs
+	return subjectTypes.ToSlice()
 }
 
 func (m *Model) subtract(newModel *Model) *diff.Changes {

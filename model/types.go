@@ -4,7 +4,6 @@ import "fmt"
 
 type ObjectName Identifier
 type RelationName Identifier
-type PermissionName Identifier
 
 func (on ObjectName) String() string {
 	return string(on)
@@ -14,17 +13,9 @@ func (rn RelationName) String() string {
 	return string(rn)
 }
 
-func (pn PermissionName) String() string {
-	return string(pn)
-}
-
-func (pn PermissionName) RN() RelationName {
-	return RelationName(pn)
-}
-
 type Object struct {
-	Relations   map[RelationName]*Relation     `json:"relations,omitempty"`
-	Permissions map[PermissionName]*Permission `json:"permissions,omitempty"`
+	Relations   map[RelationName]*Relation   `json:"relations,omitempty"`
+	Permissions map[RelationName]*Permission `json:"permissions,omitempty"`
 }
 
 func (o *Object) HasRelation(name RelationName) bool {
@@ -35,15 +26,15 @@ func (o *Object) HasRelation(name RelationName) bool {
 	return o.Relations[name] != nil
 }
 
-func (o *Object) HasPermission(name PermissionName) bool {
+func (o *Object) HasPermission(name RelationName) bool {
 	if o == nil {
 		return false
 	}
 	return o.Permissions[name] != nil
 }
 
-func (o *Object) HasRelOrPerm(name string) bool {
-	return o.HasRelation(RelationName(name)) || o.HasPermission(PermissionName(name))
+func (o *Object) HasRelOrPerm(name RelationName) bool {
+	return o.HasRelation(name) || o.HasPermission(name)
 }
 
 type Relation struct {
@@ -111,35 +102,54 @@ func (rr *RelationRef) IsSubject() bool {
 }
 
 type Permission struct {
-	Union        []*PermissionRef     `json:"union,omitempty"`
-	Intersection []*PermissionRef     `json:"intersection,omitempty"`
+	Union        []*PermissionTerm    `json:"union,omitempty"`
+	Intersection []*PermissionTerm    `json:"intersection,omitempty"`
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
+
+	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
 }
 
-func (p *Permission) Refs() []*PermissionRef {
-	var refs []*PermissionRef
+func (p *Permission) IsUnion() bool {
+	return p.Union != nil
+}
+
+func (p *Permission) IsIntersection() bool {
+	return p.Intersection != nil
+}
+
+func (p *Permission) IsExclusion() bool {
+	return p.Exclusion != nil
+}
+
+func (p *Permission) Terms() []*PermissionTerm {
+	var refs []*PermissionTerm
 
 	switch {
-	case p.Union != nil:
+	case p.IsUnion():
 		refs = p.Union
-	case p.Intersection != nil:
+	case p.IsIntersection():
 		refs = p.Intersection
-	case p.Exclusion != nil:
-		refs = []*PermissionRef{p.Exclusion.Include, p.Exclusion.Exclude}
+	case p.IsExclusion():
+		refs = []*PermissionTerm{p.Exclusion.Include, p.Exclusion.Exclude}
 	}
 
 	return refs
 }
 
-type PermissionRef struct {
+type PermissionTerm struct {
 	Base      RelationName `json:"base,omitempty"`
-	RelOrPerm string       `json:"rel_or_perm"`
-	BaseTypes []ObjectName `json:"base_types,omitempty"`
+	RelOrPerm RelationName `json:"rel_or_perm"`
+
+	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+}
+
+func (pr *PermissionTerm) IsArrow() bool {
+	return pr.Base != ""
 }
 
 type ExclusionPermission struct {
-	Include *PermissionRef `json:"include,omitempty"`
-	Exclude *PermissionRef `json:"exclude,omitempty"`
+	Include *PermissionTerm `json:"include,omitempty"`
+	Exclude *PermissionTerm `json:"exclude,omitempty"`
 }
 
 type ArrowPermission struct {

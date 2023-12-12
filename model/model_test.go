@@ -28,7 +28,6 @@ var m1 = model.Model{
 							Relation: model.RelationName("member"),
 						}},
 					},
-					SubjectTypes: []model.ObjectName{"user"},
 				},
 			},
 		},
@@ -39,51 +38,53 @@ var m1 = model.Model{
 					Union: []*model.RelationTerm{
 						{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
 					},
-					SubjectTypes: []model.ObjectName{"user"},
 				},
 			},
-			Permissions: map[model.PermissionName]*model.Permission{
-				model.PermissionName("read"): {
-					Union: []*model.PermissionRef{{RelOrPerm: "owner"}},
+			Permissions: map[model.RelationName]*model.Permission{
+				model.RelationName("read"): {
+					Union: []*model.PermissionTerm{{RelOrPerm: "owner"}},
 				},
 			},
 		},
 		model.ObjectName("document"): {
 			Relations: map[model.RelationName]*model.Relation{
 				model.RelationName("parent_folder"): {
-					Union:        []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("folder")}}},
-					SubjectTypes: []model.ObjectName{"folder"},
+					Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("folder")}}},
 				},
 				model.RelationName("writer"): {
-					Union:        []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}}},
-					SubjectTypes: []model.ObjectName{"user"},
+					Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}}},
 				},
 				model.RelationName("reader"): {
 					Union: []*model.RelationTerm{
 						{RelationRef: &model.RelationRef{Object: model.ObjectName("user")}},
 						{RelationRef: &model.RelationRef{Object: model.ObjectName("user"), Relation: "*"}},
 					},
-					SubjectTypes: []model.ObjectName{"user"},
 				},
 			},
-			Permissions: map[model.PermissionName]*model.Permission{
-				model.PermissionName("edit"): {
-					Union: []*model.PermissionRef{{RelOrPerm: "writer"}},
+			Permissions: map[model.RelationName]*model.Permission{
+				model.RelationName("edit"): {
+					Union: []*model.PermissionTerm{{RelOrPerm: "writer"}},
 				},
-				model.PermissionName("view"): {
-					Union: []*model.PermissionRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
-				},
-				model.PermissionName("read_and_write"): {
-					Intersection: []*model.PermissionRef{{RelOrPerm: "reader"}, {RelOrPerm: "writer"}},
-				},
-				model.PermissionName("can_only_read"): {
-					Exclusion: &model.ExclusionPermission{
-						Include: &model.PermissionRef{RelOrPerm: "reader"},
-						Exclude: &model.PermissionRef{RelOrPerm: "writer"},
+				model.RelationName("view"): {
+					Union: []*model.PermissionTerm{
+						{RelOrPerm: "reader"},
+						{RelOrPerm: "writer"},
 					},
 				},
-				model.PermissionName("read"): {
-					Union: []*model.PermissionRef{{Base: "parent_folder", RelOrPerm: "read"}},
+				model.RelationName("read_and_write"): {
+					Intersection: []*model.PermissionTerm{
+						{RelOrPerm: "reader"},
+						{RelOrPerm: "writer"},
+					},
+				},
+				model.RelationName("can_only_read"): {
+					Exclusion: &model.ExclusionPermission{
+						Include: &model.PermissionTerm{RelOrPerm: "reader"},
+						Exclude: &model.PermissionTerm{RelOrPerm: "writer"},
+					},
+				},
+				model.RelationName("read"): {
+					Union: []*model.PermissionTerm{{Base: "parent_folder", RelOrPerm: "read"}},
 				},
 			},
 		},
@@ -91,6 +92,8 @@ var m1 = model.Model{
 }
 
 func TestProgrammaticModel(t *testing.T) {
+	stretch.NoError(t, m1.Validate())
+
 	b1, err := json.Marshal(m1)
 	stretch.NoError(t, err)
 
@@ -187,9 +190,9 @@ func TestDiff(t *testing.T) {
 						Union: []*model.RelationTerm{{RelationRef: &model.RelationRef{Object: model.ObjectName("new_user")}}},
 					},
 				},
-				Permissions: map[model.PermissionName]*model.Permission{
-					model.PermissionName("read"): {
-						Union: []*model.PermissionRef{{RelOrPerm: "owner"}},
+				Permissions: map[model.RelationName]*model.Permission{
+					model.RelationName("read"): {
+						Union: []*model.PermissionTerm{{RelOrPerm: "owner"}},
 					},
 				},
 			},
@@ -335,61 +338,61 @@ func TestGraph(t *testing.T) {
 	}
 }
 
-type expectedErrors int
-
 func TestValidation(t *testing.T) {
 	tests := []struct {
 		name           string
 		manifest       string
-		expectedErrors expectedErrors
-		validate       func(error, *stretch.Assertions)
+		expectedErrors []string
 	}{
 		{
 			"valid manifest",
 			"./testdata/valid.yaml",
-			expectedErrors(0),
-			func(_ error, _ *stretch.Assertions) {},
+			[]string{},
 		},
 		{
 			"relation/permission collision",
 			"./testdata/rel_perm_collision.yaml",
-			expectedErrors(2),
-			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "permission name 'file:writer' conflicts with 'file:writer' relation")
-				assert.ErrorContains(err, "relation 'file:bad' has no definition")
+			[]string{
+				"permission name 'file:writer' conflicts with 'file:writer' relation",
+				"relation 'file:bad' has no definition",
 			},
 		},
 		{
-			"relation to undefined targets",
-			"./testdata/undefined_targets.yaml",
-			expectedErrors(6),
-			func(err error, assert *stretch.Assertions) {
-				// relations
-				assert.ErrorContains(err, "relation 'file:owner' references undefined object type 'person'")
-				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'team'")
-				assert.ErrorContains(err, "relation 'file:reader' references undefined object type 'project'")
-				assert.ErrorContains(err, "relation 'file:writer' references undefined object type 'team'")
-				assert.ErrorContains(err, "relation 'file:admin' references undefined relation type 'group#admin'")
-				assert.ErrorContains(err, "permission name 'file:reader' conflicts with 'file:reader' relation")
+			"relations to undefined targets",
+			"./testdata/undefined_rel_targets.yaml",
+			[]string{
+				"relation 'file:owner' references undefined object type 'person'",
+				"relation 'file:reader' references undefined object type 'team'",
+				"relation 'file:reader' references undefined object type 'project'",
+				"relation 'file:writer' references undefined object type 'team'",
+				"relation 'file:admin' references undefined relation type 'group#admin'",
+			},
+		},
+		{
+			"permissions to undefined targets",
+			"./testdata/undefined_perm_targets.yaml",
+			[]string{
+				"permission 'folder:read' references undefined relation type 'folder:parent'",
+				"permission 'folder:view' references undefined relation or permission 'folder:viewer'",
+				"permission 'folder:view' references undefined relation or permission 'folder:guest'",
+				"permission 'folder:write' references undefined relation or permission 'folder:editor'",
 			},
 		},
 		{
 			"cyclic relation definitions",
 			"./testdata/invalid_cycles.yaml",
-			expectedErrors(3),
-			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "relation 'team:member' is circular and does not resolve to any object types")
-				assert.ErrorContains(err, "relation 'team:owner' is circular and does not resolve to any object types")
-				assert.ErrorContains(err, "relation 'project:owner' is circular and does not resolve to any object types")
+			[]string{
+				"relation 'team:member' is circular and does not resolve to any object types",
+				"relation 'team:owner' is circular and does not resolve to any object types",
+				"relation 'project:owner' is circular and does not resolve to any object types",
 			},
 		},
 		{
 			"permissions with invalid targets",
 			"./testdata/invalid_perms.yaml",
-			expectedErrors(2),
-			func(err error, assert *stretch.Assertions) {
-				assert.ErrorContains(err, "permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'")
-				assert.ErrorContains(err, "permission 'file:write' references undefined relation or permission 'file:editor'")
+			[]string{
+				"permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'",
+				"permission 'file:update' references 'parent->write', which can resolve to undefined relation or permission 'folder:write'",
 			},
 		},
 	}
@@ -406,7 +409,8 @@ func TestValidation(t *testing.T) {
 			assert.NoError(enc.Encode(m))
 			tt.Logf("model: %s", b.String())
 
-			if test.expectedErrors == 0 {
+			if len(test.expectedErrors) == 0 {
+				assert.NoError(err)
 				return
 			}
 
@@ -419,12 +423,46 @@ func TestValidation(t *testing.T) {
 
 			merr := aerr.Unwrap().(*multierror.Error)
 			assert.NotNil(merr)
-			test.validate(merr, assert)
+
+			for _, expected := range test.expectedErrors {
+				assert.ErrorContains(merr, expected)
+			}
 
 			// verify that we got the expected number of errors.
-			assert.Len(merr.Errors, int(test.expectedErrors))
+			assert.Len(merr.Errors, len(test.expectedErrors))
 		})
 	}
+}
+
+func TestResolution(t *testing.T) {
+	assert := stretch.New(t)
+	m, err := loadManifest("./testdata/valid.yaml")
+	assert.NoError(err)
+
+	// Relations
+	assert.Equal([]model.ObjectName{"user"}, m.Objects["team"].Relations["owner"].SubjectTypes)
+	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Relations["owner"].SubjectTypes)
+	assert.Equal([]model.ObjectName{"group"}, m.Objects["group"].Relations["parent"].SubjectTypes)
+
+	// - order-agnostic set comparison: a subset of equal length.
+	assert.Len(m.Objects["team"].Relations["member"].SubjectTypes, 2)
+	assert.Subset(m.Objects["team"].Relations["member"].SubjectTypes, []model.ObjectName{"user", "team"})
+
+	assert.Len(m.Objects["group"].Relations["member"].SubjectTypes, 2)
+	assert.Subset(m.Objects["group"].Relations["member"].SubjectTypes, []model.ObjectName{"user", "team"})
+
+	assert.Len(m.Objects["group"].Relations["manager"].SubjectTypes, 2)
+	assert.Subset(m.Objects["group"].Relations["manager"].SubjectTypes, []model.ObjectName{"user", "team"})
+
+	// Permissions
+	assert.Len(m.Objects["group"].Permissions["manage"].SubjectTypes, 2)
+	assert.Subset(m.Objects["group"].Permissions["manage"].SubjectTypes, []model.ObjectName{"user", "team"})
+
+	assert.Len(m.Objects["group"].Permissions["delete"].SubjectTypes, 2)
+	assert.Subset(m.Objects["group"].Permissions["delete"].SubjectTypes, []model.ObjectName{"user", "team"})
+
+	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Permissions["purge"].SubjectTypes)
+
 }
 
 func loadManifest(path string) (*model.Model, error) {

@@ -23,16 +23,16 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 
 func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
 	return &model.Permission{
-		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionRef {
-			return perm.Accept(v).(*model.PermissionRef)
+		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
+			return perm.Accept(v).(*model.PermissionTerm)
 		}),
 	}
 }
 
 func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) interface{} {
 	return &model.Permission{
-		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm IPermContext, _ int) *model.PermissionRef {
-			return perm.Accept(v).(*model.PermissionRef)
+		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
+			return perm.Accept(v).(*model.PermissionTerm)
 		}),
 	}
 }
@@ -40,16 +40,16 @@ func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) in
 func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interface{} {
 	return &model.Permission{
 		Exclusion: &model.ExclusionPermission{
-			Include: c.Exclusion().Perm(0).Accept(v).(*model.PermissionRef),
-			Exclude: c.Exclusion().Perm(1).Accept(v).(*model.PermissionRef),
+			Include: c.Exclusion().Perm(0).Accept(v).(*model.PermissionTerm),
+			Exclude: c.Exclusion().Perm(1).Accept(v).(*model.PermissionTerm),
 		},
 	}
 }
 
 func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
-	return &model.PermissionRef{RelOrPerm: c.Direct().ID().GetText()}
+	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.Direct().ID().GetText())}
 }
 
 func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
-	return &model.PermissionRef{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: c.Arrow().ID(1).GetText()}
+	return &model.PermissionTerm{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: model.RelationName(c.Arrow().ID(1).GetText())}
 }
