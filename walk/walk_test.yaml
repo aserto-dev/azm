@@ -46,6 +46,6 @@ types:
       viewer: user | user:* | group#member
     permissions:
       can_change_owner: owner
-      can_read: viewer | can_write| parent->can_read
+      can_read: viewer | can_write | parent->can_read
       can_share: owner | parent->owner
       can_write: owner | parent->owner

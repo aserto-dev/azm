@@ -40,11 +40,6 @@ func TestLoadModel(t *testing.T) {
 	b1, err := json.Marshal(m1)
 	require.NoError(t, err)
 
-	// f, err := os.Create("../model/testdata/model.json")
-	// require.NoError(t, err)
-	// defer f.Close()
-	// require.NoError(t, m1.Write(f))
-
 	b2, err := os.ReadFile("../model/testdata/model.json")
 	require.NoError(t, err)
 

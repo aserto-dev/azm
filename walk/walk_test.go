@@ -95,10 +95,10 @@ func TestCheck(t *testing.T) {
 		{name: "recursive groups - alpha/omega", check: check("group", "alpha", "member", "user", "user1"), expected: false},
 
 		// Permissions
-		// {name: "owner can change owner", check: check("doc", "doc1", "can_change_owner", "user", "d1_owner"), expected: true},
-		// {name: "owner can read", check: check("doc", "doc1", "can_read", "user", "d1_owner"), expected: true},
-		// {name: "parent owner can read", check: check("doc", "doc1", "can_read", "user", "f1_owner"), expected: true},
-		// {name: "direct viewer can read", check: check("doc", "doc1", "can_read", "user", "user1"), expected: true},
+		{name: "owner can change owner", check: check("doc", "doc1", "can_change_owner", "user", "d1_owner"), expected: true},
+		{name: "owner can read", check: check("doc", "doc1", "can_read", "user", "d1_owner"), expected: true},
+		{name: "parent owner can read", check: check("doc", "doc1", "can_read", "user", "f1_owner"), expected: true},
+		{name: "direct viewer can read", check: check("doc", "doc1", "can_read", "user", "user1"), expected: true},
 	}
 
 	r, err := os.Open("./walk_test.yaml")
