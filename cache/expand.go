@@ -74,7 +74,7 @@ func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionTerm) []model
 	result := []model.RelationName{}
 	for _, ref := range u {
 		if ref.IsArrow() {
-			panic("expandUnion: arrow permissions not supported yet")
+			continue
 		}
 
 		result = append(result, ref.RelOrPerm)
