@@ -1,14 +1,15 @@
 package walk
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 
-	set "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 )
 
@@ -17,8 +18,6 @@ type ObjectID string
 func (id ObjectID) String() string {
 	return string(id)
 }
-
-type ObjectIDs set.Set[ObjectID]
 
 type Object struct {
 	Type model.ObjectName
@@ -34,7 +33,7 @@ type Walker struct {
 	subj    *Object
 	getRels RelationReader
 
-	visited map[model.RelationRef]ObjectIDs
+	memo checkMemo
 }
 
 func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Walker {
@@ -44,7 +43,7 @@ func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Walker {
 		rel:     model.RelationName(req.Relation),
 		subj:    &Object{Type: model.ObjectName(req.SubjectType), ID: ObjectID(req.SubjectId)},
 		getRels: reader,
-		visited: map[model.RelationRef]ObjectIDs{},
+		memo:    checkMemo{},
 	}
 }
 
@@ -59,34 +58,135 @@ func (w *Walker) Check() (bool, error) {
 	}
 
 	params := &checkParams{
-		object:   w.obj,
+		ot:       w.obj.Type,
+		oid:      w.obj.ID,
 		relation: w.rel,
-		subject:  w.subj,
+		st:       w.subj.Type,
+		sid:      w.subj.ID,
 	}
 
 	return w.check(params)
 }
 
+type checkStatus int
+
+const (
+	checkStatusUnknown checkStatus = iota
+	checkStatusPending
+	checkStatusTrue
+	checkStatusFalse
+)
+
+type checkMemo map[checkParams]checkStatus
+
 type checkParams struct {
-	object   *Object
+	ot       model.ObjectName
+	oid      ObjectID
 	relation model.RelationName
-	subject  *Object
+	st       model.ObjectName
+	sid      ObjectID
+}
+
+func (p *checkParams) String() string {
+	return fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, p.oid, p.relation, p.st, p.sid)
 }
 
 func (w *Walker) check(params *checkParams) (bool, error) {
-	if !w.markVisited(params.object, params.relation) {
-		// We already checked this relation and it didn't resolve to the subject.
+	prior := w.markVisited(params)
+	switch prior {
+	case checkStatusPending:
+		// We have a cycle.
 		return false, nil
+	case checkStatusTrue, checkStatusFalse:
+		// We already checked this relation.
+		return prior == checkStatusTrue, nil
 	}
 
-	o := w.m.Objects[params.object.Type]
+	o := w.m.Objects[params.ot]
 
+	var (
+		result bool
+		err    error
+	)
 	if o.HasRelation(params.relation) {
-		return w.checkRelation(params)
+		result, err = w.checkRelation(params)
+	} else {
+		result, err = w.checkPermission(params)
 	}
 
-	p := o.Permissions[params.relation]
-	if !lo.Contains(p.SubjectTypes, params.subject.Type) {
+	status := checkStatusFalse
+	if err == nil && result {
+		status = checkStatusTrue
+	}
+	w.markComplete(params, status)
+
+	return result, err
+}
+
+func (w *Walker) markVisited(params *checkParams) checkStatus {
+	status, ok := w.memo[*params]
+	if !ok {
+		w.memo[*params] = checkStatusPending
+		status = checkStatusUnknown
+	}
+	return status
+}
+
+func (w *Walker) markComplete(params *checkParams, status checkStatus) {
+	w.memo[*params] = status
+}
+
+func (w *Walker) checkRelation(params *checkParams) (bool, error) {
+	r := w.m.Objects[params.ot].Relations[params.relation]
+	steps := w.stepRelation(r, params.st)
+
+	for _, step := range steps {
+		if step.IsWildcard() && step.Object == params.st {
+			// We have a wildcard match.
+			return true, nil
+		}
+
+		rels, err := w.getRels(&dsc.Relation{
+			ObjectType:      params.ot.String(),
+			ObjectId:        params.oid.String(),
+			Relation:        params.relation.String(),
+			SubjectType:     step.Object.String(),
+			SubjectRelation: step.Relation.String(),
+		})
+		if err != nil {
+			return false, err
+		}
+		switch {
+		case step.IsDirect():
+			for _, rel := range rels {
+				if rel.SubjectId == params.sid.String() {
+					return true, nil
+				}
+			}
+		case step.IsSubject():
+			for _, rel := range rels {
+				if ok, err := w.check(&checkParams{
+					ot:       step.Object,
+					oid:      ObjectID(rel.SubjectId),
+					relation: step.Relation,
+					st:       params.st,
+					sid:      params.sid,
+				}); err != nil {
+					return false, err
+				} else if ok {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (w *Walker) checkPermission(params *checkParams) (bool, error) {
+	p := w.m.Objects[params.ot].Permissions[params.relation]
+
+	if !lo.Contains(p.SubjectTypes, params.st) {
 		// The subject type cannot have this permission.
 		return false, nil
 	}
@@ -109,10 +209,10 @@ func (w *Walker) check(params *checkParams) (bool, error) {
 		return w.checkAll(termChecks)
 	case p.IsExclusion():
 		include, err := w.checkAny(termChecks[:1])
-		if err != nil {
+		switch {
+		case err != nil:
 			return false, err
-		}
-		if !include {
+		case !include:
 			// Short-circuit: The include term is false, so the permission is false.
 			return false, nil
 		}
@@ -125,80 +225,16 @@ func (w *Walker) check(params *checkParams) (bool, error) {
 		return !exclude, nil
 	}
 
-	return false, nil
-}
-
-func (w *Walker) markVisited(o *Object, rn model.RelationName) bool {
-	rr := &model.RelationRef{Object: o.Type, Relation: rn}
-
-	visited := w.visited[*rr]
-	if visited == nil {
-		visited = set.NewSet[ObjectID]()
-		w.visited[*rr] = visited
-	}
-
-	if visited.Contains(o.ID) {
-		// already visited
-		return false
-	}
-
-	visited.Add(o.ID)
-	return true
-}
-
-func (w *Walker) checkRelation(params *checkParams) (bool, error) {
-	r := w.m.Objects[params.object.Type].Relations[params.relation]
-	steps := w.stepRelation(r, params.subject.Type)
-
-	for _, step := range steps {
-		if step.IsWildcard() && step.Object == params.subject.Type {
-			// We have a wildcard match.
-			return true, nil
-		}
-
-		rels, err := w.getRels(&dsc.Relation{
-			ObjectType:      params.object.Type.String(),
-			ObjectId:        params.object.ID.String(),
-			Relation:        params.relation.String(),
-			SubjectType:     step.Object.String(),
-			SubjectRelation: step.Relation.String(),
-		})
-		if err != nil {
-			return false, err
-		}
-		switch {
-		case step.IsDirect():
-			for _, rel := range rels {
-				if rel.SubjectId == params.subject.ID.String() {
-					return true, nil
-				}
-			}
-		case step.IsSubject():
-			for _, rel := range rels {
-				if ok, err := w.check(&checkParams{
-					object:   &Object{Type: step.Object, ID: ObjectID(rel.SubjectId)},
-					relation: step.Relation,
-					subject:  params.subject,
-				}); err != nil {
-					return false, err
-				} else if ok {
-					return true, nil
-				}
-			}
-		}
-	}
-
-	return false, nil
+	return false, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
 func (w *Walker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
 	if pt.IsArrow() {
 		// Resolve the base of the arrow.
 		rels, err := w.getRels(&dsc.Relation{
-			ObjectType:  params.object.Type.String(),
-			ObjectId:    params.object.ID.String(),
-			Relation:    pt.Base.String(),
-			SubjectType: params.subject.Type.String(),
+			ObjectType: params.ot.String(),
+			ObjectId:   params.oid.String(),
+			Relation:   pt.Base.String(),
 		})
 		if err != nil {
 			return []*checkParams{}, err
@@ -206,16 +242,18 @@ func (w *Walker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*c
 
 		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *checkParams {
 			return &checkParams{
-				object:   &Object{Type: model.ObjectName(rel.SubjectType), ID: ObjectID(rel.SubjectId)},
+				ot:       model.ObjectName(rel.SubjectType),
+				oid:      ObjectID(rel.SubjectId),
 				relation: pt.RelOrPerm,
-				subject:  params.subject,
+				st:       params.st,
+				sid:      params.sid,
 			}
 		})
 
 		return expanded, nil
 	}
 
-	return []*checkParams{{object: params.object, relation: pt.RelOrPerm, subject: params.subject}}, nil
+	return []*checkParams{{ot: params.ot, oid: params.oid, relation: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
 }
 
 func (w *Walker) checkAny(checks [][]*checkParams) (bool, error) {
@@ -239,6 +277,15 @@ func (w *Walker) checkAny(checks [][]*checkParams) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+
+		fmt.Printf(
+			"checkAny: %s - %v\n",
+			strings.Join(
+				lo.Map(check, func(p *checkParams, _ int) string {
+					return p.String()
+				}),
+				", ",
+			), ok)
 		if ok {
 			return true, nil
 		}

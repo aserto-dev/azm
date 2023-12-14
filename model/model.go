@@ -313,16 +313,12 @@ func (m *Model) resolvePermissions() error {
 
 	seen := set.NewSet[RelationRef]()
 	for on, o := range m.Objects {
-		for pn, p := range o.Permissions {
-			subjs := m.resolvePermission(on, p, seen)
-
-			switch subjs.IsEmpty() {
-			case true:
+		for pn := range o.Permissions {
+			subjs := m.resolvePermission(&RelationRef{on, pn}, seen)
+			if subjs.IsEmpty() {
 				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 					"permission '%s:%s' cannot be satisfied by any type", on, pn),
 				)
-			default:
-				p.SubjectTypes = subjs.ToSlice()
 			}
 		}
 	}
@@ -330,24 +326,39 @@ func (m *Model) resolvePermissions() error {
 	return errs
 }
 
-func (m *Model) resolvePermission(on ObjectName, p *Permission, seen relSet) objSet {
+func (m *Model) resolvePermission(ref *RelationRef, seen relSet) objSet {
+	p := m.Objects[ref.Object].Permissions[ref.Relation]
+
 	if len(p.SubjectTypes) > 0 {
 		// already resolved
 		return set.NewSet(p.SubjectTypes...)
 	}
 
-	for _, term := range p.Terms() {
-		term.SubjectTypes = m.resolvePermissionTerm(on, term, seen)
+	if seen.Contains(*ref) {
+		// cycle detected
+		return set.NewSet[ObjectName]()
 	}
+	seen.Add(*ref)
+
+	for _, term := range p.Terms() {
+		term.SubjectTypes = m.resolvePermissionTerm(ref.Object, term, seen)
+	}
+
+	// filter out terms that have no subject types. They represent cycles that are still being resolved.
+	resolvedTerms := lo.Filter(p.Terms(), func(term *PermissionTerm, _ int) bool {
+		return len(term.SubjectTypes) > 0
+	})
+
+	var subjTypes objSet
 
 	switch {
 	case p.IsUnion():
-		return set.NewSet(lo.FlatMap(p.Terms(), func(term *PermissionTerm, _ int) []ObjectName {
+		subjTypes = set.NewSet(lo.FlatMap(resolvedTerms, func(term *PermissionTerm, _ int) []ObjectName {
 			return term.SubjectTypes
 		})...)
 
 	case p.IsIntersection():
-		return lo.Reduce(p.Terms(), func(acc objSet, term *PermissionTerm, i int) objSet {
+		subjTypes = lo.Reduce(resolvedTerms, func(acc objSet, term *PermissionTerm, i int) objSet {
 			subjs := set.NewSet(term.SubjectTypes...)
 
 			if i == 0 {
@@ -359,10 +370,12 @@ func (m *Model) resolvePermission(on ObjectName, p *Permission, seen relSet) obj
 		}, nil)
 
 	case p.IsExclusion():
-		return set.NewSet(p.Exclusion.Include.SubjectTypes...)
+		subjTypes = set.NewSet(p.Exclusion.Include.SubjectTypes...)
 	}
 
-	return nil
+	p.SubjectTypes = subjTypes.ToSlice()
+
+	return subjTypes
 }
 
 func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) []ObjectName {
@@ -380,7 +393,7 @@ func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen 
 	}
 
 	subjectTypes := set.NewSet[ObjectName]()
-	for ref := range refs.Iterator().C {
+	for ref := range refs.Iter() {
 		o := m.Objects[ref.Object]
 
 		if o.HasRelation(ref.Relation) {
@@ -389,10 +402,7 @@ func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen 
 			continue
 		}
 
-		if !seen.Contains(ref) {
-			seen.Add(ref)
-			subjectTypes = subjectTypes.Union(m.resolvePermission(ref.Object, o.Permissions[ref.Relation], seen))
-		}
+		subjectTypes = subjectTypes.Union(m.resolvePermission(&ref, seen))
 	}
 
 	return subjectTypes.ToSlice()

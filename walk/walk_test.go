@@ -36,12 +36,17 @@ func (r *relation) AsProto() *dsc.Relation {
 type RelationsReader []*relation
 
 func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error) {
+	ot := model.ObjectName(req.ObjectType)
+	rn := model.RelationName(req.Relation)
+	st := model.ObjectName(req.SubjectType)
+	sr := model.RelationName(req.SubjectRelation)
+
 	matches := lo.Filter(r, func(rel *relation, _ int) bool {
-		return rel.ObjectType == model.ObjectName(req.ObjectType) &&
-			rel.ObjectID == req.ObjectId &&
-			rel.Relation == model.RelationName(req.Relation) &&
-			rel.SubjectType == model.ObjectName(req.SubjectType) &&
-			rel.SubjectRelation == model.RelationName(req.SubjectRelation)
+		return (ot == "" || rel.ObjectType == ot) &&
+			(req.ObjectId == "" || rel.ObjectID == req.ObjectId) &&
+			(rn == "" || rel.Relation == rn) &&
+			(st == "" || rel.SubjectType == st) &&
+			(sr == "" || rel.SubjectRelation == sr)
 	})
 
 	return lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
@@ -94,11 +99,29 @@ func TestCheck(t *testing.T) {
 
 		{name: "recursive groups - alpha/omega", check: check("group", "alpha", "member", "user", "user1"), expected: false},
 
-		// Permissions
+		// // Permissions
 		{name: "owner can change owner", check: check("doc", "doc1", "can_change_owner", "user", "d1_owner"), expected: true},
+		{name: "viewer cannot change owner", check: check("doc", "doc1", "can_change_owner", "user", "user1"), expected: false},
+		{name: "unrelated cannot change owner", check: check("doc", "doc1", "can_change_owner", "user", "userX"), expected: false},
+
 		{name: "owner can read", check: check("doc", "doc1", "can_read", "user", "d1_owner"), expected: true},
 		{name: "parent owner can read", check: check("doc", "doc1", "can_read", "user", "f1_owner"), expected: true},
 		{name: "direct viewer can read", check: check("doc", "doc1", "can_read", "user", "user1"), expected: true},
+
+		{name: "owner can write", check: check("doc", "doc1", "can_write", "user", "d1_owner"), expected: true},
+		{name: "parent owner can write", check: check("doc", "doc1", "can_write", "user", "f1_owner"), expected: true},
+		{name: "viewer cannot write", check: check("doc", "doc1", "can_write", "user", "user2"), expected: false},
+
+		{name: "folder owner", check: check("folder", "folder1", "owner", "user", "f1_owner"), expected: true},
+		{name: "folder owner can create file", check: check("folder", "folder1", "can_create_file", "user", "f1_owner"), expected: true},
+		{name: "folder owner can share", check: check("folder", "folder1", "can_share", "user", "f1_owner"), expected: true},
+
+		// // intersection
+		{name: "writer cannot share", check: check("doc", "doc1", "can_share", "user", "d1_owner"), expected: false},
+		{name: "parent owner can share", check: check("doc", "doc1", "can_share", "user", "f1_owner"), expected: true},
+
+		// negation
+		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: false},
 	}
 
 	r, err := os.Open("./walk_test.yaml")
@@ -113,7 +136,7 @@ func TestCheck(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			walker := walk.New(m, nil, test.check, rels.GetRelations)
+			walker := walk.New(m, test.check, rels.GetRelations)
 
 			res, err := walker.Check()
 			assert.NoError(err)
