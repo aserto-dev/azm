@@ -130,18 +130,19 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 	steps := w.stepRelation(r, params.st)
 
 	for _, step := range steps {
-		if step.IsWildcard() && step.Object == params.st {
-			// We have a wildcard match.
-			return true, nil
+		req := &dsc.Relation{
+			ObjectType:  params.ot.String(),
+			ObjectId:    params.oid.String(),
+			Relation:    params.rel.String(),
+			SubjectType: step.Object.String(),
 		}
-
-		rels, err := w.getRels(&dsc.Relation{
-			ObjectType:      params.ot.String(),
-			ObjectId:        params.oid.String(),
-			Relation:        params.rel.String(),
-			SubjectType:     step.Object.String(),
-			SubjectRelation: step.Relation.String(),
-		})
+		switch {
+		case step.IsWildcard():
+			req.SubjectId = "*"
+		case step.IsSubject():
+			req.SubjectRelation = step.Relation.String()
+		}
+		rels, err := w.getRels(req)
 		if err != nil {
 			return false, err
 		}
@@ -152,6 +153,13 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 					return true, nil
 				}
 			}
+
+		case step.IsWildcard():
+			if len(rels) > 0 {
+				// We have a wildcard match.
+				return true, nil
+			}
+
 		case step.IsSubject():
 			for _, rel := range rels {
 				if ok, err := w.check(&checkParams{

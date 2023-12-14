@@ -46,6 +46,7 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 			(req.ObjectId == "" || rel.ObjectID == req.ObjectId) &&
 			(rn == "" || rel.Relation == rn) &&
 			(st == "" || rel.SubjectType == st) &&
+			(req.SubjectId == "" || rel.SubjectID == req.SubjectId) &&
 			(sr == "" || rel.SubjectRelation == sr)
 	})
 
@@ -56,13 +57,15 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 
 func TestCheck(t *testing.T) {
 	rels := RelationsReader{
-		{"folder", "folder1", "owner", "user", "f1_owner", ""},     // folder:folder1#owner@user:f1_owner
-		{"doc", "doc1", "parent", "folder", "folder1", ""},         // doc:doc1#parent@folder:folder1
-		{"doc", "doc1", "owner", "user", "d1_owner", ""},           // doc:doc1#owner@user:d1_owner
-		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"}, // doc:doc1#viewer@group:d1_viewers#member
-		{"doc", "doc1", "viewer", "user", "user1", ""},             // doc:doc1#viewer@user:user1
-		{"group", "d1_viewers", "member", "user", "user2", ""},     // group:d1_viewers#member@user:user2
-		{"doc", "doc2", "viewer", "user", "*", ""},                 // doc:doc2#viewer@user:*
+		{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
+		{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
+		{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
+		{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
+		{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
+		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
+		{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
+		{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
+		{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
 
 		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
 		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
@@ -99,7 +102,7 @@ func TestCheck(t *testing.T) {
 
 		{name: "recursive groups - alpha/omega", check: check("group", "alpha", "member", "user", "user1"), expected: false},
 
-		// // Permissions
+		// Permissions
 		{name: "owner can change owner", check: check("doc", "doc1", "can_change_owner", "user", "d1_owner"), expected: true},
 		{name: "viewer cannot change owner", check: check("doc", "doc1", "can_change_owner", "user", "user1"), expected: false},
 		{name: "unrelated cannot change owner", check: check("doc", "doc1", "can_change_owner", "user", "userX"), expected: false},
@@ -107,6 +110,8 @@ func TestCheck(t *testing.T) {
 		{name: "owner can read", check: check("doc", "doc1", "can_read", "user", "d1_owner"), expected: true},
 		{name: "parent owner can read", check: check("doc", "doc1", "can_read", "user", "f1_owner"), expected: true},
 		{name: "direct viewer can read", check: check("doc", "doc1", "can_read", "user", "user1"), expected: true},
+		{name: "parent viewer can read", check: check("doc", "doc1", "can_read", "user", "f1_viewer"), expected: true},
+		{name: "unrelated cannot read", check: check("doc", "doc1", "can_read", "user", "userX"), expected: false},
 
 		{name: "owner can write", check: check("doc", "doc1", "can_write", "user", "d1_owner"), expected: true},
 		{name: "parent owner can write", check: check("doc", "doc1", "can_write", "user", "f1_owner"), expected: true},
@@ -116,12 +121,14 @@ func TestCheck(t *testing.T) {
 		{name: "folder owner can create file", check: check("folder", "folder1", "can_create_file", "user", "f1_owner"), expected: true},
 		{name: "folder owner can share", check: check("folder", "folder1", "can_share", "user", "f1_owner"), expected: true},
 
-		// // intersection
+		// // // intersection
 		{name: "writer cannot share", check: check("doc", "doc1", "can_share", "user", "d1_owner"), expected: false},
 		{name: "parent owner can share", check: check("doc", "doc1", "can_share", "user", "f1_owner"), expected: true},
 
-		// negation
-		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: false},
+		// // negation
+		{name: "f1_owner can read folder1", check: check("folder", "folder1", "can_read", "user", "f1_owner"), expected: true},
+		{name: "f1_owner isn't doc1 viewer", check: check("doc", "doc1", "viewer", "user", "f1_owner"), expected: false},
+		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: true},
 	}
 
 	r, err := os.Open("./walk_test.yaml")
