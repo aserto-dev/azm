@@ -66,7 +66,27 @@ const (
 	checkStatusFalse
 )
 
+// checkMemo tracks pending checks to detect cycles, and caches the results of completed checks.
 type checkMemo map[checkParams]checkStatus
+
+// MarkVisited returns the status of a check. If the check has not been visited, it is marked as pending.
+func (m checkMemo) MarkVisited(params *checkParams) checkStatus {
+	status, ok := m[*params]
+	if !ok {
+		m[*params] = checkStatusPending
+		status = checkStatusUnknown
+	}
+	return status
+}
+
+// MarkComplete records the result of a check.
+func (m checkMemo) MarkComplete(params *checkParams, checkResult bool) {
+	status := checkStatusFalse
+	if checkResult {
+		status = checkStatusTrue
+	}
+	m[*params] = status
+}
 
 type checkParams struct {
 	ot  model.ObjectName
@@ -81,7 +101,7 @@ func (p *checkParams) String() string {
 }
 
 func (w *Walker) check(params *checkParams) (bool, error) {
-	prior := w.markVisited(params)
+	prior := w.memo.MarkVisited(params)
 	switch prior {
 	case checkStatusPending:
 		// We have a cycle.
@@ -103,26 +123,9 @@ func (w *Walker) check(params *checkParams) (bool, error) {
 		result, err = w.checkPermission(params)
 	}
 
-	status := checkStatusFalse
-	if err == nil && result {
-		status = checkStatusTrue
-	}
-	w.markComplete(params, status)
+	w.memo.MarkComplete(params, result)
 
 	return result, err
-}
-
-func (w *Walker) markVisited(params *checkParams) checkStatus {
-	status, ok := w.memo[*params]
-	if !ok {
-		w.memo[*params] = checkStatusPending
-		status = checkStatusUnknown
-	}
-	return status
-}
-
-func (w *Walker) markComplete(params *checkParams, status checkStatus) {
-	w.memo[*params] = status
 }
 
 func (w *Walker) checkRelation(params *checkParams) (bool, error) {
