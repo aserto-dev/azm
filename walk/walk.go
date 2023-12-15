@@ -139,16 +139,19 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 			Relation:    params.rel.String(),
 			SubjectType: step.Object.String(),
 		}
+
 		switch {
 		case step.IsWildcard():
 			req.SubjectId = "*"
 		case step.IsSubject():
 			req.SubjectRelation = step.Relation.String()
 		}
+
 		rels, err := w.getRels(req)
 		if err != nil {
 			return false, err
 		}
+
 		switch {
 		case step.IsDirect():
 			for _, rel := range rels {
@@ -323,7 +326,7 @@ func (w *Walker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*m
 	sort.Slice(steps, func(i, j int) bool {
 		switch {
 		case steps[i].Assignment() > steps[j].Assignment():
-			// Wildcard < Subjetc < Direct
+			// Wildcard < Subject < Direct
 			return true
 		case steps[i].Assignment() == steps[j].Assignment():
 			return steps[i].String() < steps[j].String()
