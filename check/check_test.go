@@ -2,6 +2,7 @@ package check_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	azmcheck "github.com/aserto-dev/azm/check"
@@ -147,6 +148,7 @@ func TestCheck(t *testing.T) {
 
 			res, err := checker.Check()
 			assert.NoError(err)
+			tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
 			assert.Equal(test.expected, res)
 		})
 	}
@@ -164,6 +166,7 @@ func check(
 		Relation:    relation.String(),
 		SubjectType: subjectType.String(),
 		SubjectId:   subjectID,
+		Trace: true,
 	}
 
 }

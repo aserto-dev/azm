@@ -3,7 +3,6 @@ package check
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -26,7 +25,7 @@ type Checker struct {
 	params  *checkParams
 	getRels RelationReader
 
-	memo checkMemo
+	memo *checkMemo
 }
 
 func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
@@ -40,7 +39,7 @@ func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker 
 			sid: ObjectID(req.SubjectId),
 		},
 		getRels: reader,
-		memo:    checkMemo{},
+		memo:    newCheckMemo(req.Trace),
 	}
 }
 
@@ -57,35 +56,8 @@ func (c *Checker) Check() (bool, error) {
 	return c.check(c.params)
 }
 
-type checkStatus int
-
-const (
-	checkStatusUnknown checkStatus = iota
-	checkStatusPending
-	checkStatusTrue
-	checkStatusFalse
-)
-
-// checkMemo tracks pending checks to detect cycles, and caches the results of completed checks.
-type checkMemo map[checkParams]checkStatus
-
-// MarkVisited returns the status of a check. If the check has not been visited, it is marked as pending.
-func (m checkMemo) MarkVisited(params *checkParams) checkStatus {
-	status, ok := m[*params]
-	if !ok {
-		m[*params] = checkStatusPending
-		status = checkStatusUnknown
-	}
-	return status
-}
-
-// MarkComplete records the result of a check.
-func (m checkMemo) MarkComplete(params *checkParams, checkResult bool) {
-	status := checkStatusFalse
-	if checkResult {
-		status = checkStatusTrue
-	}
-	m[*params] = status
+func (c *Checker) Trace() []string {
+	return c.memo.Trace()
 }
 
 type checkParams struct {
@@ -188,6 +160,32 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 	return false, nil
 }
 
+func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
+	steps := lo.FilterMap(r.Union, func(rt *model.RelationTerm, _ int) (*model.RelationRef, bool) {
+		if rt.IsDirect() || rt.IsWildcard() {
+			// include direct or wildcard with the expected types.
+			return rt.RelationRef, len(subjs) == 0 || lo.Contains(subjs, rt.Object)
+		}
+
+		// include subject relations that can resolve to the expected types.
+		return rt.RelationRef, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rt.Object].Relations[rt.Relation].SubjectTypes, subjs)) > 0
+	})
+
+	sort.Slice(steps, func(i, j int) bool {
+		switch {
+		case steps[i].Assignment() > steps[j].Assignment():
+			// Wildcard < Subject < Direct
+			return true
+		case steps[i].Assignment() == steps[j].Assignment():
+			return steps[i].String() < steps[j].String()
+		default:
+			return false
+		}
+	})
+
+	return steps
+}
+
 func (c *Checker) checkPermission(params *checkParams) (bool, error) {
 	p := c.m.Objects[params.ot].Permissions[params.rel]
 
@@ -283,14 +281,6 @@ func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
 			return false, err
 		}
 
-		fmt.Printf(
-			"checkAny: %s - %v\n",
-			strings.Join(
-				lo.Map(check, func(p *checkParams, _ int) string {
-					return p.String()
-				}),
-				", ",
-			), ok)
 		if ok {
 			return true, nil
 		}
@@ -312,30 +302,4 @@ func (c *Checker) checkAll(checks [][]*checkParams) (bool, error) {
 		}
 	}
 	return true, nil
-}
-
-func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rt *model.RelationTerm, _ int) (*model.RelationRef, bool) {
-		if rt.IsDirect() || rt.IsWildcard() {
-			// include direct or wildcard with the expected types.
-			return rt.RelationRef, len(subjs) == 0 || lo.Contains(subjs, rt.Object)
-		}
-
-		// include subject relations that can resolve to the expected types.
-		return rt.RelationRef, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rt.Object].Relations[rt.Relation].SubjectTypes, subjs)) > 0
-	})
-
-	sort.Slice(steps, func(i, j int) bool {
-		switch {
-		case steps[i].Assignment() > steps[j].Assignment():
-			// Wildcard < Subject < Direct
-			return true
-		case steps[i].Assignment() == steps[j].Assignment():
-			return steps[i].String() < steps[j].String()
-		default:
-			return false
-		}
-	})
-
-	return steps
 }
