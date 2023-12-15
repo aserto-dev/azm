@@ -78,7 +78,7 @@ func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionTerm) []model
 		}
 
 		result = append(result, ref.RelOrPerm)
-		exp := lo.FilterMap(o.Relations[ref.RelOrPerm].Union, func(r *model.RelationTerm, _ int) (*model.PermissionTerm, bool) {
+		exp := lo.FilterMap(o.Relations[ref.RelOrPerm].Union, func(r *model.RelationRef, _ int) (*model.PermissionTerm, bool) {
 			if !r.IsDirect() {
 				return &model.PermissionTerm{}, false
 			}

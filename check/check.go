@@ -161,14 +161,14 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 }
 
 func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rt *model.RelationTerm, _ int) (*model.RelationRef, bool) {
-		if rt.IsDirect() || rt.IsWildcard() {
+	steps := lo.FilterMap(r.Union, func(rr *model.RelationRef, _ int) (*model.RelationRef, bool) {
+		if rr.IsDirect() || rr.IsWildcard() {
 			// include direct or wildcard with the expected types.
-			return rt.RelationRef, len(subjs) == 0 || lo.Contains(subjs, rt.Object)
+			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
 		}
 
 		// include subject relations that can resolve to the expected types.
-		return rt.RelationRef, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rt.Object].Relations[rt.Relation].SubjectTypes, subjs)) > 0
+		return rr, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0
 	})
 
 	sort.Slice(steps, func(i, j int) bool {

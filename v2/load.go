@@ -43,7 +43,7 @@ func Load(r io.Reader) (*model.Model, error) {
 		// create all relation instances
 		for relName := range obj {
 			if _, ok := o.Relations[model.RelationName(relName)]; !ok {
-				o.Relations[model.RelationName(relName)] = &model.Relation{Union: []*model.RelationTerm{}}
+				o.Relations[model.RelationName(relName)] = &model.Relation{Union: []*model.RelationRef{}}
 			}
 		}
 
@@ -55,12 +55,9 @@ func Load(r io.Reader) (*model.Model, error) {
 					return nil, azm.ErrRelationNotFound.Msg(v)
 				}
 
-				rs.Union = append(rs.Union, &model.RelationTerm{
-					RelationRef: &model.RelationRef{
-						Object:   on,
-						Relation: model.RelationName(relName),
-					},
-					SubjectTypes: []model.ObjectName{},
+				rs.Union = append(rs.Union, &model.RelationRef{
+					Object:   on,
+					Relation: model.RelationName(relName),
 				})
 
 				o.Relations[model.RelationName(v)] = rs

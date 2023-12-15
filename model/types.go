@@ -38,13 +38,8 @@ func (o *Object) HasRelOrPerm(name RelationName) bool {
 }
 
 type Relation struct {
-	Union        []*RelationTerm `json:"union,omitempty"`
-	SubjectTypes []ObjectName    `json:"subject_types,omitempty"`
-}
-
-type RelationTerm struct {
-	*RelationRef
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+	Union        []*RelationRef `json:"union,omitempty"`
+	SubjectTypes []ObjectName   `json:"subject_types,omitempty"`
 }
 
 type RelationRef struct {

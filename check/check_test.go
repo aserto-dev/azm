@@ -166,7 +166,7 @@ func check(
 		Relation:    relation.String(),
 		SubjectType: subjectType.String(),
 		SubjectId:   subjectID,
-		Trace: true,
+		Trace:       true,
 	}
 
 }
