@@ -29,7 +29,7 @@ func TestPermissionParser(t *testing.T) {
 
 type relationTest struct {
 	input    string
-	validate func([]*model.RelationTerm, *assert.Assertions)
+	validate func([]*model.RelationRef, *assert.Assertions)
 }
 
 type permissionTest struct {
@@ -40,7 +40,7 @@ type permissionTest struct {
 var relationTests = []relationTest{
 	{
 		"user",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
@@ -50,7 +50,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"name-with-dashes",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
@@ -60,7 +60,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"group#member",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsSubject())
@@ -70,7 +70,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user:*",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsWildcard())
@@ -80,7 +80,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user | group",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 2)
 
 			assert.True(rel[0].IsDirect())
@@ -94,7 +94,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user | group | user:* | group#member",
-		func(rel []*model.RelationTerm, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 4)
 
 			assert.True(rel[0].IsDirect())

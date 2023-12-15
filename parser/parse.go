@@ -5,12 +5,12 @@ import (
 	"github.com/aserto-dev/azm/model"
 )
 
-func ParseRelation(input string) []*model.RelationTerm {
+func ParseRelation(input string) []*model.RelationRef {
 	p := newParser(input)
 	rTree := p.Relation()
 
 	var v RelationVisitor
-	return v.Visit(rTree).([]*model.RelationTerm)
+	return v.Visit(rTree).([]*model.RelationRef)
 }
 
 func ParsePermission(input string) *model.Permission {
