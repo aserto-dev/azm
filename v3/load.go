@@ -41,10 +41,10 @@ func Load(r io.Reader) (*model.Model, error) {
 			return rn, &model.Relation{Union: rts}
 		})
 
-		permissions := lo.MapEntries(o.Permissions, func(pn PermissionName, pd string) (model.PermissionName, *model.Permission) {
+		permissions := lo.MapEntries(o.Permissions, func(pn PermissionName, pd string) (model.RelationName, *model.Permission) {
 			log.Debug().Str("object", string(on)).Str("permission", string(pn)).Msg("loading permission")
 
-			return model.PermissionName(pn), parser.ParsePermission(pd)
+			return model.RelationName(pn), parser.ParsePermission(pd)
 		})
 
 		m.Objects[model.ObjectName(on)] = &model.Object{

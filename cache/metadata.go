@@ -97,11 +97,11 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []string {
 	permissions := []string{}
 	for pn, p := range o.Permissions {
-		union := lo.Map(p.Union, func(r *model.PermissionRef, _ int) string {
-			if r.Base != "" {
-				panic("arrow permissions not supported yet")
+		union := lo.FilterMap(p.Union, func(r *model.PermissionTerm, _ int) (string, bool) {
+			if r.IsArrow() {
+				return "", false
 			}
-			return r.RelOrPerm
+			return r.RelOrPerm.String(), true
 		})
 		if lo.Contains(union, string(rn)) {
 			permissions = append(permissions, string(pn))
@@ -114,7 +114,7 @@ func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.R
 	unions := []string{}
 	for name, r := range o.Relations {
 		for _, rt := range r.Union {
-			if rt.Subject != nil && rt.Subject.Object == on && rt.Subject.Relation == rn {
+			if rt.IsSubject() && rt.Object == on && rt.Relation == rn {
 				unions = append(unions, string(name))
 			}
 		}
@@ -177,7 +177,7 @@ func (c *Cache) GetPermission(permission string) (*dsc2.Permission, error) {
 	defer c.mtx.RUnlock()
 
 	norm, _ := model.NormalizeIdentifier(permission)
-	pn := model.PermissionName(norm)
+	pn := model.RelationName(norm)
 
 	for _, o := range c.model.Objects {
 		if _, ok := o.Permissions[pn]; ok {

@@ -29,10 +29,10 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 	// iterate through relation set, determine if it "unions" with the given relation.
 	for _, rt := range r.Union {
 		switch {
-		case rt.Subject != nil && rt.Subject.Object == on:
-			results = append(results, rt.Subject.Relation)
-		case rt.Direct != nil:
-			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Direct.Object))...)
+		case rt.IsSubject() && rt.Object == on:
+			results = append(results, rt.Relation)
+		case rt.IsDirect():
+			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Object))...)
 		}
 	}
 
@@ -40,12 +40,12 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 }
 
 // ExpandPermission returns list of relations which cover the given permission for the given object type.
-func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) []model.RelationName {
+func (c *Cache) ExpandPermission(on model.ObjectName, pn model.RelationName) []model.RelationName {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
 	norm, _ := model.NormalizeIdentifier(string(pn))
-	pn = model.PermissionName(norm)
+	pn = model.RelationName(norm)
 
 	results := []model.RelationName{}
 
@@ -70,21 +70,20 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.PermissionName) [
 }
 
 // convert union []string to []model.RelationName.
-func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionRef) []model.RelationName {
+func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionTerm) []model.RelationName {
 	result := []model.RelationName{}
 	for _, ref := range u {
-		if ref.Base != "" {
-			panic("expandUnion: arrow permissions not supported yet")
+		if ref.IsArrow() {
+			continue
 		}
-		rn := model.RelationName(ref.RelOrPerm)
-		result = append(result, rn)
 
-		exp := lo.FilterMap(o.Relations[rn].Union, func(r *model.RelationTerm, _ int) (*model.PermissionRef, bool) {
-			if r.Direct == nil {
-				return &model.PermissionRef{}, false
+		result = append(result, ref.RelOrPerm)
+		exp := lo.FilterMap(o.Relations[ref.RelOrPerm].Union, func(r *model.RelationTerm, _ int) (*model.PermissionTerm, bool) {
+			if !r.IsDirect() {
+				return &model.PermissionTerm{}, false
 			}
-			_, ok := o.Relations[model.RelationName(r.Direct.Object)]
-			return &model.PermissionRef{RelOrPerm: string(r.Direct.Object)}, ok
+			_, ok := o.Relations[model.RelationName(r.Object)]
+			return &model.PermissionTerm{RelOrPerm: model.RelationName(r.Object)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

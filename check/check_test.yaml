@@ -26,7 +26,7 @@ types:
   group:
     relations:
       ### display_name: group#member ###
-      member: user
+      member: user | group#member
 
   ### display_name: Folder ###
   folder:
@@ -36,6 +36,8 @@ types:
       viewer: user | user:* | group#member
     permissions:
       can_create_file: owner
+      can_read: viewer | owner | parent->can_read
+      can_share: can_create_file
 
   ### display_name: Document ###
   doc:
@@ -45,6 +47,7 @@ types:
       viewer: user | user:* | group#member
     permissions:
       can_change_owner: owner
-      can_read: viewer | owner | parent->viewer
-      can_share: owner | parent->owner
+      can_read: viewer | can_write | parent->can_read
       can_write: owner | parent->owner
+      can_share: can_write & parent->can_share
+      can_invite: parent->can_read - viewer

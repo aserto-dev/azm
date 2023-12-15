@@ -33,7 +33,7 @@ func Load(r io.Reader) (*model.Model, error) {
 		if _, ok := m.Objects[on]; !ok {
 			m.Objects[on] = &model.Object{
 				Relations:   map[model.RelationName]*model.Relation{},
-				Permissions: map[model.PermissionName]*model.Permission{},
+				Permissions: map[model.RelationName]*model.Permission{},
 			}
 		}
 
@@ -55,13 +55,13 @@ func Load(r io.Reader) (*model.Model, error) {
 					return nil, azm.ErrRelationNotFound.Msg(v)
 				}
 
-				rs.Union = append(rs.Union, &model.RelationTerm{Subject: &model.SubjectRelation{
+				rs.Union = append(rs.Union, &model.RelationTerm{
 					RelationRef: &model.RelationRef{
 						Object:   on,
 						Relation: model.RelationName(relName),
 					},
 					SubjectTypes: []model.ObjectName{},
-				}})
+				})
 
 				o.Relations[model.RelationName(v)] = rs
 			}
@@ -69,16 +69,16 @@ func Load(r io.Reader) (*model.Model, error) {
 			for _, v := range rel.Perms {
 
 				norm, _ := model.NormalizeIdentifier(v)
-				pn := model.PermissionName(norm)
+				pn := model.RelationName(norm)
 
 				// if permission does not exist, create permission definition.
 				if pd, ok := o.Permissions[pn]; !ok {
 					p := &model.Permission{
-						Union: []*model.PermissionRef{{RelOrPerm: relName}},
+						Union: []*model.PermissionTerm{{RelOrPerm: model.RelationName(relName)}},
 					}
 					o.Permissions[pn] = p
 				} else {
-					pd.Union = append(pd.Union, &model.PermissionRef{RelOrPerm: relName})
+					pd.Union = append(pd.Union, &model.PermissionTerm{RelOrPerm: model.RelationName(relName)})
 					o.Permissions[pn] = pd
 				}
 			}

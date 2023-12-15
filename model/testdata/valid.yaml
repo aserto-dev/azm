@@ -7,6 +7,7 @@ model:
 
 types:
   user: {}
+  machine: {}
 
   team:
     relations:
@@ -18,10 +19,10 @@ types:
     relations:
       owner: team
       parent: group
-      manager: user | group#member
       member: user | group#member | team:*
+      manager: user | group#member
 
     permissions:
       manage: owner->member | manager
       delete: manage - member
-      purge: owner & delete & parent->manage
+      purge: owner & delete
