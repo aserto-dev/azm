@@ -1,14 +1,14 @@
 package cache
 
 import (
-	"github.com/aserto-dev/azm/walk"
+	"github.com/aserto-dev/azm/check"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 )
 
-func (c *Cache) Check(req *dsr.CheckRequest, relReader walk.RelationReader) (*dsr.CheckResponse, error) {
-	w := walk.New(c.model, req, relReader)
+func (c *Cache) Check(req *dsr.CheckRequest, relReader check.RelationReader) (*dsr.CheckResponse, error) {
+	checker := check.New(c.model, req, relReader)
 
-	ok, err := w.Check()
+	ok, err := checker.Check()
 	if err != nil {
 		return nil, err
 	}

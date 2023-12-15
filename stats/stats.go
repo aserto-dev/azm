@@ -1,4 +1,4 @@
-package walk
+package stats
 
 import (
 	"sync/atomic"

@@ -10,7 +10,7 @@ import (
 )
 
 func TestGraph(t *testing.T) {
-	r, err := os.Open("../walk/walk_test.yaml")
+	r, err := os.Open("../check/check_test.yaml")
 	require.NoError(t, err)
 
 	m, err := v3.Load(r)

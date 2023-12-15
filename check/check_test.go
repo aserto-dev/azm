@@ -1,12 +1,12 @@
-package walk_test
+package check_test
 
 import (
 	"os"
 	"testing"
 
+	azmcheck "github.com/aserto-dev/azm/check"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
-	"github.com/aserto-dev/azm/walk"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
@@ -131,7 +131,7 @@ func TestCheck(t *testing.T) {
 		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: true},
 	}
 
-	r, err := os.Open("./walk_test.yaml")
+	r, err := os.Open("./check_test.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
@@ -143,9 +143,9 @@ func TestCheck(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			walker := walk.New(m, test.check, rels.GetRelations)
+			checker := azmcheck.New(m, test.check, rels.GetRelations)
 
-			res, err := walker.Check()
+			res, err := checker.Check()
 			assert.NoError(err)
 			assert.Equal(test.expected, res)
 		})

@@ -1,4 +1,4 @@
-package walk
+package check
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ func (id ObjectID) String() string {
 
 type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
 
-type Walker struct {
+type Checker struct {
 	m       *model.Model
 	params  *checkParams
 	getRels RelationReader
@@ -29,8 +29,8 @@ type Walker struct {
 	memo checkMemo
 }
 
-func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Walker {
-	return &Walker{
+func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
+	return &Checker{
 		m: m,
 		params: &checkParams{
 			ot:  model.ObjectName(req.ObjectType),
@@ -44,17 +44,17 @@ func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Walker {
 	}
 }
 
-func (w *Walker) Check() (bool, error) {
-	o := w.m.Objects[w.params.ot]
+func (c *Checker) Check() (bool, error) {
+	o := c.m.Objects[c.params.ot]
 	if o == nil {
-		return false, derr.ErrObjectTypeNotFound.Msg(w.params.ot.String())
+		return false, derr.ErrObjectTypeNotFound.Msg(c.params.ot.String())
 	}
 
-	if !o.HasRelOrPerm(w.params.rel) {
-		return false, derr.ErrRelationNotFound.Msg(w.params.rel.String())
+	if !o.HasRelOrPerm(c.params.rel) {
+		return false, derr.ErrRelationNotFound.Msg(c.params.rel.String())
 	}
 
-	return w.check(w.params)
+	return c.check(c.params)
 }
 
 type checkStatus int
@@ -100,8 +100,8 @@ func (p *checkParams) String() string {
 	return fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, p.oid, p.rel, p.st, p.sid)
 }
 
-func (w *Walker) check(params *checkParams) (bool, error) {
-	prior := w.memo.MarkVisited(params)
+func (c *Checker) check(params *checkParams) (bool, error) {
+	prior := c.memo.MarkVisited(params)
 	switch prior {
 	case checkStatusPending:
 		// We have a cycle.
@@ -109,28 +109,30 @@ func (w *Walker) check(params *checkParams) (bool, error) {
 	case checkStatusTrue, checkStatusFalse:
 		// We already checked this relation.
 		return prior == checkStatusTrue, nil
+	case checkStatusUnknown:
+		// this is the first time we're running this check.
 	}
 
-	o := w.m.Objects[params.ot]
+	o := c.m.Objects[params.ot]
 
 	var (
 		result bool
 		err    error
 	)
 	if o.HasRelation(params.rel) {
-		result, err = w.checkRelation(params)
+		result, err = c.checkRelation(params)
 	} else {
-		result, err = w.checkPermission(params)
+		result, err = c.checkPermission(params)
 	}
 
-	w.memo.MarkComplete(params, result)
+	c.memo.MarkComplete(params, result)
 
 	return result, err
 }
 
-func (w *Walker) checkRelation(params *checkParams) (bool, error) {
-	r := w.m.Objects[params.ot].Relations[params.rel]
-	steps := w.stepRelation(r, params.st)
+func (c *Checker) checkRelation(params *checkParams) (bool, error) {
+	r := c.m.Objects[params.ot].Relations[params.rel]
+	steps := c.stepRelation(r, params.st)
 
 	for _, step := range steps {
 		req := &dsc.Relation{
@@ -147,7 +149,7 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 			req.SubjectRelation = step.Relation.String()
 		}
 
-		rels, err := w.getRels(req)
+		rels, err := c.getRels(req)
 		if err != nil {
 			return false, err
 		}
@@ -168,7 +170,7 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 
 		case step.IsSubject():
 			for _, rel := range rels {
-				if ok, err := w.check(&checkParams{
+				if ok, err := c.check(&checkParams{
 					ot:  step.Object,
 					oid: ObjectID(rel.SubjectId),
 					rel: step.Relation,
@@ -186,8 +188,8 @@ func (w *Walker) checkRelation(params *checkParams) (bool, error) {
 	return false, nil
 }
 
-func (w *Walker) checkPermission(params *checkParams) (bool, error) {
-	p := w.m.Objects[params.ot].Permissions[params.rel]
+func (c *Checker) checkPermission(params *checkParams) (bool, error) {
+	p := c.m.Objects[params.ot].Permissions[params.rel]
 
 	if !lo.Contains(p.SubjectTypes, params.st) {
 		// The subject type cannot have this permission.
@@ -198,7 +200,7 @@ func (w *Walker) checkPermission(params *checkParams) (bool, error) {
 	termChecks := make([][]*checkParams, 0, len(terms))
 	for _, pt := range terms {
 		// expand arrow operators.
-		expanded, err := w.expandTerm(pt, params)
+		expanded, err := c.expandTerm(pt, params)
 		if err != nil {
 			return false, err
 		}
@@ -207,11 +209,11 @@ func (w *Walker) checkPermission(params *checkParams) (bool, error) {
 
 	switch {
 	case p.IsUnion():
-		return w.checkAny(termChecks)
+		return c.checkAny(termChecks)
 	case p.IsIntersection():
-		return w.checkAll(termChecks)
+		return c.checkAll(termChecks)
 	case p.IsExclusion():
-		include, err := w.checkAny(termChecks[:1])
+		include, err := c.checkAny(termChecks[:1])
 		switch {
 		case err != nil:
 			return false, err
@@ -220,7 +222,7 @@ func (w *Walker) checkPermission(params *checkParams) (bool, error) {
 			return false, nil
 		}
 
-		exclude, err := w.checkAny(termChecks[1:])
+		exclude, err := c.checkAny(termChecks[1:])
 		if err != nil {
 			return false, err
 		}
@@ -231,10 +233,10 @@ func (w *Walker) checkPermission(params *checkParams) (bool, error) {
 	return false, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
-func (w *Walker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
+func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
 	if pt.IsArrow() {
 		// Resolve the base of the arrow.
-		rels, err := w.getRels(&dsc.Relation{
+		rels, err := c.getRels(&dsc.Relation{
 			ObjectType: params.ot.String(),
 			ObjectId:   params.oid.String(),
 			Relation:   pt.Base.String(),
@@ -259,7 +261,7 @@ func (w *Walker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*c
 	return []*checkParams{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
 }
 
-func (w *Walker) checkAny(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
 	for _, check := range checks {
 		var (
 			ok  bool
@@ -270,9 +272,9 @@ func (w *Walker) checkAny(checks [][]*checkParams) (bool, error) {
 		case 0:
 			ok, err = false, nil
 		case 1:
-			ok, err = w.check(check[0])
+			ok, err = c.check(check[0])
 		default:
-			ok, err = w.checkAny(lo.Map(check, func(params *checkParams, _ int) []*checkParams {
+			ok, err = c.checkAny(lo.Map(check, func(params *checkParams, _ int) []*checkParams {
 				return []*checkParams{params}
 			}))
 		}
@@ -297,11 +299,11 @@ func (w *Walker) checkAny(checks [][]*checkParams) (bool, error) {
 	return false, nil
 }
 
-func (w *Walker) checkAll(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAll(checks [][]*checkParams) (bool, error) {
 	for _, check := range checks {
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
 		// then a match on any of them is sufficient.
-		ok, err := w.checkAny([][]*checkParams{check})
+		ok, err := c.checkAny([][]*checkParams{check})
 		if err != nil {
 			return false, err
 		}
@@ -312,7 +314,7 @@ func (w *Walker) checkAll(checks [][]*checkParams) (bool, error) {
 	return true, nil
 }
 
-func (w *Walker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
+func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
 	steps := lo.FilterMap(r.Union, func(rt *model.RelationTerm, _ int) (*model.RelationRef, bool) {
 		if rt.IsDirect() || rt.IsWildcard() {
 			// include direct or wildcard with the expected types.
@@ -320,7 +322,7 @@ func (w *Walker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*m
 		}
 
 		// include subject relations that can resolve to the expected types.
-		return rt.RelationRef, len(subjs) == 0 || len(lo.Intersect(w.m.Objects[rt.Object].Relations[rt.Relation].SubjectTypes, subjs)) > 0
+		return rt.RelationRef, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rt.Object].Relations[rt.Relation].SubjectTypes, subjs)) > 0
 	})
 
 	sort.Slice(steps, func(i, j int) bool {
