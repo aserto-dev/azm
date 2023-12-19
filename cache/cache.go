@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 )
 
 type Cache struct {
@@ -72,4 +73,18 @@ func (c *Cache) Metadata() *model.Metadata {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 	return c.model.Metadata
+}
+
+func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	return c.model.ValidateRelation(
+		model.ObjectName(relation.ObjectType),
+		model.ObjectID(relation.ObjectId),
+		model.RelationName(relation.Relation),
+		model.ObjectName(relation.SubjectType),
+		model.ObjectID(relation.SubjectId),
+		model.RelationName(relation.SubjectRelation),
+	)
 }

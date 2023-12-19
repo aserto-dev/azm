@@ -12,11 +12,7 @@ import (
 	"github.com/samber/lo"
 )
 
-type ObjectID string
-
-func (id ObjectID) String() string {
-	return string(id)
-}
+type ObjectID = model.ObjectID
 
 type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
 
