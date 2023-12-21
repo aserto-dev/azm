@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/aserto-dev/azm/model"
-	"github.com/aserto-dev/azm/model/diff"
+	"github.com/aserto-dev/azm/types"
 )
 
 type Cache struct {
@@ -29,14 +29,14 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 }
 
 // Returns a diff struct resulted between the old and the new model.
-func (c *Cache) Diff(other *model.Model) *diff.Diff {
+func (c *Cache) Diff(other *model.Model) *model.Diff {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	return c.model.Diff(other)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
-func (c *Cache) ObjectExists(on model.ObjectName) bool {
+func (c *Cache) ObjectExists(on types.ObjectName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -45,7 +45,7 @@ func (c *Cache) ObjectExists(on model.ObjectName) bool {
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
-func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool {
+func (c *Cache) RelationExists(on types.ObjectName, rn types.RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -57,7 +57,7 @@ func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(on model.ObjectName, pn model.RelationName) bool {
+func (c *Cache) PermissionExists(on types.ObjectName, pn types.RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

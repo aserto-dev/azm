@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	dse2 "github.com/aserto-dev/go-directory/aserto/directory/exporter/v2"
 	dsr2 "github.com/aserto-dev/go-directory/aserto/directory/reader/v2"
@@ -78,31 +78,31 @@ func (m *Migrator) Process() error {
 
 func (m *Migrator) normalize() error {
 	for i := 0; i < len(m.Metadata.ObjectTypes); i++ {
-		if !model.IsValidIdentifier(m.Metadata.ObjectTypes[i].Name) {
-			if normalized, err := model.NormalizeIdentifier(m.Metadata.ObjectTypes[i].Name); err == nil {
+		if !types.IsValidIdentifier(m.Metadata.ObjectTypes[i].Name) {
+			if normalized, err := types.NormalizeIdentifier(m.Metadata.ObjectTypes[i].Name); err == nil {
 				m.Metadata.ObjectTypes[i].Name = normalized
 			}
 		}
 	}
 
 	for i := 0; i < len(m.Metadata.RelationTypes); i++ {
-		if !model.IsValidIdentifier(m.Metadata.RelationTypes[i].Name) {
-			if normalized, err := model.NormalizeIdentifier(m.Metadata.RelationTypes[i].Name); err == nil {
+		if !types.IsValidIdentifier(m.Metadata.RelationTypes[i].Name) {
+			if normalized, err := types.NormalizeIdentifier(m.Metadata.RelationTypes[i].Name); err == nil {
 				m.Metadata.RelationTypes[i].Name = normalized
 			}
 		}
 
 		for j := 0; j < len(m.Metadata.RelationTypes[i].Unions); j++ {
-			if !model.IsValidIdentifier(m.Metadata.RelationTypes[i].Unions[j]) {
-				if normalized, err := model.NormalizeIdentifier(m.Metadata.RelationTypes[i].Unions[j]); err == nil {
+			if !types.IsValidIdentifier(m.Metadata.RelationTypes[i].Unions[j]) {
+				if normalized, err := types.NormalizeIdentifier(m.Metadata.RelationTypes[i].Unions[j]); err == nil {
 					m.Metadata.RelationTypes[i].Unions[j] = normalized
 				}
 			}
 		}
 
 		for j := 0; j < len(m.Metadata.RelationTypes[i].Permissions); j++ {
-			if !model.IsValidIdentifier(m.Metadata.RelationTypes[i].Permissions[j]) {
-				if normalized, err := model.NormalizeIdentifier(m.Metadata.RelationTypes[i].Permissions[j]); err == nil {
+			if !types.IsValidIdentifier(m.Metadata.RelationTypes[i].Permissions[j]) {
+				if normalized, err := types.NormalizeIdentifier(m.Metadata.RelationTypes[i].Permissions[j]); err == nil {
 					m.Metadata.RelationTypes[i].Permissions[j] = normalized
 				}
 			}
@@ -114,22 +114,22 @@ func (m *Migrator) normalize() error {
 
 func (m *Migrator) validate() error {
 	for _, ot := range m.Metadata.ObjectTypes {
-		if !model.IsValidIdentifier(ot.Name) {
+		if !types.IsValidIdentifier(ot.Name) {
 			fmt.Fprintf(os.Stderr, "ot %s is not a valid identifier\n", ot.Name)
 		}
 	}
 
 	for _, rt := range m.Metadata.RelationTypes {
-		if !model.IsValidIdentifier(rt.Name) {
+		if !types.IsValidIdentifier(rt.Name) {
 			fmt.Fprintf(os.Stderr, "rt %s is not a valid identifier\n", rt.Name)
 		}
 		for _, u := range rt.Unions {
-			if !model.IsValidIdentifier(u) {
+			if !types.IsValidIdentifier(u) {
 				fmt.Fprintf(os.Stderr, "rt %s union %s is not a valid identifier\n", rt.Name, u)
 			}
 		}
 		for _, p := range rt.Permissions {
-			if !model.IsValidIdentifier(p) {
+			if !types.IsValidIdentifier(p) {
 				fmt.Fprintf(os.Stderr, "rt %s permission %s is not a valid identifier\n", rt.Name, p)
 			}
 		}

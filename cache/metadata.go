@@ -3,7 +3,7 @@ package cache
 import (
 	"sort"
 
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/samber/lo"
@@ -18,7 +18,7 @@ func (c *Cache) GetObjectType(objectType string) (*dsc2.ObjectType, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	if _, ok := c.model.Objects[model.ObjectName(objectType)]; ok {
+	if _, ok := c.model.Objects[types.ObjectName(objectType)]; ok {
 		return &dsc2.ObjectType{
 			Name:        objectType,
 			DisplayName: title(objectType),
@@ -68,8 +68,8 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	on := model.ObjectName(objectType)
-	rn := model.RelationName(relation)
+	on := types.ObjectName(objectType)
+	rn := types.RelationName(relation)
 
 	o, ok := c.model.Objects[on]
 	if !ok {
@@ -94,10 +94,10 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 	}, nil
 }
 
-func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []string {
+func (*Cache) getRelationPermissions(o *types.Object, rn types.RelationName) []string {
 	permissions := []string{}
 	for pn, p := range o.Permissions {
-		union := lo.FilterMap(p.Union, func(r *model.PermissionTerm, _ int) (string, bool) {
+		union := lo.FilterMap(p.Union, func(r *types.PermissionTerm, _ int) (string, bool) {
 			if r.IsArrow() {
 				return "", false
 			}
@@ -110,7 +110,7 @@ func (*Cache) getRelationPermissions(o *model.Object, rn model.RelationName) []s
 	return permissions
 }
 
-func (*Cache) getRelationUnions(o *model.Object, on model.ObjectName, rn model.RelationName) []string {
+func (*Cache) getRelationUnions(o *types.Object, on types.ObjectName, rn types.RelationName) []string {
 	unions := []string{}
 	for name, r := range o.Relations {
 		for _, rt := range r.Union {
@@ -131,11 +131,11 @@ func (c *Cache) GetRelationTypes(objectType string) (RelationTypeSlice, error) {
 
 	objectTypes := c.model.Objects
 	if objectType != "" {
-		if o, ok := c.model.Objects[model.ObjectName(objectType)]; !ok {
+		if o, ok := c.model.Objects[types.ObjectName(objectType)]; !ok {
 			return results, derr.ErrObjectTypeNotFound.Msg(objectType)
 		} else {
-			objectTypes = map[model.ObjectName]*model.Object{
-				model.ObjectName(objectType): o,
+			objectTypes = map[types.ObjectName]*types.Object{
+				types.ObjectName(objectType): o,
 			}
 		}
 	}
@@ -176,8 +176,8 @@ func (c *Cache) GetPermission(permission string) (*dsc2.Permission, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	norm, _ := model.NormalizeIdentifier(permission)
-	pn := model.RelationName(norm)
+	norm, _ := types.NormalizeIdentifier(permission)
+	pn := types.RelationName(norm)
 
 	for _, o := range c.model.Objects {
 		if _, ok := o.Permissions[pn]; ok {

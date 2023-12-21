@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
@@ -32,10 +33,10 @@ func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker 
 	return &Checker{
 		m: m,
 		params: &checkParams{
-			ot:  model.ObjectName(req.ObjectType),
+			ot:  types.ObjectName(req.ObjectType),
 			oid: ObjectID(req.ObjectId),
-			rel: model.RelationName(req.Relation),
-			st:  model.ObjectName(req.SubjectType),
+			rel: types.RelationName(req.Relation),
+			st:  types.ObjectName(req.SubjectType),
 			sid: ObjectID(req.SubjectId),
 		},
 		getRels: reader,
@@ -61,10 +62,10 @@ func (c *Checker) Trace() []string {
 }
 
 type checkParams struct {
-	ot  model.ObjectName
+	ot  types.ObjectName
 	oid ObjectID
-	rel model.RelationName
-	st  model.ObjectName
+	rel types.RelationName
+	st  types.ObjectName
 	sid ObjectID
 }
 
@@ -160,8 +161,8 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 	return false, nil
 }
 
-func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rr *model.RelationRef, _ int) (*model.RelationRef, bool) {
+func (c *Checker) stepRelation(r *types.Relation, subjs ...types.ObjectName) []*types.RelationRef {
+	steps := lo.FilterMap(r.Union, func(rr *types.RelationRef, _ int) (*types.RelationRef, bool) {
 		if rr.IsDirect() || rr.IsWildcard() {
 			// include direct or wildcard with the expected types.
 			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
@@ -231,7 +232,7 @@ func (c *Checker) checkPermission(params *checkParams) (bool, error) {
 	return false, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
-func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
+func (c *Checker) expandTerm(pt *types.PermissionTerm, params *checkParams) ([]*checkParams, error) {
 	if pt.IsArrow() {
 		// Resolve the base of the arrow.
 		rels, err := c.getRels(&dsc.Relation{
@@ -245,7 +246,7 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*
 
 		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *checkParams {
 			return &checkParams{
-				ot:  model.ObjectName(rel.SubjectType),
+				ot:  types.ObjectName(rel.SubjectType),
 				oid: ObjectID(rel.SubjectId),
 				rel: pt.RelOrPerm,
 				st:  params.st,

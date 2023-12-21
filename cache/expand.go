@@ -1,17 +1,17 @@
 package cache
 
 import (
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	"github.com/samber/lo"
 )
 
 // ExpandRelation, returns list of relations which are a union of the given relation.
 // For example, when a writer relation inherits reader, the expansion of a reader = reader + writer.
-func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []model.RelationName {
+func (c *Cache) ExpandRelation(on types.ObjectName, rn types.RelationName) []types.RelationName {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	results := []model.RelationName{}
+	results := []types.RelationName{}
 
 	// starting object type and relation must exist in order to be expanded.
 	if o, ok := c.model.Objects[on]; !ok {
@@ -32,7 +32,7 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 		case rt.IsSubject() && rt.Object == on:
 			results = append(results, rt.Relation)
 		case rt.IsDirect():
-			results = append(results, c.ExpandRelation(on, model.RelationName(rt.Object))...)
+			results = append(results, c.ExpandRelation(on, types.RelationName(rt.Object))...)
 		}
 	}
 
@@ -40,14 +40,14 @@ func (c *Cache) ExpandRelation(on model.ObjectName, rn model.RelationName) []mod
 }
 
 // ExpandPermission returns list of relations which cover the given permission for the given object type.
-func (c *Cache) ExpandPermission(on model.ObjectName, pn model.RelationName) []model.RelationName {
+func (c *Cache) ExpandPermission(on types.ObjectName, pn types.RelationName) []types.RelationName {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	norm, _ := model.NormalizeIdentifier(string(pn))
-	pn = model.RelationName(norm)
+	norm, _ := types.NormalizeIdentifier(string(pn))
+	pn = types.RelationName(norm)
 
-	results := []model.RelationName{}
+	results := []types.RelationName{}
 
 	// starting object type and permission must exist in order to be expanded.
 	o, ok := c.model.Objects[on]
@@ -70,20 +70,20 @@ func (c *Cache) ExpandPermission(on model.ObjectName, pn model.RelationName) []m
 }
 
 // convert union []string to []model.RelationName.
-func (c *Cache) expandUnion(o *model.Object, u ...*model.PermissionTerm) []model.RelationName {
-	result := []model.RelationName{}
+func (c *Cache) expandUnion(o *types.Object, u ...*types.PermissionTerm) []types.RelationName {
+	result := []types.RelationName{}
 	for _, ref := range u {
 		if ref.IsArrow() {
 			continue
 		}
 
 		result = append(result, ref.RelOrPerm)
-		exp := lo.FilterMap(o.Relations[ref.RelOrPerm].Union, func(r *model.RelationRef, _ int) (*model.PermissionTerm, bool) {
+		exp := lo.FilterMap(o.Relations[ref.RelOrPerm].Union, func(r *types.RelationRef, _ int) (*types.PermissionTerm, bool) {
 			if !r.IsDirect() {
-				return &model.PermissionTerm{}, false
+				return &types.PermissionTerm{}, false
 			}
-			_, ok := o.Relations[model.RelationName(r.Object)]
-			return &model.PermissionTerm{RelOrPerm: model.RelationName(r.Object)}, ok
+			_, ok := o.Relations[types.RelationName(r.Object)]
+			return &types.PermissionTerm{RelOrPerm: types.RelationName(r.Object)}, ok
 
 		})
 		result = append(result, c.expandUnion(o, exp...)...)

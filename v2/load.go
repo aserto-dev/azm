@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm"
 	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 
 	"gopkg.in/yaml.v3"
 )
@@ -16,7 +17,7 @@ func Load(r io.Reader) (*model.Model, error) {
 
 	m := model.Model{
 		Version: model.ModelVersion,
-		Objects: map[model.ObjectName]*model.Object{},
+		Objects: map[types.ObjectName]*types.Object{},
 	}
 
 	if err := dec.Decode(&manifest); err != nil {
@@ -27,13 +28,13 @@ func Load(r io.Reader) (*model.Model, error) {
 	}
 
 	for objName, obj := range manifest {
-		on := model.ObjectName(objName)
+		on := types.ObjectName(objName)
 
 		// create object type if not exists
 		if _, ok := m.Objects[on]; !ok {
-			m.Objects[on] = &model.Object{
-				Relations:   map[model.RelationName]*model.Relation{},
-				Permissions: map[model.RelationName]*model.Permission{},
+			m.Objects[on] = &types.Object{
+				Relations:   map[types.RelationName]*types.Relation{},
+				Permissions: map[types.RelationName]*types.Permission{},
 			}
 		}
 
@@ -42,40 +43,40 @@ func Load(r io.Reader) (*model.Model, error) {
 
 		// create all relation instances
 		for relName := range obj {
-			if _, ok := o.Relations[model.RelationName(relName)]; !ok {
-				o.Relations[model.RelationName(relName)] = &model.Relation{Union: []*model.RelationRef{}}
+			if _, ok := o.Relations[types.RelationName(relName)]; !ok {
+				o.Relations[types.RelationName(relName)] = &types.Relation{Union: []*types.RelationRef{}}
 			}
 		}
 
 		for relName, rel := range obj {
 			// create a subject relation for each union-ed relation, using the same object type.
 			for _, v := range rel.Union {
-				rs, ok := o.Relations[model.RelationName(v)]
+				rs, ok := o.Relations[types.RelationName(v)]
 				if !ok {
 					return nil, azm.ErrRelationNotFound.Msg(v)
 				}
 
-				rs.Union = append(rs.Union, &model.RelationRef{
+				rs.Union = append(rs.Union, &types.RelationRef{
 					Object:   on,
-					Relation: model.RelationName(relName),
+					Relation: types.RelationName(relName),
 				})
 
-				o.Relations[model.RelationName(v)] = rs
+				o.Relations[types.RelationName(v)] = rs
 			}
 
 			for _, v := range rel.Perms {
 
-				norm, _ := model.NormalizeIdentifier(v)
-				pn := model.RelationName(norm)
+				norm, _ := types.NormalizeIdentifier(v)
+				pn := types.RelationName(norm)
 
 				// if permission does not exist, create permission definition.
 				if pd, ok := o.Permissions[pn]; !ok {
-					p := &model.Permission{
-						Union: []*model.PermissionTerm{{RelOrPerm: model.RelationName(relName)}},
+					p := &types.Permission{
+						Union: []*types.PermissionTerm{{RelOrPerm: types.RelationName(relName)}},
 					}
 					o.Permissions[pn] = p
 				} else {
-					pd.Union = append(pd.Union, &model.PermissionTerm{RelOrPerm: model.RelationName(relName)})
+					pd.Union = append(pd.Union, &types.PermissionTerm{RelOrPerm: types.RelationName(relName)})
 					o.Permissions[pn] = pd
 				}
 			}

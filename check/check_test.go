@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	azmcheck "github.com/aserto-dev/azm/check"
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -15,12 +15,12 @@ import (
 )
 
 type relation struct {
-	ObjectType      model.ObjectName
+	ObjectType      types.ObjectName
 	ObjectID        string
-	Relation        model.RelationName
-	SubjectType     model.ObjectName
+	Relation        types.RelationName
+	SubjectType     types.ObjectName
 	SubjectID       string
-	SubjectRelation model.RelationName
+	SubjectRelation types.RelationName
 }
 
 func (r *relation) AsProto() *dsc.Relation {
@@ -37,10 +37,10 @@ func (r *relation) AsProto() *dsc.Relation {
 type RelationsReader []*relation
 
 func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error) {
-	ot := model.ObjectName(req.ObjectType)
-	rn := model.RelationName(req.Relation)
-	st := model.ObjectName(req.SubjectType)
-	sr := model.RelationName(req.SubjectRelation)
+	ot := types.ObjectName(req.ObjectType)
+	rn := types.RelationName(req.Relation)
+	st := types.ObjectName(req.SubjectType)
+	sr := types.RelationName(req.SubjectRelation)
 
 	matches := lo.Filter(r, func(rel *relation, _ int) bool {
 		return (ot == "" || rel.ObjectType == ot) &&
@@ -156,9 +156,9 @@ func TestCheck(t *testing.T) {
 }
 
 func check(
-	objectType model.ObjectName, objectID string,
-	relation model.RelationName,
-	subjectType model.ObjectName, subjectID string,
+	objectType types.ObjectName, objectID string,
+	relation types.RelationName,
+	subjectType types.ObjectName, subjectID string,
 ) *dsr.CheckRequest {
 	return &dsr.CheckRequest{
 		ObjectType:  objectType.String(),

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	"github.com/samber/lo"
 )
 
@@ -15,41 +15,41 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 	case *UnionPermContext, *IntersectionPermContext, *ExclusionPermContext:
 		return t.Accept(v)
 	case *PermissionContext:
-		return &model.Permission{}
+		return &types.Permission{}
 	default:
 		panic("PermissionVisitor can only visit permissions")
 	}
 }
 
 func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
-	return &model.Permission{
-		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
-			return perm.Accept(v).(*model.PermissionTerm)
+	return &types.Permission{
+		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *types.PermissionTerm {
+			return perm.Accept(v).(*types.PermissionTerm)
 		}),
 	}
 }
 
 func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) interface{} {
-	return &model.Permission{
-		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
-			return perm.Accept(v).(*model.PermissionTerm)
+	return &types.Permission{
+		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm IPermContext, _ int) *types.PermissionTerm {
+			return perm.Accept(v).(*types.PermissionTerm)
 		}),
 	}
 }
 
 func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interface{} {
-	return &model.Permission{
-		Exclusion: &model.ExclusionPermission{
-			Include: c.Exclusion().Perm(0).Accept(v).(*model.PermissionTerm),
-			Exclude: c.Exclusion().Perm(1).Accept(v).(*model.PermissionTerm),
+	return &types.Permission{
+		Exclusion: &types.ExclusionPermission{
+			Include: c.Exclusion().Perm(0).Accept(v).(*types.PermissionTerm),
+			Exclude: c.Exclusion().Perm(1).Accept(v).(*types.PermissionTerm),
 		},
 	}
 }
 
 func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
-	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.Direct().ID().GetText())}
+	return &types.PermissionTerm{RelOrPerm: types.RelationName(c.Direct().ID().GetText())}
 }
 
 func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
-	return &model.PermissionTerm{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: model.RelationName(c.Arrow().ID(1).GetText())}
+	return &types.PermissionTerm{Base: types.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: types.RelationName(c.Arrow().ID(1).GetText())}
 }

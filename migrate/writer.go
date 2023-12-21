@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"github.com/samber/lo"
 )
@@ -89,7 +89,7 @@ func writeManifestTypes(w io.Writer) {
 func writeTypeInstance(w io.Writer, indent int, instance *dsc2.ObjectType, this bool) {
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 
-	name, err := model.NormalizeIdentifier(instance.Name)
+	name, err := types.NormalizeIdentifier(instance.Name)
 
 	if err != nil {
 		fmt.Fprintf(w, "%s%s:\n", space(indent), "### INVALID IDENTIFIER >>>")
@@ -108,7 +108,7 @@ func writeRelations(w io.Writer, indent int) {
 func writeRelationInstance(w io.Writer, indent int, instance *dsc2.RelationType) {
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 
-	name, err := model.NormalizeIdentifier(instance.Name)
+	name, err := types.NormalizeIdentifier(instance.Name)
 	if err != nil {
 		fmt.Fprintf(w, "%s%s:\n", space(indent), "### INVALID IDENTIFIER >>>")
 		fmt.Fprintf(w, "%s%s: %s\n", space(indent), "### "+name, strings.Join(instance.Unions, " | "))
@@ -129,7 +129,7 @@ func writePermissionInstance(w io.Writer, indent int, instances map[string]map[s
 		})
 		fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", pn)
 
-		name, err := model.NormalizeIdentifier(pn)
+		name, err := types.NormalizeIdentifier(pn)
 		if err != nil {
 			fmt.Fprintf(w, "%s%s:\n", space(indent), "### INVALID IDENTIFIER >>>")
 			fmt.Fprintf(w, "%s%s: %s\n", space(indent), "### "+pn, strings.Join(relArray, " | "))

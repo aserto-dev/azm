@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/hashicorp/go-multierror"
@@ -16,72 +17,72 @@ import (
 
 var m1 = model.Model{
 	Version: 2,
-	Objects: map[model.ObjectName]*model.Object{
-		model.ObjectName("user"): {},
-		model.ObjectName("group"): {
-			Relations: map[model.RelationName]*model.Relation{
-				model.RelationName("member"): {
-					Union: []*model.RelationRef{
-						{Object: model.ObjectName("user")},
-						{Object: model.ObjectName("group"), Relation: model.RelationName("member")},
+	Objects: map[types.ObjectName]*types.Object{
+		types.ObjectName("user"): {},
+		types.ObjectName("group"): {
+			Relations: map[types.RelationName]*types.Relation{
+				types.RelationName("member"): {
+					Union: []*types.RelationRef{
+						{Object: types.ObjectName("user")},
+						{Object: types.ObjectName("group"), Relation: types.RelationName("member")},
 					},
 				},
 			},
 		},
 
-		model.ObjectName("folder"): {
-			Relations: map[model.RelationName]*model.Relation{
-				model.RelationName("owner"): {
-					Union: []*model.RelationRef{
-						{Object: model.ObjectName("user")},
+		types.ObjectName("folder"): {
+			Relations: map[types.RelationName]*types.Relation{
+				types.RelationName("owner"): {
+					Union: []*types.RelationRef{
+						{Object: types.ObjectName("user")},
 					},
 				},
 			},
-			Permissions: map[model.RelationName]*model.Permission{
-				model.RelationName("read"): {
-					Union: []*model.PermissionTerm{{RelOrPerm: "owner"}},
+			Permissions: map[types.RelationName]*types.Permission{
+				types.RelationName("read"): {
+					Union: []*types.PermissionTerm{{RelOrPerm: "owner"}},
 				},
 			},
 		},
-		model.ObjectName("document"): {
-			Relations: map[model.RelationName]*model.Relation{
-				model.RelationName("parent_folder"): {
-					Union: []*model.RelationRef{{Object: model.ObjectName("folder")}},
+		types.ObjectName("document"): {
+			Relations: map[types.RelationName]*types.Relation{
+				types.RelationName("parent_folder"): {
+					Union: []*types.RelationRef{{Object: types.ObjectName("folder")}},
 				},
-				model.RelationName("writer"): {
-					Union: []*model.RelationRef{{Object: model.ObjectName("user")}},
+				types.RelationName("writer"): {
+					Union: []*types.RelationRef{{Object: types.ObjectName("user")}},
 				},
-				model.RelationName("reader"): {
-					Union: []*model.RelationRef{
-						{Object: model.ObjectName("user")},
-						{Object: model.ObjectName("user"), Relation: "*"},
+				types.RelationName("reader"): {
+					Union: []*types.RelationRef{
+						{Object: types.ObjectName("user")},
+						{Object: types.ObjectName("user"), Relation: "*"},
 					},
 				},
 			},
-			Permissions: map[model.RelationName]*model.Permission{
-				model.RelationName("edit"): {
-					Union: []*model.PermissionTerm{{RelOrPerm: "writer"}},
+			Permissions: map[types.RelationName]*types.Permission{
+				types.RelationName("edit"): {
+					Union: []*types.PermissionTerm{{RelOrPerm: "writer"}},
 				},
-				model.RelationName("view"): {
-					Union: []*model.PermissionTerm{
+				types.RelationName("view"): {
+					Union: []*types.PermissionTerm{
 						{RelOrPerm: "reader"},
 						{RelOrPerm: "writer"},
 					},
 				},
-				model.RelationName("read_and_write"): {
-					Intersection: []*model.PermissionTerm{
+				types.RelationName("read_and_write"): {
+					Intersection: []*types.PermissionTerm{
 						{RelOrPerm: "reader"},
 						{RelOrPerm: "writer"},
 					},
 				},
-				model.RelationName("can_only_read"): {
-					Exclusion: &model.ExclusionPermission{
-						Include: &model.PermissionTerm{RelOrPerm: "reader"},
-						Exclude: &model.PermissionTerm{RelOrPerm: "writer"},
+				types.RelationName("can_only_read"): {
+					Exclusion: &types.ExclusionPermission{
+						Include: &types.PermissionTerm{RelOrPerm: "reader"},
+						Exclude: &types.PermissionTerm{RelOrPerm: "writer"},
 					},
 				},
-				model.RelationName("read"): {
-					Union: []*model.PermissionTerm{{Base: "parent_folder", RelOrPerm: "read"}},
+				types.RelationName("read"): {
+					Union: []*types.PermissionTerm{{Base: "parent_folder", RelOrPerm: "read"}},
 				},
 			},
 		},
@@ -161,42 +162,40 @@ func TestDiff(t *testing.T) {
 
 	m3 := model.Model{
 		Version: 2,
-		Objects: map[model.ObjectName]*model.Object{
-			model.ObjectName("new_user"): {},
-			model.ObjectName("group"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("member"): {
-						Union: []*model.RelationRef{
-							{Object: model.ObjectName("new_user")},
-							{Object: model.ObjectName("group"), Relation: model.RelationName("member")},
+		Objects: map[types.ObjectName]*types.Object{
+			types.ObjectName("new_user"): {},
+			types.ObjectName("group"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("member"): {
+						Union: []*types.RelationRef{
+							{Object: types.ObjectName("new_user")},
 						},
 					},
 				},
 			},
-			model.ObjectName("folder"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("owner"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("new_user")}},
+			types.ObjectName("folder"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("owner"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("new_user")}},
 					},
-					model.RelationName("viewer"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("new_user")}},
+					types.RelationName("viewer"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("new_user")}},
 					},
 				},
-				Permissions: map[model.RelationName]*model.Permission{
-					model.RelationName("read"): {
-						Union: []*model.PermissionTerm{{RelOrPerm: "owner"}},
+				Permissions: map[types.RelationName]*types.Permission{
+					types.RelationName("read"): {
+						Union: []*types.PermissionTerm{{RelOrPerm: "owner"}},
 					},
 				},
 			},
-			model.ObjectName("document"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("writer"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("new_user")}},
+			types.ObjectName("document"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("writer"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("new_user")}},
 					},
-					model.RelationName("reader"): {
-						Union: []*model.RelationRef{
-							{Object: model.ObjectName("new_user")},
-							{Object: model.ObjectName("new_user"), Relation: "*"},
+					types.RelationName("reader"): {
+						Union: []*types.RelationRef{
+							{Object: types.ObjectName("new_user")},
 						},
 					},
 				},
@@ -231,57 +230,57 @@ func TestDiff(t *testing.T) {
 
 	diffm1m3 := m1.Diff(&m3)
 	stretch.Equal(t, len(diffm1m3.Added.Objects), 1)
-	stretch.Equal(t, diffm1m3.Added.Objects[0], "new_user")
+	stretch.Equal(t, diffm1m3.Added.Objects[0], types.ObjectName("new_user"))
 	stretch.Equal(t, len(diffm1m3.Removed.Objects), 1)
-	stretch.Equal(t, diffm1m3.Removed.Objects[0], "user")
+	stretch.Equal(t, diffm1m3.Removed.Objects[0], types.ObjectName("user"))
 
-	stretch.Equal(t, len(diffm1m3.Added.Relations), 1)
-	stretch.Equal(t, diffm1m3.Added.Relations["folder"], []string{"viewer"})
-	stretch.Equal(t, len(diffm1m3.Removed.Relations), 1)
-	stretch.Equal(t, diffm1m3.Removed.Relations["document"], []string{"parent_folder"})
+	stretch.Equal(t, len(diffm1m3.Added.Relations), 3)
+	stretch.Equal(t, diffm1m3.Added.Relations["folder"], map[types.RelationName][]string{"owner": {"new_user"}, "viewer": {}})
+	stretch.Equal(t, len(diffm1m3.Removed.Relations), 3)
+	stretch.Equal(t, diffm1m3.Removed.Relations["document"], map[types.RelationName][]string{"parent_folder": {}, "reader": {"user", "user:*"}, "writer": {"user"}})
 }
 
 func TestGraph(t *testing.T) {
 	m := model.Model{
 		Version: 2,
-		Objects: map[model.ObjectName]*model.Object{
-			model.ObjectName("user"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("rel_name"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("ext_obj")}},
+		Objects: map[types.ObjectName]*types.Object{
+			types.ObjectName("user"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("rel_name"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("ext_obj")}},
 					},
 				},
 			},
-			model.ObjectName("ext_obj"): {},
-			model.ObjectName("group"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("member"): {
-						Union: []*model.RelationRef{
-							{Object: model.ObjectName("user")},
-							{Object: model.ObjectName("group"), Relation: model.RelationName("member")},
+			types.ObjectName("ext_obj"): {},
+			types.ObjectName("group"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("member"): {
+						Union: []*types.RelationRef{
+							{Object: types.ObjectName("user")},
+							{Object: types.ObjectName("group"), Relation: types.RelationName("member")},
 						},
 					},
 				},
 			},
-			model.ObjectName("folder"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("owner"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("user")}},
+			types.ObjectName("folder"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("owner"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("user")}},
 					},
 				},
 			},
-			model.ObjectName("document"): {
-				Relations: map[model.RelationName]*model.Relation{
-					model.RelationName("parent_folder"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("folder")}},
+			types.ObjectName("document"): {
+				Relations: map[types.RelationName]*types.Relation{
+					types.RelationName("parent_folder"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("folder")}},
 					},
-					model.RelationName("writer"): {
-						Union: []*model.RelationRef{{Object: model.ObjectName("user")}},
+					types.RelationName("writer"): {
+						Union: []*types.RelationRef{{Object: types.ObjectName("user")}},
 					},
-					model.RelationName("reader"): {
-						Union: []*model.RelationRef{
-							{Object: model.ObjectName("user")},
-							{Object: model.ObjectName("user"), Relation: "*"},
+					types.RelationName("reader"): {
+						Union: []*types.RelationRef{
+							{Object: types.ObjectName("user")},
+							{Object: types.ObjectName("user"), Relation: "*"},
 						},
 					},
 				},
@@ -429,28 +428,28 @@ func TestResolution(t *testing.T) {
 	assert.NoError(err)
 
 	// Relations
-	assert.Equal([]model.ObjectName{"user"}, m.Objects["team"].Relations["owner"].SubjectTypes)
-	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Relations["owner"].SubjectTypes)
-	assert.Equal([]model.ObjectName{"group"}, m.Objects["group"].Relations["parent"].SubjectTypes)
+	assert.Equal([]types.ObjectName{"user"}, m.Objects["team"].Relations["owner"].SubjectTypes)
+	assert.Equal([]types.ObjectName{"team"}, m.Objects["group"].Relations["owner"].SubjectTypes)
+	assert.Equal([]types.ObjectName{"group"}, m.Objects["group"].Relations["parent"].SubjectTypes)
 
 	// - order-agnostic set comparison: a subset of equal length.
 	assert.Len(m.Objects["team"].Relations["member"].SubjectTypes, 2)
-	assert.Subset(m.Objects["team"].Relations["member"].SubjectTypes, []model.ObjectName{"user", "team"})
+	assert.Subset(m.Objects["team"].Relations["member"].SubjectTypes, []types.ObjectName{"user", "team"})
 
 	assert.Len(m.Objects["group"].Relations["member"].SubjectTypes, 2)
-	assert.Subset(m.Objects["group"].Relations["member"].SubjectTypes, []model.ObjectName{"user", "team"})
+	assert.Subset(m.Objects["group"].Relations["member"].SubjectTypes, []types.ObjectName{"user", "team"})
 
 	assert.Len(m.Objects["group"].Relations["manager"].SubjectTypes, 2)
-	assert.Subset(m.Objects["group"].Relations["manager"].SubjectTypes, []model.ObjectName{"user", "team"})
+	assert.Subset(m.Objects["group"].Relations["manager"].SubjectTypes, []types.ObjectName{"user", "team"})
 
 	// Permissions
 	assert.Len(m.Objects["group"].Permissions["manage"].SubjectTypes, 2)
-	assert.Subset(m.Objects["group"].Permissions["manage"].SubjectTypes, []model.ObjectName{"user", "team"})
+	assert.Subset(m.Objects["group"].Permissions["manage"].SubjectTypes, []types.ObjectName{"user", "team"})
 
 	assert.Len(m.Objects["group"].Permissions["delete"].SubjectTypes, 2)
-	assert.Subset(m.Objects["group"].Permissions["delete"].SubjectTypes, []model.ObjectName{"user", "team"})
+	assert.Subset(m.Objects["group"].Permissions["delete"].SubjectTypes, []types.ObjectName{"user", "team"})
 
-	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Permissions["purge"].SubjectTypes)
+	assert.Equal([]types.ObjectName{"team"}, m.Objects["group"].Permissions["purge"].SubjectTypes)
 
 }
 

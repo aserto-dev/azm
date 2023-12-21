@@ -1,9 +1,9 @@
-package model_test
+package types_test
 
 import (
 	"testing"
 
-	"github.com/aserto-dev/azm/model"
+	"github.com/aserto-dev/azm/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -127,7 +127,7 @@ var isValidIdentifierTests = []struct {
 func TestIsValidateIdentifier(t *testing.T) {
 	for _, tc := range isValidIdentifierTests {
 		t.Run(tc.Name, func(t *testing.T) {
-			if tc.Valid != model.IsValidIdentifier(tc.Input) {
+			if tc.Valid != types.IsValidIdentifier(tc.Input) {
 				t.Fail()
 			}
 		})
@@ -137,7 +137,7 @@ func TestIsValidateIdentifier(t *testing.T) {
 func TestNormalizeIdentifier(t *testing.T) {
 	for _, tc := range isValidIdentifierTests {
 		t.Run(tc.Name, func(t *testing.T) {
-			normalized, err := model.NormalizeIdentifier(tc.Input)
+			normalized, err := types.NormalizeIdentifier(tc.Input)
 			t.Logf("[%s] -> [%s]", tc.Input, normalized)
 			if tc.Valid {
 				assert.NoError(t, err)
