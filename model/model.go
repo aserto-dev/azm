@@ -17,10 +17,18 @@ import (
 
 const ModelVersion int = 2
 
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+type RelationRef = types.RelationRef
+type Object = types.Object
+type Relation = types.Relation
+type Permission = types.Permission
+type PermissionTerm = types.PermissionTerm
+
 type Model struct {
-	Version  int                                `json:"version"`
-	Objects  map[types.ObjectName]*types.Object `json:"types"`
-	Metadata *Metadata                          `json:"metadata"`
+	Version  int                    `json:"version"`
+	Objects  map[ObjectName]*Object `json:"types"`
+	Metadata *Metadata              `json:"metadata"`
 }
 
 type Metadata struct {
@@ -38,8 +46,8 @@ func New(r io.Reader) (*Model, error) {
 	return &m, nil
 }
 
-type objSet set.Set[types.ObjectName]
-type relSet set.Set[types.RelationRef]
+type objSet set.Set[ObjectName]
+type relSet set.Set[RelationRef]
 
 func (m *Model) GetGraph() *graph.Graph {
 	grph := graph.NewGraph()
@@ -140,11 +148,11 @@ func (m *Model) validateReferences() error {
 	return errs
 }
 
-func (m *Model) validateUniqueNames(on types.ObjectName, o *types.Object) error {
-	rels := lo.Map(lo.Keys(o.Relations), func(rn types.RelationName, _ int) string {
+func (m *Model) validateUniqueNames(on ObjectName, o *Object) error {
+	rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
 		return string(rn)
 	})
-	perms := lo.Map(lo.Keys(o.Permissions), func(pn types.RelationName, _ int) string {
+	perms := lo.Map(lo.Keys(o.Permissions), func(pn RelationName, _ int) string {
 		return string(pn)
 	})
 
@@ -160,7 +168,7 @@ func (m *Model) validateUniqueNames(on types.ObjectName, o *types.Object) error 
 	return errs
 }
 
-func (m *Model) validateObjectRels(on types.ObjectName, o *types.Object) error {
+func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 	var errs error
 	for rn, rs := range o.Relations {
 		for _, r := range rs.Union {
@@ -192,7 +200,7 @@ func (m *Model) validateObjectRels(on types.ObjectName, o *types.Object) error {
 	return errs
 }
 
-func (m *Model) validateObjectPerms(on types.ObjectName, o *types.Object) error {
+func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 	var errs error
 	for pn, p := range o.Permissions {
 		terms := p.Terms()
@@ -234,7 +242,7 @@ func (m *Model) resolveRelations() error {
 	var errs error
 	for on, o := range m.Objects {
 		for rn, r := range o.Relations {
-			seen := set.NewSet(types.RelationRef{Object: on, Relation: rn})
+			seen := set.NewSet(RelationRef{Object: on, Relation: rn})
 			subs := m.resolveRelation(r, seen)
 			switch len(subs) {
 			case 0:
@@ -250,13 +258,13 @@ func (m *Model) resolveRelations() error {
 	return errs
 }
 
-func (m *Model) resolveRelation(r *types.Relation, seen relSet) []types.ObjectName {
+func (m *Model) resolveRelation(r *Relation, seen relSet) []ObjectName {
 	if len(r.SubjectTypes) > 0 {
 		// already resolved
 		return r.SubjectTypes
 	}
 
-	subjectTypes := set.NewSet[types.ObjectName]()
+	subjectTypes := set.NewSet[ObjectName]()
 	for _, rr := range r.Union {
 		switch {
 		case rr.IsSubject():
@@ -283,7 +291,7 @@ func (m *Model) validatePermissions() error {
 	return errs
 }
 
-func (m *Model) validatePermission(on types.ObjectName, pn types.RelationName, p *types.Permission) error {
+func (m *Model) validatePermission(on ObjectName, pn RelationName, p *Permission) error {
 	o := m.Objects[on]
 
 	var errs error
@@ -311,10 +319,10 @@ func (m *Model) validatePermission(on types.ObjectName, pn types.RelationName, p
 func (m *Model) resolvePermissions() error {
 	var errs error
 
-	seen := set.NewSet[types.RelationRef]()
+	seen := set.NewSet[RelationRef]()
 	for on, o := range m.Objects {
 		for pn := range o.Permissions {
-			subjs := m.resolvePermission(&types.RelationRef{Object: on, Relation: pn}, seen)
+			subjs := m.resolvePermission(&RelationRef{Object: on, Relation: pn}, seen)
 			if subjs.IsEmpty() {
 				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 					"permission '%s:%s' cannot be satisfied by any type", on, pn),
@@ -326,7 +334,7 @@ func (m *Model) resolvePermissions() error {
 	return errs
 }
 
-func (m *Model) resolvePermission(ref *types.RelationRef, seen relSet) objSet {
+func (m *Model) resolvePermission(ref *RelationRef, seen relSet) objSet {
 	p := m.Objects[ref.Object].Permissions[ref.Relation]
 
 	if len(p.SubjectTypes) > 0 {
@@ -336,7 +344,7 @@ func (m *Model) resolvePermission(ref *types.RelationRef, seen relSet) objSet {
 
 	if seen.Contains(*ref) {
 		// cycle detected
-		return set.NewSet[types.ObjectName]()
+		return set.NewSet[ObjectName]()
 	}
 	seen.Add(*ref)
 
@@ -345,7 +353,7 @@ func (m *Model) resolvePermission(ref *types.RelationRef, seen relSet) objSet {
 	}
 
 	// filter out terms that have no subject types. They represent cycles that are still being resolved.
-	resolvedTerms := lo.Filter(p.Terms(), func(term *types.PermissionTerm, _ int) bool {
+	resolvedTerms := lo.Filter(p.Terms(), func(term *PermissionTerm, _ int) bool {
 		return len(term.SubjectTypes) > 0
 	})
 
@@ -353,12 +361,12 @@ func (m *Model) resolvePermission(ref *types.RelationRef, seen relSet) objSet {
 
 	switch {
 	case p.IsUnion():
-		subjTypes = set.NewSet(lo.FlatMap(resolvedTerms, func(term *types.PermissionTerm, _ int) []types.ObjectName {
+		subjTypes = set.NewSet(lo.FlatMap(resolvedTerms, func(term *PermissionTerm, _ int) []ObjectName {
 			return term.SubjectTypes
 		})...)
 
 	case p.IsIntersection():
-		subjTypes = lo.Reduce(resolvedTerms, func(acc objSet, term *types.PermissionTerm, i int) objSet {
+		subjTypes = lo.Reduce(resolvedTerms, func(acc objSet, term *PermissionTerm, i int) objSet {
 			subjs := set.NewSet(term.SubjectTypes...)
 
 			if i == 0 {
@@ -378,21 +386,21 @@ func (m *Model) resolvePermission(ref *types.RelationRef, seen relSet) objSet {
 	return subjTypes
 }
 
-func (m *Model) resolvePermissionTerm(on types.ObjectName, term *types.PermissionTerm, seen relSet) []types.ObjectName {
-	var refs set.Set[types.RelationRef]
+func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) []ObjectName {
+	var refs set.Set[RelationRef]
 
 	switch {
 	case term.IsArrow():
 		sts := m.Objects[on].Relations[term.Base].SubjectTypes
-		refs = set.NewSet(lo.Map(sts, func(st types.ObjectName, _ int) types.RelationRef {
-			return types.RelationRef{Object: st, Relation: term.RelOrPerm}
+		refs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
+			return RelationRef{Object: st, Relation: term.RelOrPerm}
 		})...)
 
 	default:
-		refs = set.NewSet(types.RelationRef{Object: on, Relation: term.RelOrPerm})
+		refs = set.NewSet(RelationRef{Object: on, Relation: term.RelOrPerm})
 	}
 
-	subjectTypes := set.NewSet[types.ObjectName]()
+	subjectTypes := set.NewSet[ObjectName]()
 	for ref := range refs.Iter() {
 		o := m.Objects[ref.Object]
 
@@ -410,8 +418,8 @@ func (m *Model) resolvePermissionTerm(on types.ObjectName, term *types.Permissio
 
 func (m *Model) subtract(newModel *Model) *Changes {
 	chgs := &Changes{
-		Objects:   make([]types.ObjectName, 0),
-		Relations: make(map[types.ObjectName]map[types.RelationName][]string),
+		Objects:   make([]ObjectName, 0),
+		Relations: make(map[ObjectName]map[RelationName][]string),
 	}
 
 	if m == nil {
@@ -432,7 +440,7 @@ func (m *Model) subtract(newModel *Model) *Changes {
 			for relname, rel := range obj.Relations {
 				if newModel.Objects[objName].Relations[relname] == nil {
 					if chgs.Relations[objName] == nil {
-						chgs.Relations[objName] = make(map[types.RelationName][]string, 0)
+						chgs.Relations[objName] = make(map[RelationName][]string, 0)
 					}
 					chgs.Relations[objName][relname] = []string{}
 					continue
@@ -440,7 +448,7 @@ func (m *Model) subtract(newModel *Model) *Changes {
 				relDiff := substractArray(rel.Union, newModel.Objects[objName].Relations[relname].Union)
 				if len(relDiff) > 0 {
 					if chgs.Relations[objName] == nil {
-						chgs.Relations[objName] = make(map[types.RelationName][]string, 0)
+						chgs.Relations[objName] = make(map[RelationName][]string, 0)
 					}
 					chgs.Relations[objName][relname] = relDiff
 				}
@@ -451,12 +459,12 @@ func (m *Model) subtract(newModel *Model) *Changes {
 	return chgs
 }
 
-func substractArray(arr1, arr2 []*types.RelationRef) []string {
+func substractArray(arr1, arr2 []*RelationRef) []string {
 	result := []string{}
 	for _, elem := range arr1 {
 		found := false
 		for _, elem2 := range arr2 {
-			if elem == elem2 {
+			if *elem == *elem2 {
 				found = true
 				break
 			}

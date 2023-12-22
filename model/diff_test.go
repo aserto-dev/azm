@@ -14,6 +14,9 @@ import (
 
 var ErrBoom = errors.New("Boom")
 
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+
 func TestValidateDiffNoDeletion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockInstances := model.NewMockInstances(ctrl)
@@ -27,9 +30,9 @@ func TestValidateDiffNoDeletion(t *testing.T) {
 func TestValidateDiffWithObjectTypeDeletion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockInstances := model.NewMockInstances(ctrl)
-	objType := types.ObjectName("user")
+	objType := ObjectName("user")
 
-	dif := model.Diff{Removed: model.Changes{Objects: []types.ObjectName{objType}}, Added: model.Changes{}}
+	dif := model.Diff{Removed: model.Changes{Objects: []ObjectName{objType}}, Added: model.Changes{}}
 
 	mockInstances.EXPECT().GetStats().Return(&stats.Stats{}, nil)
 	err := dif.Validate(mockInstances)
@@ -40,7 +43,7 @@ func TestValidateDiffWithObjectTypeDeletion(t *testing.T) {
 func TestValidateDiffWith2ObjectTypeDeletion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockInstances := model.NewMockInstances(ctrl)
-	objTypes := []types.ObjectName{"user", "member"}
+	objTypes := []ObjectName{"user", "member"}
 
 	dif := model.Diff{Removed: model.Changes{Objects: objTypes}, Added: model.Changes{}}
 
@@ -54,8 +57,8 @@ func TestValidateDiffWith2ObjectTypeDeletion(t *testing.T) {
 func TestValidateDiffWithRelationTypeDeletion(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockInstances := model.NewMockInstances(ctrl)
-	objTypes := []types.ObjectName{"user", "member"}
-	relationTypes := map[types.ObjectName]map[types.RelationName][]string{"folder": {"parent_folder": []string{"document"}}}
+	objTypes := []ObjectName{"user", "member"}
+	relationTypes := map[ObjectName]map[RelationName][]string{"folder": {"parent_folder": []string{"document"}}}
 
 	dif := model.Diff{Removed: model.Changes{Objects: objTypes, Relations: relationTypes}, Added: model.Changes{}}
 
@@ -69,8 +72,8 @@ func TestValidateDiffWithRelationTypeDeletion(t *testing.T) {
 func TestValidateDiffWithObjectInstances(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockInstances := model.NewMockInstances(ctrl)
-	objTypes := []types.ObjectName{"user", "member"}
-	relationTypes := map[types.ObjectName]map[types.RelationName][]string{"folder": {"parent_folder": []string{"document"}}}
+	objTypes := []ObjectName{"user", "member"}
+	relationTypes := map[ObjectName]map[RelationName][]string{"folder": {"parent_folder": []string{"document"}}}
 
 	dif := model.Diff{Removed: model.Changes{Objects: objTypes, Relations: relationTypes}, Added: model.Changes{}}
 

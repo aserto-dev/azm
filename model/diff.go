@@ -2,7 +2,6 @@ package model
 
 import (
 	stats "github.com/aserto-dev/azm/stats"
-	"github.com/aserto-dev/azm/types"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -16,8 +15,8 @@ type Diff struct {
 }
 
 type Changes struct {
-	Objects   []types.ObjectName
-	Relations map[types.ObjectName]map[types.RelationName][]string
+	Objects   []ObjectName
+	Relations map[ObjectName]map[RelationName][]string
 }
 type Instances interface {
 	GetStats() (*stats.Stats, error)
@@ -79,7 +78,7 @@ func (d *Diff) validateRelationsTypes(sts *stats.Stats) error {
 				}
 			} else {
 				for _, sub := range subjs {
-					if sts.ObjectTypes[objType].Relations[rel].SubjectTypes[types.ObjectName(sub)].Count > 0 {
+					if sts.ObjectTypes[objType].Relations[rel].SubjectTypes[ObjectName(sub)].Count > 0 {
 						errs = multierror.Append(errs, errors.Wrapf(derr.ErrRelationTypeInUse, "object type [%s], relation type [%s], subject type [%s]", objType, rel, sub))
 					}
 				}
