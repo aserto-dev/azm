@@ -5,20 +5,27 @@ import (
 	"github.com/aserto-dev/azm/types"
 )
 
-func ParseRelation(input string) []*types.RelationRef {
+type RelationRef = types.RelationRef
+type Permission = types.Permission
+type PermissionTerm = types.PermissionTerm
+type RelationName = types.RelationName
+type ExclusionPermission = types.ExclusionPermission
+type ObjectName = types.ObjectName
+
+func ParseRelation(input string) []*RelationRef {
 	p := newParser(input)
 	rTree := p.Relation()
 
 	var v RelationVisitor
-	return v.Visit(rTree).([]*types.RelationRef)
+	return v.Visit(rTree).([]*RelationRef)
 }
 
-func ParsePermission(input string) *types.Permission {
+func ParsePermission(input string) *Permission {
 	p := newParser(input)
 	pTree := p.Permission()
 
 	var v PermissionVisitor
-	return v.Visit(pTree).(*types.Permission)
+	return v.Visit(pTree).(*Permission)
 }
 
 func newParser(input string) *AzmParser {

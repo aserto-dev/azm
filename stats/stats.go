@@ -7,32 +7,35 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 )
 
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+
 type Stats struct {
 	ObjectTypes ObjectTypes `json:"object_types,omitempty"`
 }
 
-type ObjectTypes map[types.ObjectName]struct {
+type ObjectTypes map[ObjectName]struct {
 	ObjCount  int32     `json:"_obj_count,omitempty"`
 	Count     int32     `json:"_count,omitempty"`
 	Relations Relations `json:"relations,omitempty"`
 }
 
-type Relations map[types.RelationName]struct {
+type Relations map[RelationName]struct {
 	Count        int32        `json:"_count,omitempty"`
 	SubjectTypes SubjectTypes `json:"subject_types,omitempty"`
 }
 
-type SubjectTypes map[types.ObjectName]struct {
+type SubjectTypes map[ObjectName]struct {
 	Count            int32            `json:"_count,omitempty"`
 	SubjectRelations SubjectRelations `json:"subject_relations,omitempty"`
 }
 
-type SubjectRelations map[types.RelationName]struct {
+type SubjectRelations map[RelationName]struct {
 	Count int32 `json:"_count,omitempty"`
 }
 
 func (s *Stats) CountObject(obj *dsc.Object) {
-	ot, ok := s.ObjectTypes[types.ObjectName(obj.Type)]
+	ot, ok := s.ObjectTypes[ObjectName(obj.Type)]
 	if !ok {
 		atomic.StoreInt32(&ot.ObjCount, 0)
 		if ot.Relations == nil {
@@ -42,14 +45,14 @@ func (s *Stats) CountObject(obj *dsc.Object) {
 
 	atomic.AddInt32(&ot.ObjCount, 1)
 
-	s.ObjectTypes[types.ObjectName(obj.Type)] = ot
+	s.ObjectTypes[ObjectName(obj.Type)] = ot
 }
 
 func (s *Stats) CountRelation(rel *dsc.Relation) {
-	objType := types.ObjectName(rel.ObjectType)
-	relation := types.RelationName(rel.Relation)
-	subType := types.ObjectName(rel.SubjectType)
-	subRel := types.RelationName(rel.SubjectRelation)
+	objType := ObjectName(rel.ObjectType)
+	relation := RelationName(rel.Relation)
+	subType := ObjectName(rel.SubjectType)
+	subRel := RelationName(rel.SubjectRelation)
 
 	// object_types
 	ot, ok := s.ObjectTypes[objType]

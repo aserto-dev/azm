@@ -2,7 +2,6 @@ package parser
 
 import (
 	"github.com/antlr4-go/antlr/v4"
-	"github.com/aserto-dev/azm/types"
 	"github.com/samber/lo"
 )
 
@@ -20,29 +19,29 @@ func (v *RelationVisitor) Visit(tree antlr.ParseTree) interface{} {
 }
 
 func (v *RelationVisitor) VisitRelation(c *RelationContext) interface{} {
-	return lo.Map(c.AllRel(), func(rel IRelContext, _ int) *types.RelationRef {
-		if term, ok := rel.Accept(v).(*types.RelationRef); ok {
+	return lo.Map(c.AllRel(), func(rel IRelContext, _ int) *RelationRef {
+		if term, ok := rel.Accept(v).(*RelationRef); ok {
 			return term
 		}
 
-		return &types.RelationRef{}
+		return &RelationRef{}
 	})
 }
 
 func (v *RelationVisitor) VisitDirectRel(c *DirectRelContext) interface{} {
-	return &types.RelationRef{Object: types.ObjectName(c.Direct().ID().GetText())}
+	return &RelationRef{Object: ObjectName(c.Direct().ID().GetText())}
 }
 
 func (v *RelationVisitor) VisitWildcardRel(c *WildcardRelContext) interface{} {
-	return &types.RelationRef{
-		Object:   types.ObjectName(c.Wildcard().ID().GetText()),
+	return &RelationRef{
+		Object:   ObjectName(c.Wildcard().ID().GetText()),
 		Relation: "*",
 	}
 }
 
 func (v *RelationVisitor) VisitSubjectRel(c *SubjectRelContext) interface{} {
-	return &types.RelationRef{
-		Object:   types.ObjectName(c.Subject().ID(0).GetText()),
-		Relation: types.RelationName(c.Subject().ID(1).GetText()),
+	return &RelationRef{
+		Object:   ObjectName(c.Subject().ID(0).GetText()),
+		Relation: RelationName(c.Subject().ID(1).GetText()),
 	}
 }

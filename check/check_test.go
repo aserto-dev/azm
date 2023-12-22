@@ -14,13 +14,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+
 type relation struct {
-	ObjectType      types.ObjectName
+	ObjectType      ObjectName
 	ObjectID        string
-	Relation        types.RelationName
-	SubjectType     types.ObjectName
+	Relation        RelationName
+	SubjectType     ObjectName
 	SubjectID       string
-	SubjectRelation types.RelationName
+	SubjectRelation RelationName
 }
 
 func (r *relation) AsProto() *dsc.Relation {
@@ -37,10 +40,10 @@ func (r *relation) AsProto() *dsc.Relation {
 type RelationsReader []*relation
 
 func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error) {
-	ot := types.ObjectName(req.ObjectType)
-	rn := types.RelationName(req.Relation)
-	st := types.ObjectName(req.SubjectType)
-	sr := types.RelationName(req.SubjectRelation)
+	ot := ObjectName(req.ObjectType)
+	rn := RelationName(req.Relation)
+	st := ObjectName(req.SubjectType)
+	sr := RelationName(req.SubjectRelation)
 
 	matches := lo.Filter(r, func(rel *relation, _ int) bool {
 		return (ot == "" || rel.ObjectType == ot) &&
@@ -156,9 +159,9 @@ func TestCheck(t *testing.T) {
 }
 
 func check(
-	objectType types.ObjectName, objectID string,
-	relation types.RelationName,
-	subjectType types.ObjectName, subjectID string,
+	objectType ObjectName, objectID string,
+	relation RelationName,
+	subjectType ObjectName, subjectID string,
 ) *dsr.CheckRequest {
 	return &dsr.CheckRequest{
 		ObjectType:  objectType.String(),

@@ -18,7 +18,7 @@ func (c *Cache) GetObjectType(objectType string) (*dsc2.ObjectType, error) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	if _, ok := c.model.Objects[types.ObjectName(objectType)]; ok {
+	if _, ok := c.model.Objects[ObjectName(objectType)]; ok {
 		return &dsc2.ObjectType{
 			Name:        objectType,
 			DisplayName: title(objectType),
@@ -68,8 +68,8 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	on := types.ObjectName(objectType)
-	rn := types.RelationName(relation)
+	on := ObjectName(objectType)
+	rn := RelationName(relation)
 
 	o, ok := c.model.Objects[on]
 	if !ok {
@@ -94,10 +94,10 @@ func (c *Cache) GetRelationType(objectType, relation string) (*dsc2.RelationType
 	}, nil
 }
 
-func (*Cache) getRelationPermissions(o *types.Object, rn types.RelationName) []string {
+func (*Cache) getRelationPermissions(o *Object, rn RelationName) []string {
 	permissions := []string{}
 	for pn, p := range o.Permissions {
-		union := lo.FilterMap(p.Union, func(r *types.PermissionTerm, _ int) (string, bool) {
+		union := lo.FilterMap(p.Union, func(r *PermissionTerm, _ int) (string, bool) {
 			if r.IsArrow() {
 				return "", false
 			}
@@ -110,7 +110,7 @@ func (*Cache) getRelationPermissions(o *types.Object, rn types.RelationName) []s
 	return permissions
 }
 
-func (*Cache) getRelationUnions(o *types.Object, on types.ObjectName, rn types.RelationName) []string {
+func (*Cache) getRelationUnions(o *Object, on ObjectName, rn RelationName) []string {
 	unions := []string{}
 	for name, r := range o.Relations {
 		for _, rt := range r.Union {
@@ -131,11 +131,11 @@ func (c *Cache) GetRelationTypes(objectType string) (RelationTypeSlice, error) {
 
 	objectTypes := c.model.Objects
 	if objectType != "" {
-		if o, ok := c.model.Objects[types.ObjectName(objectType)]; !ok {
+		if o, ok := c.model.Objects[ObjectName(objectType)]; !ok {
 			return results, derr.ErrObjectTypeNotFound.Msg(objectType)
 		} else {
-			objectTypes = map[types.ObjectName]*types.Object{
-				types.ObjectName(objectType): o,
+			objectTypes = map[ObjectName]*Object{
+				ObjectName(objectType): o,
 			}
 		}
 	}
@@ -177,7 +177,7 @@ func (c *Cache) GetPermission(permission string) (*dsc2.Permission, error) {
 	defer c.mtx.RUnlock()
 
 	norm, _ := types.NormalizeIdentifier(permission)
-	pn := types.RelationName(norm)
+	pn := RelationName(norm)
 
 	for _, o := range c.model.Objects {
 		if _, ok := o.Permissions[pn]; ok {

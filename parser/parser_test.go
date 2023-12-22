@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+type RelationRef = types.RelationRef
+type Permission = types.Permission
+
 func TestRelationParser(t *testing.T) {
 	for _, test := range relationTests {
 		t.Run(test.input, func(tt *testing.T) {
@@ -29,88 +34,88 @@ func TestPermissionParser(t *testing.T) {
 
 type relationTest struct {
 	input    string
-	validate func([]*types.RelationRef, *assert.Assertions)
+	validate func([]*RelationRef, *assert.Assertions)
 }
 
 type permissionTest struct {
 	input    string
-	validate func(*types.Permission, *assert.Assertions)
+	validate func(*Permission, *assert.Assertions)
 }
 
 var relationTests = []relationTest{
 	{
 		"user",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
-			assert.Equal(types.ObjectName("user"), term.Object)
+			assert.Equal(ObjectName("user"), term.Object)
 			assert.Empty(term.Relation)
 		},
 	},
 	{
 		"name-with-dashes",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
-			assert.Equal(types.ObjectName("name-with-dashes"), term.Object)
+			assert.Equal(ObjectName("name-with-dashes"), term.Object)
 			assert.Empty(term.Relation)
 		},
 	},
 	{
 		"group#member",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsSubject())
-			assert.Equal(types.ObjectName("group"), term.Object)
-			assert.Equal(types.RelationName("member"), term.Relation)
+			assert.Equal(ObjectName("group"), term.Object)
+			assert.Equal(RelationName("member"), term.Relation)
 		},
 	},
 	{
 		"user:*",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsWildcard())
-			assert.Equal(types.ObjectName("user"), term.Object)
-			assert.Equal(types.RelationName("*"), term.Relation)
+			assert.Equal(ObjectName("user"), term.Object)
+			assert.Equal(RelationName("*"), term.Relation)
 		},
 	},
 	{
 		"user | group",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 2)
 
 			assert.True(rel[0].IsDirect())
-			assert.Equal(types.ObjectName("user"), rel[0].Object)
+			assert.Equal(ObjectName("user"), rel[0].Object)
 			assert.Empty(rel[0].Relation)
 
 			assert.True(rel[1].IsDirect())
-			assert.Equal(types.ObjectName("group"), rel[1].Object)
+			assert.Equal(ObjectName("group"), rel[1].Object)
 			assert.Empty(rel[1].Relation)
 		},
 	},
 	{
 		"user | group | user:* | group#member",
-		func(rel []*types.RelationRef, assert *assert.Assertions) {
+		func(rel []*RelationRef, assert *assert.Assertions) {
 			assert.Len(rel, 4)
 
 			assert.True(rel[0].IsDirect())
-			assert.Equal(types.ObjectName("user"), rel[0].Object)
+			assert.Equal(ObjectName("user"), rel[0].Object)
 			assert.Empty(rel[0].Relation)
 
 			assert.True(rel[0].IsDirect())
-			assert.Equal(types.ObjectName("group"), rel[1].Object)
+			assert.Equal(ObjectName("group"), rel[1].Object)
 			assert.Empty(rel[1].Relation)
 
 			assert.True(rel[2].IsWildcard())
-			assert.Equal(types.ObjectName("user"), rel[2].Object)
+			assert.Equal(ObjectName("user"), rel[2].Object)
 
 			assert.True(rel[3].IsSubject())
-			assert.Equal(types.ObjectName("group"), rel[3].Object)
-			assert.Equal(types.RelationName("member"), rel[3].Relation)
+			assert.Equal(ObjectName("group"), rel[3].Object)
+			assert.Equal(RelationName("member"), rel[3].Relation)
 		},
 	},
 }
@@ -118,8 +123,8 @@ var relationTests = []relationTest{
 var permissionTests = []permissionTest{
 	{
 		"can_write",
-		func(perm *types.Permission, assert *assert.Assertions) {
-			assert.Equal(types.RelationName("can_write"), perm.Union[0].RelOrPerm)
+		func(perm *Permission, assert *assert.Assertions) {
+			assert.Equal(RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
 			assert.Empty(perm.Intersection)
 			assert.Nil(perm.Exclusion)
@@ -127,40 +132,40 @@ var permissionTests = []permissionTest{
 	},
 	{
 		"can_write | parent->can_read",
-		func(perm *types.Permission, assert *assert.Assertions) {
+		func(perm *Permission, assert *assert.Assertions) {
 			assert.Len(perm.Union, 2)
-			assert.Equal(types.RelationName("can_write"), perm.Union[0].RelOrPerm)
+			assert.Equal(RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
-			assert.Equal(types.RelationName("parent"), perm.Union[1].Base)
-			assert.Equal(types.RelationName("can_read"), perm.Union[1].RelOrPerm)
+			assert.Equal(RelationName("parent"), perm.Union[1].Base)
+			assert.Equal(RelationName("can_read"), perm.Union[1].RelOrPerm)
 		},
 	},
 	{
 		"can_write & can_read",
-		func(perm *types.Permission, assert *assert.Assertions) {
+		func(perm *Permission, assert *assert.Assertions) {
 			assert.Len(perm.Intersection, 2)
-			assert.Equal(types.RelationName("can_write"), perm.Intersection[0].RelOrPerm)
+			assert.Equal(RelationName("can_write"), perm.Intersection[0].RelOrPerm)
 			assert.Empty(perm.Intersection[0].Base)
-			assert.Equal(types.RelationName("can_read"), perm.Intersection[1].RelOrPerm)
+			assert.Equal(RelationName("can_read"), perm.Intersection[1].RelOrPerm)
 			assert.Empty(perm.Intersection[1].Base)
 		},
 	},
 	{
 		"can_write - can_read",
-		func(perm *types.Permission, assert *assert.Assertions) {
-			assert.Equal(types.RelationName("can_write"), perm.Exclusion.Include.RelOrPerm)
+		func(perm *Permission, assert *assert.Assertions) {
+			assert.Equal(RelationName("can_write"), perm.Exclusion.Include.RelOrPerm)
 			assert.Empty(perm.Exclusion.Include.Base)
-			assert.Equal(types.RelationName("can_read"), perm.Exclusion.Exclude.RelOrPerm)
+			assert.Equal(RelationName("can_read"), perm.Exclusion.Exclude.RelOrPerm)
 			assert.Empty(perm.Exclusion.Exclude.Base)
 		},
 	},
 	{
 		"parent->can_read - parent->can_write",
-		func(perm *types.Permission, assert *assert.Assertions) {
-			assert.Equal(types.RelationName("parent"), perm.Exclusion.Include.Base)
-			assert.Equal(types.RelationName("can_read"), perm.Exclusion.Include.RelOrPerm)
-			assert.Equal(types.RelationName("parent"), perm.Exclusion.Exclude.Base)
-			assert.Equal(types.RelationName("can_write"), perm.Exclusion.Exclude.RelOrPerm)
+		func(perm *Permission, assert *assert.Assertions) {
+			assert.Equal(RelationName("parent"), perm.Exclusion.Include.Base)
+			assert.Equal(RelationName("can_read"), perm.Exclusion.Include.RelOrPerm)
+			assert.Equal(RelationName("parent"), perm.Exclusion.Exclude.Base)
+			assert.Equal(RelationName("can_write"), perm.Exclusion.Exclude.RelOrPerm)
 		},
 	},
 }

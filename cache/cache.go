@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/aserto-dev/azm/model"
-	"github.com/aserto-dev/azm/types"
 )
 
 type Cache struct {
@@ -36,7 +35,7 @@ func (c *Cache) Diff(other *model.Model) *model.Diff {
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
-func (c *Cache) ObjectExists(on types.ObjectName) bool {
+func (c *Cache) ObjectExists(on ObjectName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -45,7 +44,7 @@ func (c *Cache) ObjectExists(on types.ObjectName) bool {
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
-func (c *Cache) RelationExists(on types.ObjectName, rn types.RelationName) bool {
+func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -57,7 +56,7 @@ func (c *Cache) RelationExists(on types.ObjectName, rn types.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(on types.ObjectName, pn types.RelationName) bool {
+func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

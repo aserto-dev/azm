@@ -14,6 +14,10 @@ import (
 )
 
 type ObjectID string
+type ObjectName = types.ObjectName
+type RelationName = types.RelationName
+type Relation = types.Relation
+type RelationRef = types.RelationRef
 
 func (id ObjectID) String() string {
 	return string(id)
@@ -33,10 +37,10 @@ func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker 
 	return &Checker{
 		m: m,
 		params: &checkParams{
-			ot:  types.ObjectName(req.ObjectType),
+			ot:  ObjectName(req.ObjectType),
 			oid: ObjectID(req.ObjectId),
-			rel: types.RelationName(req.Relation),
-			st:  types.ObjectName(req.SubjectType),
+			rel: RelationName(req.Relation),
+			st:  ObjectName(req.SubjectType),
 			sid: ObjectID(req.SubjectId),
 		},
 		getRels: reader,
@@ -62,10 +66,10 @@ func (c *Checker) Trace() []string {
 }
 
 type checkParams struct {
-	ot  types.ObjectName
+	ot  ObjectName
 	oid ObjectID
-	rel types.RelationName
-	st  types.ObjectName
+	rel RelationName
+	st  ObjectName
 	sid ObjectID
 }
 
@@ -161,8 +165,8 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 	return false, nil
 }
 
-func (c *Checker) stepRelation(r *types.Relation, subjs ...types.ObjectName) []*types.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rr *types.RelationRef, _ int) (*types.RelationRef, bool) {
+func (c *Checker) stepRelation(r *Relation, subjs ...ObjectName) []*RelationRef {
+	steps := lo.FilterMap(r.Union, func(rr *RelationRef, _ int) (*RelationRef, bool) {
 		if rr.IsDirect() || rr.IsWildcard() {
 			// include direct or wildcard with the expected types.
 			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
@@ -246,7 +250,7 @@ func (c *Checker) expandTerm(pt *types.PermissionTerm, params *checkParams) ([]*
 
 		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *checkParams {
 			return &checkParams{
-				ot:  types.ObjectName(rel.SubjectType),
+				ot:  ObjectName(rel.SubjectType),
 				oid: ObjectID(rel.SubjectId),
 				rel: pt.RelOrPerm,
 				st:  params.st,
