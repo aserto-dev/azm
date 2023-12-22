@@ -7,7 +7,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model/diff"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	set "github.com/deckarep/golang-set/v2"
@@ -67,26 +66,6 @@ func (r *relation) String() string {
 
 type objSet set.Set[ObjectName]
 type relSet set.Set[RelationRef]
-
-func (m *Model) GetGraph() *graph.Graph {
-	grph := graph.NewGraph()
-	for objectName := range m.Objects {
-		grph.AddNode(string(objectName))
-	}
-	for objectName, obj := range m.Objects {
-		for relName, rel := range obj.Relations {
-			for _, rl := range rel.Union {
-				if rl.IsDirect() {
-					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
-				} else if rl.IsSubject() {
-					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
-				}
-			}
-		}
-	}
-
-	return grph
-}
 
 func (m *Model) Reader() (io.Reader, error) {
 	b := bytes.Buffer{}
