@@ -61,10 +61,16 @@ func NewRelationRef(on ObjectName, rn RelationName) *RelationRef {
 }
 
 func (rr *RelationRef) String() string {
-	if rr.Relation == "" {
+	switch {
+	case rr.IsWildcard():
+		return fmt.Sprintf("%s:%s", rr.Object, rr.Relation)
+	case rr.IsDirect():
 		return string(rr.Object)
+	case rr.IsSubject():
+		return fmt.Sprintf("%s#%s", rr.Object, rr.Relation)
 	}
-	return fmt.Sprintf("%s:%s", rr.Object, rr.Relation)
+
+	panic("unknown relation assignment")
 }
 
 func (rr *RelationRef) Assignment() RelationAssignment {

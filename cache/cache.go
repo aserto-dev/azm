@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
+	stts "github.com/aserto-dev/azm/stats"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 )
 
@@ -29,11 +30,10 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 	return nil
 }
 
-// Returns a diff struct resulted between the old and the new model.
-func (c *Cache) Diff(other *model.Model) *diff.Diff {
+func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	return c.model.Diff(other)
+	return diff.CanUpdateModel(c.model, other, stats)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
