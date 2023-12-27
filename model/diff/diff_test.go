@@ -76,7 +76,7 @@ var testCases = []testCase{
 	{
 		"delete direct assignment with instances", baseModel, noDirectAssignment,
 		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 1, Relations: Relations{
-			"member": {Count: 1, SubjectTypes: SubjectTypes{"user": {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}}}},
+			"member": {Count: 1, SubjectTypes: SubjectTypes{"user": {Count: 1}}},
 		}}}},
 		func(assert *require.Assertions, err error) {
 			assert.Error(err)
@@ -93,7 +93,7 @@ var testCases = []testCase{
 	{
 		"delete wildcard assignment with instances", baseModel, noWildcardAssignment,
 		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 1, Relations: Relations{
-			"member": {Count: 1, SubjectTypes: SubjectTypes{"user:*": {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}}}},
+			"member": {Count: 1, SubjectTypes: SubjectTypes{"user:*": {Count: 1}}},
 		}}}},
 		func(assert *require.Assertions, err error) {
 			assert.Error(err)
@@ -121,8 +121,8 @@ var testCases = []testCase{
 		"multiple errors", baseModel, noDirectAssignment,
 		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 1, Relations: Relations{
 			"member": {Count: 2, SubjectTypes: SubjectTypes{
-				"user":  {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}},
-				"group": {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}},
+				"user":  {Count: 1},
+				"group": {Count: 1},
 			}},
 		}}}},
 		func(assert *require.Assertions, err error) {

@@ -22,14 +22,14 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 
 	var errs error
 	for on, rd := range d {
-		if len(rd) == 0 && stats.ObjectTypes[on].ObjCount+stats.ObjectTypes[on].Count > 0 {
+		if len(rd) == 0 && stats.ObjectRefCount(on) > 0 {
 			// The object has been removed but there are still instances or relations.
 			errs = multierror.Append(errs, derr.ErrObjectTypeInUse.Msg(on.String()))
 			continue
 		}
 
 		for rn, rel := range rd {
-			if len(rel) == 0 && stats.ObjectTypes[on].Relations[rn].Count > 0 {
+			if len(rel) == 0 && stats.RelationRefCount(on, rn) > 0 {
 				// The relation has been removed but there are still instances.
 				errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s:%s", on, rn))
 				continue
@@ -41,7 +41,7 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 					sn += ":*"
 					sr = ""
 				}
-				if stats.ObjectTypes[on].Relations[rn].SubjectTypes[sn].SubjectRelations[sr].Count > 0 {
+				if stats.RelationSubjectCount(on, rn, sn, sr) > 0 {
 					// The relation hasn't been removed, but some of its subjects have.
 					errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s#%s@%s", on, rn, &ref))
 				}
