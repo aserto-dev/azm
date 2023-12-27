@@ -8,6 +8,7 @@ import (
 	stts "github.com/aserto-dev/azm/stats"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,6 +115,26 @@ var testCases = []testCase{
 		func(assert *require.Assertions, err error) {
 			assert.Error(err)
 			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group").Error())
+		},
+	},
+	{
+		"multiple errors", baseModel, noDirectAssignment,
+		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 1, Relations: Relations{
+			"member": {Count: 2, SubjectTypes: SubjectTypes{
+				"user":  {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}},
+				"group": {Count: 1, SubjectRelations: SubjectRelations{"": {Count: 1}}},
+			}},
+		}}}},
+		func(assert *require.Assertions, err error) {
+			assert.Error(err)
+
+			aerr := derr.ErrInvalidArgument
+			assert.ErrorAs(err, &aerr)
+
+			merr := aerr.Unwrap().(*multierror.Error)
+			assert.Len(merr.Errors, 2)
+			assert.ErrorContains(merr, derr.ErrRelationTypeInUse.Msg("group#member@user").Error())
+			assert.ErrorContains(merr, derr.ErrRelationTypeInUse.Msg("group#member@group").Error())
 		},
 	},
 }

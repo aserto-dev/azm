@@ -43,13 +43,17 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 				}
 				if stats.ObjectTypes[on].Relations[rn].SubjectTypes[sn].SubjectRelations[sr].Count > 0 {
 					// The relation hasn't been removed, but some of its subjects have.
-					errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s#%s@%s", on, rn, ref))
+					errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s#%s@%s", on, rn, &ref))
 				}
 			}
 		}
 	}
 
-	return errs
+	if errs != nil {
+		return derr.ErrInvalidArgument.Err(errs)
+	}
+
+	return nil
 }
 
 func calculateDelta(from, sub *model.Model) delta {
