@@ -1,6 +1,7 @@
 package diff_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 type (
 	Stats            = stts.Stats
 	ObjectTypes      = stts.ObjectTypes
+	ObjectType       = stts.ObjectType
 	Relations        = stts.Relations
 	SubjectTypes     = stts.SubjectTypes
 	SubjectRelations = stts.SubjectRelations
@@ -41,7 +43,7 @@ var testCases = []testCase{
 		"delete object with instances", baseModel, noGroupObject,
 		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 0}}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrObjectTypeInUse.Msg("group").Error())
 		},
 	},
@@ -49,7 +51,7 @@ var testCases = []testCase{
 		"delete object with relations", baseModel, noGroupObject,
 		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 0, Count: 1}}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrObjectTypeInUse.Msg("group").Error())
 		},
 	},
@@ -60,9 +62,12 @@ var testCases = []testCase{
 	},
 	{
 		"delete relation with instances", baseModel, noMemberRelation,
-		&Stats{ObjectTypes: ObjectTypes{"group": {ObjCount: 1, Count: 1, Relations: Relations{"member": {Count: 1}}}}},
+		&Stats{ObjectTypes: ObjectTypes{
+			"group": &ObjectType{ObjCount: 1, Count: 1, Relations: Relations{"member": {Count: 1}}},
+			"user":  &ObjectType{ObjCount: 2, Count: 1, Relations: Relations{"manager": {Count: 1}}},
+		}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group").Error())
 		},
 	},
@@ -79,7 +84,7 @@ var testCases = []testCase{
 			"member": {Count: 1, SubjectTypes: SubjectTypes{"user": {Count: 1}}},
 		}}}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group").Error())
 		},
 	},
@@ -96,7 +101,7 @@ var testCases = []testCase{
 			"member": {Count: 1, SubjectTypes: SubjectTypes{"user:*": {Count: 1}}},
 		}}}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group").Error())
 		},
 	},
@@ -113,7 +118,7 @@ var testCases = []testCase{
 			"member": {Count: 1, SubjectTypes: SubjectTypes{"group": {Count: 1, SubjectRelations: SubjectRelations{"member": {Count: 1}}}}},
 		}}}},
 		func(assert *require.Assertions, err error) {
-			assert.Error(err)
+			assert.Equal(1, errorCount(err), err)
 			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group").Error())
 		},
 	},
@@ -127,16 +132,26 @@ var testCases = []testCase{
 		}}}},
 		func(assert *require.Assertions, err error) {
 			assert.Error(err)
+			assert.Equal(2, errorCount(err), err)
 
-			aerr := derr.ErrInvalidArgument
-			assert.ErrorAs(err, &aerr)
-
-			merr := aerr.Unwrap().(*multierror.Error)
-			assert.Len(merr.Errors, 2)
-			assert.ErrorContains(merr, derr.ErrRelationTypeInUse.Msg("group#member@user").Error())
-			assert.ErrorContains(merr, derr.ErrRelationTypeInUse.Msg("group#member@group").Error())
+			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group#member@user").Error())
+			assert.ErrorContains(err, derr.ErrRelationTypeInUse.Msg("group#member@group").Error())
 		},
 	},
+}
+
+func errorCount(err error) int {
+	if err == nil {
+		return 0
+	}
+
+	aerr := derr.ErrUnknown
+	if !errors.As(err, &aerr) {
+		return 1
+	}
+
+	merr := aerr.Unwrap().(*multierror.Error)
+	return len(merr.Errors)
 }
 
 type testCase struct {

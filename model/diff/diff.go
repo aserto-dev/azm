@@ -83,7 +83,9 @@ func calculateDelta(from, sub *model.Model) delta {
 			}
 
 			relDiff, _ := DifferencePtr(rel.Union, sub.Objects[objName].Relations[relname].Union)
-			relsDiff[relname] = lo.Associate(relDiff, func(r *model.RelationRef) (model.RelationRef, struct{}) { return *r, struct{}{} })
+			if len(relDiff) > 0 {
+				relsDiff[relname] = lo.Associate(relDiff, func(r *model.RelationRef) (model.RelationRef, struct{}) { return *r, struct{}{} })
+			}
 		}
 
 		if len(relsDiff) > 0 {
