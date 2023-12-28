@@ -7,8 +7,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/aserto-dev/azm/graph"
-	"github.com/aserto-dev/azm/model/diff"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	set "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
@@ -67,26 +65,6 @@ func (r *relation) String() string {
 
 type objSet set.Set[ObjectName]
 type relSet set.Set[RelationRef]
-
-func (m *Model) GetGraph() *graph.Graph {
-	grph := graph.NewGraph()
-	for objectName := range m.Objects {
-		grph.AddNode(string(objectName))
-	}
-	for objectName, obj := range m.Objects {
-		for relName, rel := range obj.Relations {
-			for _, rl := range rel.Union {
-				if rl.IsDirect() {
-					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
-				} else if rl.IsSubject() {
-					grph.AddEdge(string(objectName), string(rl.Object), string(relName))
-				}
-			}
-		}
-	}
-
-	return grph
-}
 
 func (m *Model) Reader() (io.Reader, error) {
 	b := bytes.Buffer{}
@@ -180,45 +158,4 @@ func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, s
 	}
 
 	return nil
-}
-
-func (m *Model) Diff(newModel *Model) *diff.Diff {
-	// newmodel - m => additions
-	added := newModel.subtract(m)
-	// m - newModel => deletions
-	deleted := m.subtract(newModel)
-
-	return &diff.Diff{Added: *added, Removed: *deleted}
-}
-
-func (m *Model) subtract(newModel *Model) *diff.Changes {
-	chgs := &diff.Changes{
-		Objects:   make([]string, 0),
-		Relations: make(map[string][]string),
-	}
-
-	if m == nil {
-		return chgs
-	}
-
-	if newModel == nil {
-		for objName := range m.Objects {
-			chgs.Objects = append(chgs.Objects, string(objName))
-		}
-		return chgs
-	}
-
-	for objName, obj := range m.Objects {
-		if newModel.Objects[objName] == nil {
-			chgs.Objects = append(chgs.Objects, string(objName))
-		} else {
-			for relname := range obj.Relations {
-				if newModel.Objects[objName].Relations[relname] == nil {
-					chgs.Relations[string(objName)] = append(chgs.Relations[string(objName)], string(relname))
-				}
-			}
-		}
-	}
-
-	return chgs
 }

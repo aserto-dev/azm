@@ -1,97 +1,78 @@
 package stats
 
 import (
-	"sync/atomic"
-
 	"github.com/aserto-dev/azm/model"
-	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 )
 
 type Stats struct {
 	ObjectTypes ObjectTypes `json:"object_types,omitempty"`
 }
 
-type ObjectTypes map[model.ObjectName]struct {
+type ObjectTypes map[model.ObjectName]*ObjectType
+
+type ObjectType struct {
 	ObjCount  int32     `json:"_obj_count,omitempty"`
 	Count     int32     `json:"_count,omitempty"`
 	Relations Relations `json:"relations,omitempty"`
 }
 
-type Relations map[model.RelationName]struct {
+type Relations map[model.RelationName]*Relation
+
+type Relation struct {
 	Count        int32        `json:"_count,omitempty"`
 	SubjectTypes SubjectTypes `json:"subject_types,omitempty"`
 }
 
-type SubjectTypes map[model.ObjectName]struct {
+type SubjectTypes map[model.ObjectName]*SubjectType
+
+type SubjectType struct {
 	Count            int32            `json:"_count,omitempty"`
 	SubjectRelations SubjectRelations `json:"subject_relations,omitempty"`
 }
 
-type SubjectRelations map[model.RelationName]struct {
+type SubjectRelations map[model.RelationName]*SubjectRelation
+
+type SubjectRelation struct {
 	Count int32 `json:"_count,omitempty"`
 }
 
-func (s *Stats) CountObject(obj *dsc.Object) {
-	ot, ok := s.ObjectTypes[model.ObjectName(obj.Type)]
-	if !ok {
-		atomic.StoreInt32(&ot.ObjCount, 0)
-		if ot.Relations == nil {
-			ot.Relations = Relations{}
-		}
+func (s *Stats) ObjectRefCount(on model.ObjectName) int32 {
+	if ot, ok := s.ObjectTypes[on]; ok {
+		return ot.Count + ot.ObjCount
 	}
 
-	atomic.AddInt32(&ot.ObjCount, 1)
-
-	s.ObjectTypes[model.ObjectName(obj.Type)] = ot
+	return 0
 }
 
-func (s *Stats) CountRelation(rel *dsc.Relation) {
-	objType := model.ObjectName(rel.ObjectType)
-	relation := model.RelationName(rel.Relation)
-	subType := model.ObjectName(rel.SubjectType)
-	subRel := model.RelationName(rel.SubjectRelation)
-
-	// object_types
-	ot, ok := s.ObjectTypes[objType]
-	if !ok {
-		atomic.StoreInt32(&ot.Count, 0)
-	}
-
-	if ot.Relations == nil {
-		ot.Relations = Relations{}
-	}
-
-	atomic.AddInt32(&ot.Count, 1)
-	s.ObjectTypes[objType] = ot
-
-	// relations
-	re, ok := ot.Relations[relation]
-	if !ok {
-		atomic.StoreInt32(&re.Count, 0)
-		re.SubjectTypes = SubjectTypes{}
-	}
-
-	atomic.AddInt32(&re.Count, 1)
-	ot.Relations[relation] = re
-
-	// subject_types
-	st, ok := re.SubjectTypes[subType]
-	if !ok {
-		atomic.StoreInt32(&st.Count, 0)
-		st.SubjectRelations = SubjectRelations{}
-	}
-
-	atomic.AddInt32(&st.Count, 1)
-	re.SubjectTypes[subType] = st
-
-	// subject_relations
-	if subRel != "" {
-		sr, ok := st.SubjectRelations[subRel]
-		if !ok {
-			atomic.StoreInt32(&sr.Count, 0)
+func (s *Stats) RelationRefCount(on model.ObjectName, rn model.RelationName) int32 {
+	if ot, ok := s.ObjectTypes[on]; ok {
+		if rt, ok := ot.Relations[rn]; ok {
+			return rt.Count
 		}
-
-		atomic.AddInt32(&sr.Count, 1)
-		st.SubjectRelations[subRel] = sr
 	}
+
+	return 0
+}
+
+func (s *Stats) RelationSubjectCount(on model.ObjectName, rn model.RelationName, sn model.ObjectName, sr model.RelationName) int32 {
+	if ot, ok := s.ObjectTypes[on]; ok {
+		if rt, ok := ot.Relations[rn]; ok {
+			if st, ok := rt.SubjectTypes[sn]; ok {
+				switch {
+				case sr != "":
+					if srt, ok := st.SubjectRelations[sr]; ok {
+						return srt.Count
+					}
+				default:
+					subjCount := int32(0)
+					for _, subj := range st.SubjectRelations {
+						subjCount += subj.Count
+					}
+					return st.Count - subjCount
+				}
+			}
+		}
+	}
+
+	return 0
 }
