@@ -31,7 +31,7 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 		for rn, rel := range rd {
 			if len(rel) == 0 && stats.RelationRefCount(on, rn) > 0 {
 				// The relation has been removed but there are still instances.
-				errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s:%s", on, rn))
+				errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s#%s", on, rn))
 				continue
 			}
 
