@@ -8,6 +8,12 @@ type Stats struct {
 	ObjectTypes ObjectTypes `json:"object_types,omitempty"`
 }
 
+func NewStats() *Stats {
+	return &Stats{
+		ObjectTypes: make(ObjectTypes),
+	}
+}
+
 type ObjectTypes map[model.ObjectName]*ObjectType
 
 type ObjectType struct {
