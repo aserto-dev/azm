@@ -30,13 +30,13 @@ func IsNotSet(s string) bool {
 	return strings.TrimSpace(s) == ""
 }
 
-type Object struct {
+type SafeObject struct {
 	*dsc3.Object
 }
 
-func NewObject(i *dsc3.Object) *Object { return &Object{i} }
+func Object(i *dsc3.Object) *SafeObject { return &SafeObject{i} }
 
-func (i *Object) Validate(mc *cache.Cache) error {
+func (i *SafeObject) Validate(mc *cache.Cache) error {
 	if i.Properties == nil {
 		i.Properties = pb.NewStruct()
 	}
@@ -48,7 +48,7 @@ func (i *Object) Validate(mc *cache.Cache) error {
 	return nil
 }
 
-func (i *Object) Hash() string {
+func (i *SafeObject) Hash() string {
 	h := fnv.New64a()
 	h.Reset()
 
@@ -81,13 +81,15 @@ func (i *Object) Hash() string {
 	return strconv.FormatUint(h.Sum64(), 10)
 }
 
-type ObjectIdentifier struct {
+type SafeObjectIdentifier struct {
 	*dsc3.ObjectIdentifier
 }
 
-func NewObjectIdentifier(i *dsc3.ObjectIdentifier) *ObjectIdentifier { return &ObjectIdentifier{i} }
+func ObjectIdentifier(i *dsc3.ObjectIdentifier) *SafeObjectIdentifier {
+	return &SafeObjectIdentifier{i}
+}
 
-func (i *ObjectIdentifier) Validate(mc *cache.Cache) error {
+func (i *SafeObjectIdentifier) Validate(mc *cache.Cache) error {
 	if i.ObjectIdentifier == nil {
 		return derr.ErrInvalidObjectIdentifier.Msg(objectIdentifierNil)
 	}
@@ -110,26 +112,26 @@ func (i *ObjectIdentifier) Validate(mc *cache.Cache) error {
 	return nil
 }
 
-func (i *ObjectIdentifier) Equal(n *dsc3.ObjectIdentifier) bool {
+func (i *SafeObjectIdentifier) Equal(n *dsc3.ObjectIdentifier) bool {
 	return strings.EqualFold(i.ObjectIdentifier.GetObjectId(), n.GetObjectId()) && strings.EqualFold(i.ObjectIdentifier.GetObjectType(), n.GetObjectType())
 }
 
-func (i *ObjectIdentifier) IsComplete() bool {
+func (i *SafeObjectIdentifier) IsComplete() bool {
 	return i != nil && i.GetObjectType() != "" && i.GetObjectId() != ""
 }
 
-type ObjectSelector struct {
+type SafeObjectSelector struct {
 	*dsc3.ObjectIdentifier
 }
 
-func NewObjectSelector(i *dsc3.ObjectIdentifier) *ObjectSelector { return &ObjectSelector{i} }
+func ObjectSelector(i *dsc3.ObjectIdentifier) *SafeObjectSelector { return &SafeObjectSelector{i} }
 
 // Validate rules:
 // valid states
 // - empty object
 // - type only
 // - type + key.
-func (i *ObjectSelector) Validate(mc *cache.Cache) error {
+func (i *SafeObjectSelector) Validate(mc *cache.Cache) error {
 	// nil not allowed
 	if i.ObjectIdentifier == nil {
 		return derr.ErrInvalidObjectSelector.Msg(objectIdentifierNil)
@@ -149,6 +151,6 @@ func (i *ObjectSelector) Validate(mc *cache.Cache) error {
 	return nil
 }
 
-func (i *ObjectSelector) IsComplete() bool {
+func (i *SafeObjectSelector) IsComplete() bool {
 	return IsSet(i.GetObjectType()) && IsSet(i.GetObjectId())
 }

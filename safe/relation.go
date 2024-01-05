@@ -11,21 +11,29 @@ import (
 	"github.com/aserto-dev/go-directory/pkg/derr"
 )
 
-// Relation identifier.
-type Relation struct {
+// SafeRelation identifier.
+type SafeRelation struct {
 	*dsc3.Relation
 	HasSubjectRelation bool
 }
 
-// Relation selector.
-type Relations struct {
-	*Relation
+func Relation(i *dsc3.Relation) *SafeRelation { return &SafeRelation{i, true} }
+
+type SafeRelationIdentifier struct {
+	*model.RelationRef
 }
 
-func NewRelation(i *dsc3.Relation) *Relation { return &Relation{i, true} }
+func RelationIdentifier(i *model.RelationRef) *SafeRelationIdentifier {
+	return &SafeRelationIdentifier{i}
+}
 
-func GetRelation(i *dsr3.GetRelationRequest) *Relation {
-	return &Relation{
+// Relation selector.
+type SafeRelations struct {
+	*SafeRelation
+}
+
+func GetRelation(i *dsr3.GetRelationRequest) *SafeRelation {
+	return &SafeRelation{
 		Relation: &dsc3.Relation{
 			ObjectType:      i.ObjectType,
 			ObjectId:        i.ObjectId,
@@ -38,14 +46,14 @@ func GetRelation(i *dsr3.GetRelationRequest) *Relation {
 	}
 }
 
-func GetRelations(i *dsr3.GetRelationsRequest) *Relations {
+func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
 	subjRel := ""
 	if i.SubjectRelation != nil {
 		subjRel = *i.SubjectRelation
 	}
 
-	return &Relations{
-		&Relation{
+	return &SafeRelations{
+		&SafeRelation{
 			Relation: &dsc3.Relation{
 				ObjectType:      i.ObjectType,
 				ObjectId:        i.ObjectId,
@@ -59,21 +67,21 @@ func GetRelations(i *dsr3.GetRelationsRequest) *Relations {
 	}
 }
 
-func (i *Relation) Object() *dsc3.ObjectIdentifier {
+func (i *SafeRelation) Object() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
 		ObjectType: i.GetObjectType(),
 		ObjectId:   i.GetObjectId(),
 	}
 }
 
-func (i *Relation) Subject() *dsc3.ObjectIdentifier {
+func (i *SafeRelation) Subject() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
 		ObjectType: i.GetSubjectType(),
 		ObjectId:   i.GetSubjectId(),
 	}
 }
 
-func (i *Relation) Validate(mc *cache.Cache) error {
+func (i *SafeRelation) Validate(mc *cache.Cache) error {
 	if i == nil || i.Relation == nil {
 		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
 	}
@@ -82,11 +90,11 @@ func (i *Relation) Validate(mc *cache.Cache) error {
 		return derr.ErrInvalidRelation.Msg("relation")
 	}
 
-	if err := NewObjectIdentifier(i.Object()).Validate(mc); err != nil {
+	if err := ObjectIdentifier(i.Object()).Validate(mc); err != nil {
 		return err
 	}
 
-	if err := NewObjectIdentifier(i.Subject()).Validate(mc); err != nil {
+	if err := ObjectIdentifier(i.Subject()).Validate(mc); err != nil {
 		return err
 	}
 
@@ -97,16 +105,16 @@ func (i *Relation) Validate(mc *cache.Cache) error {
 	return mc.ValidateRelation(i.Relation)
 }
 
-func (i *Relations) Validate(mc *cache.Cache) error {
-	if i == nil || i.Relation.Relation == nil {
+func (i *SafeRelations) Validate(mc *cache.Cache) error {
+	if i == nil || i.SafeRelation.Relation == nil {
 		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
 	}
 
-	if err := NewObjectIdentifier(i.Object()).Validate(mc); err != nil {
+	if err := ObjectSelector(i.Object()).Validate(mc); err != nil {
 		return err
 	}
 
-	if err := NewObjectIdentifier(i.Subject()).Validate(mc); err != nil {
+	if err := ObjectSelector(i.Subject()).Validate(mc); err != nil {
 		return err
 	}
 
@@ -133,7 +141,7 @@ func (i *Relations) Validate(mc *cache.Cache) error {
 	return nil
 }
 
-func (i *Relation) Hash() string {
+func (i *SafeRelation) Hash() string {
 	h := fnv.New64a()
 	h.Reset()
 
@@ -159,4 +167,47 @@ func (i *Relation) Hash() string {
 	}
 
 	return strconv.FormatUint(h.Sum64(), 10)
+}
+
+type RelationScope int
+
+const (
+	AsRelation RelationScope = iota
+	AsPermission
+	AsEither
+)
+
+func (r *SafeRelationIdentifier) Validate(scope RelationScope, mc *cache.Cache) error {
+	if r == nil || r.RelationRef == nil {
+		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
+	}
+
+	if r.Object == "" {
+		return derr.ErrInvalidRelation.Msg("object")
+	}
+
+	if r.Relation == "" {
+		return derr.ErrInvalidRelation.Msg("relation")
+	}
+
+	if mc == nil {
+		return nil
+	}
+
+	switch scope {
+	case AsRelation:
+		if !mc.RelationExists(r.Object, r.Relation) {
+			return derr.ErrRelationNotFound.Msgf("relation: %s", r)
+		}
+	case AsPermission:
+		if !mc.PermissionExists(r.Object, r.Relation) {
+			return derr.ErrPermissionNotFound.Msgf("permission: %s", r)
+		}
+	case AsEither:
+		if !mc.RelationExists(r.Object, r.Relation) && !mc.PermissionExists(r.Object, r.Relation) {
+			return derr.ErrRelationNotFound.Msgf("relation: %s", r)
+		}
+	}
+
+	return nil
 }
