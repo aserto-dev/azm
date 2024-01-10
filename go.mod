@@ -9,7 +9,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.0
 	github.com/aserto-dev/errors v0.0.6
 	github.com/aserto-dev/go-aserto v0.30.0
-	github.com/aserto-dev/go-directory v0.30.9-0.20240104235651-0e9ab297c738
+	github.com/aserto-dev/go-directory v0.30.9-0.20240110153209-a1126f40ee2e
 	github.com/deckarep/golang-set/v2 v2.5.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/magefile/mage v1.15.0

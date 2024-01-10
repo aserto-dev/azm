@@ -47,11 +47,6 @@ func GetRelation(i *dsr3.GetRelationRequest) *SafeRelation {
 }
 
 func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
-	subjRel := ""
-	if i.SubjectRelation != nil {
-		subjRel = *i.SubjectRelation
-	}
-
 	return &SafeRelations{
 		&SafeRelation{
 			Relation: &dsc3.Relation{
@@ -60,9 +55,9 @@ func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
 				Relation:        i.Relation,
 				SubjectType:     i.SubjectType,
 				SubjectId:       i.SubjectId,
-				SubjectRelation: subjRel,
+				SubjectRelation: i.SubjectRelation,
 			},
-			HasSubjectRelation: i.SubjectRelation != nil,
+			HasSubjectRelation: i.SubjectRelation != "" || i.WithEmptySubjectRelation,
 		},
 	}
 }
