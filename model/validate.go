@@ -58,7 +58,7 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 	for rn, rs := range o.Relations {
 		for _, r := range rs.Union {
 			if r.Assignment() == RelationAssignmentUnknown {
-				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
 					"relation '%s:%s' has no definition", on, rn),
 				)
 				continue
@@ -66,7 +66,7 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 
 			o := m.Objects[r.Object]
 			if o == nil {
-				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
 					"relation '%s:%s' references undefined object type '%s'", on, rn, r.Object),
 				)
 				continue
@@ -74,7 +74,7 @@ func (m *Model) validateObjectRels(on ObjectName, o *Object) error {
 
 			if r.IsSubject() {
 				if _, ok := o.Relations[r.Relation]; !ok {
-					errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+					errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
 						"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Object, r.Relation),
 					)
 				}
@@ -168,7 +168,7 @@ func (m *Model) resolveRelations() error {
 			subs := m.resolveRelation(r, seen)
 			switch len(subs) {
 			case 0:
-				errs = multierror.Append(errs, derr.ErrInvalidRelation.Msgf(
+				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
 					"relation '%s:%s' is circular and does not resolve to any object types", on, rn),
 				)
 			default:

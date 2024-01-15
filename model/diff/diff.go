@@ -50,7 +50,7 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 	}
 
 	if errs != nil {
-		return derr.ErrInvalidArgument.Err(errs)
+		return derr.ErrInUse.Err(errs)
 	}
 
 	return nil
