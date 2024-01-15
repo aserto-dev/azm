@@ -32,17 +32,19 @@ type SafeRelations struct {
 	*SafeRelation
 }
 
-func GetRelation(i *dsr3.GetRelationRequest) *SafeRelation {
-	return &SafeRelation{
-		Relation: &dsc3.Relation{
-			ObjectType:      i.ObjectType,
-			ObjectId:        i.ObjectId,
-			Relation:        i.Relation,
-			SubjectType:     i.SubjectType,
-			SubjectId:       i.SubjectId,
-			SubjectRelation: i.SubjectRelation,
+func GetRelation(i *dsr3.GetRelationRequest) *SafeRelations {
+	return &SafeRelations{
+		&SafeRelation{
+			Relation: &dsc3.Relation{
+				ObjectType:      i.ObjectType,
+				ObjectId:        i.ObjectId,
+				Relation:        i.Relation,
+				SubjectType:     i.SubjectType,
+				SubjectId:       i.SubjectId,
+				SubjectRelation: i.SubjectRelation,
+			},
+			HasSubjectRelation: true,
 		},
-		HasSubjectRelation: true,
 	}
 }
 
