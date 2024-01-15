@@ -31,6 +31,10 @@ func Load(r io.Reader) (*model.Model, error) {
 
 		relations := map[model.RelationName][]*model.Relation{}
 
+		if o == nil {
+			o = &ObjectType{}
+		}
+
 		if o.Relations == nil {
 			o.Relations = map[RelationName]RelationDefinition{}
 		}

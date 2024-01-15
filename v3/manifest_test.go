@@ -66,3 +66,16 @@ func TestLoadEmptyManifest(t *testing.T) {
 	require.NotNil(t, b1)
 
 }
+
+func TestLoadManifestWithNullObject(t *testing.T) {
+	r, err := os.Open("./manifest_empty_user.yaml")
+	require.NoError(t, err)
+
+	m1, err := v3.Load(r)
+	require.NoError(t, err)
+	require.NotNil(t, m1)
+
+	require.Equal(t, len(m1.Objects), 2)
+	require.Equal(t, len(m1.Objects["user"].Permissions), 0)
+	require.Equal(t, len(m1.Objects["user"].Relations), 0)
+}
