@@ -31,13 +31,7 @@ func Load(r io.Reader) (*model.Model, error) {
 
 		relations := map[model.RelationName][]*model.Relation{}
 
-		if o == nil {
-			o = &ObjectType{}
-		}
-
-		if o.Relations == nil {
-			o.Relations = map[RelationName]RelationDefinition{}
-		}
+		o = ensureObject(o)
 
 		for rn, rd := range o.Relations {
 			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
@@ -70,10 +64,6 @@ func Load(r io.Reader) (*model.Model, error) {
 		}
 
 		permissions := map[model.PermissionName]*model.Permission{}
-
-		if o.Permissions == nil {
-			o.Permissions = map[PermissionName]PermissionOperator{}
-		}
 
 		for pn, pd := range o.Permissions {
 			log.Debug().Str("object", string(on)).Str("permission", string(pn)).Msg("loading permission")
@@ -114,4 +104,20 @@ func Load(r io.Reader) (*model.Model, error) {
 	}
 
 	return &m, nil
+}
+
+func ensureObject(o *ObjectType) *ObjectType {
+	if o == nil {
+		o = &ObjectType{}
+	}
+
+	if o.Relations == nil {
+		o.Relations = map[RelationName]RelationDefinition{}
+	}
+
+	if o.Permissions == nil {
+		o.Permissions = map[PermissionName]PermissionOperator{}
+	}
+
+	return o
 }
