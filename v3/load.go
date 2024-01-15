@@ -31,6 +31,10 @@ func Load(r io.Reader) (*model.Model, error) {
 	for on, o := range manifest.ObjectTypes {
 		log.Debug().Str("object", string(on)).Msg("loading object")
 
+		if o == nil {
+			o = &ObjectType{}
+		}
+
 		relationTerms := lo.MapEntries(o.Relations, func(rn RelationName, rd string) (model.RelationName, []*model.RelationRef) {
 			log.Debug().Str("object", string(on)).Str("relation", string(rn)).Msg("loading relation")
 
