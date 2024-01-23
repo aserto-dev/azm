@@ -14,8 +14,6 @@ github.com/aserto-dev/errors v0.0.6 h1:iH5fkJwBGFPbcdS4B8mwvNdwODlhDEXXPduZtjLh6
 github.com/aserto-dev/errors v0.0.6/go.mod h1:kenI1gamsemaR2wS+M2un0kXIJ9exTrmeRT/fCFwlWc=
 github.com/aserto-dev/go-aserto v0.30.0 h1:RZMM8ojXp4O15+qPKsFjQ+6/+KV3pXAwqCJrQjJRD5I=
 github.com/aserto-dev/go-aserto v0.30.0/go.mod h1:y+Mrqm9yl3XgBA0lkZ4Pj2cZN1ytL1pjAwpG9rKQCJA=
-github.com/aserto-dev/go-directory v0.30.9 h1:ugDn5wO7q6Ko0VczP4j7TB+ZxEWcRCWyE+zzbMcjXus=
-github.com/aserto-dev/go-directory v0.30.9/go.mod h1:XW9IRp2u3TTkaqxcZG4sFXttJO4sia2S0j79CYkJfUg=
 github.com/aserto-dev/go-directory v0.30.10 h1:g4j5lzNndQOG6Uv+oc1Q4UzyZdtgCnGftHNIpahzcos=
 github.com/aserto-dev/go-directory v0.30.10/go.mod h1:XW9IRp2u3TTkaqxcZG4sFXttJO4sia2S0j79CYkJfUg=
 github.com/aserto-dev/header v0.0.4 h1:Bb58n1m2X/qRV3N2PS0avuFOyRcG8Iri7/qq0Wsunq8=
