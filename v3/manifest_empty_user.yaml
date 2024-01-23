@@ -10,8 +10,3 @@ types:
   admin:
     relations: null
     permissions: null
-  folder:
-    relations:
-      null_relation: null
-    permissions:
-      null_permission: null

@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://www.topaz.sh/schema/manifest.json
+---
+
+### filename: manifest.yaml ###
+### datetime: 2023-10-22T14:37:25-07:00 ###
+### description: Google Drive manifest ###
+
+### model ###
+model:
+  version: 3
+
+### object type definitions ###
+types:
+  ### display_name: User ###
+  user:
+    relations:
+      manager: user
+
+  ### display_name: Identity ###
+  identity:
+    relations:
+      ### display_name: identity#identifier ###
+      identifier: user
+
+  ### display_name: Group ###
+  group:
+    relations:
+      ### display_name: group#member ###
+      member: user | group#member
+
+  ### display_name: Folder ###
+  folder:
+    relations:
+      owner: user
+      parent: folder
+      viewer: user | user:* | group#member
+    permissions:
+      can_create_file: owner
+      can_read: viewer | owner | parent->can_read
+      can_share: can_create_file
+
+  ### display_name: Document ###
+  doc:
+    relations:
+      owner: user
+      parent: folder
+      viewer: user | user:* | group#member
+    permissions:
+      can_change_owner: owner
+      can_read: viewer | can_write | parent->can_read
+      can_write: owner | parent->owner
+      can_share: can_write & parent->can_share
+      can_invite: parent->can_read - viewer

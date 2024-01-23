@@ -40,7 +40,7 @@ func TestLoadModel(t *testing.T) {
 	b1, err := json.Marshal(m1)
 	require.NoError(t, err)
 
-	b2, err := os.ReadFile("../model/model.json")
+	b2, err := os.ReadFile("../model/testdata/model.json")
 	require.NoError(t, err)
 
 	m2 := model.Model{}
@@ -75,7 +75,7 @@ func TestLoadManifestWithNullObject(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, m1)
 
-	require.Equal(t, len(m1.Objects), 3)
+	require.Equal(t, len(m1.Objects), 2)
 	require.Equal(t, len(m1.Objects["user"].Permissions), 0)
 	require.Equal(t, len(m1.Objects["user"].Relations), 0)
 }

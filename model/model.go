@@ -7,78 +7,17 @@ import (
 	"io"
 	"time"
 
-	"github.com/aserto-dev/azm/graph"
-	"github.com/aserto-dev/azm/model/diff"
+	"github.com/aserto-dev/go-directory/pkg/derr"
+	set "github.com/deckarep/golang-set/v2"
+	"github.com/samber/lo"
 )
 
-const ModelVersion int = 1
+const ModelVersion int = 2
 
 type Model struct {
 	Version  int                    `json:"version"`
 	Objects  map[ObjectName]*Object `json:"types"`
 	Metadata *Metadata              `json:"metadata"`
-}
-
-type ObjectName Identifier
-type RelationName Identifier
-type PermissionName Identifier
-
-func (on ObjectName) String() string {
-	return string(on)
-}
-
-func (rn RelationName) String() string {
-	return string(rn)
-}
-
-func (pn PermissionName) String() string {
-	return string(pn)
-}
-
-func (pn PermissionName) RN() RelationName {
-	return RelationName(pn)
-}
-
-type Object struct {
-	Relations   map[RelationName][]*Relation   `json:"relations,omitempty"`
-	Permissions map[PermissionName]*Permission `json:"permissions,omitempty"`
-}
-
-type Relation struct {
-	Direct   ObjectName       `json:"direct,omitempty"`
-	Subject  *SubjectRelation `json:"subject,omitempty"`
-	Wildcard ObjectName       `json:"wildcard,omitempty"`
-}
-
-type ObjectRelation struct {
-	Object   ObjectName   `json:"object"`
-	Relation RelationName `json:"relation,omitempty"`
-}
-
-func (or ObjectRelation) String() string {
-	return fmt.Sprintf("%s:%s", or.Object, or.Relation)
-}
-
-type SubjectRelation struct {
-	Object   ObjectName   `json:"object,omitempty"`
-	Relation RelationName `json:"relation,omitempty"`
-}
-
-type Permission struct {
-	Union        []string             `json:"union,omitempty"`
-	Intersection []string             `json:"intersection,omitempty"`
-	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
-	Arrow        *ArrowPermission     `json:"arrow,omitempty"`
-}
-
-type ExclusionPermission struct {
-	Base     string `json:"base,omitempty"`
-	Subtract string `json:"subtract,omitempty"`
-}
-
-type ArrowPermission struct {
-	Relation   string `json:"relation,omitempty"`
-	Permission string `json:"permission,omitempty"`
 }
 
 type Metadata struct {
@@ -96,25 +35,36 @@ func New(r io.Reader) (*Model, error) {
 	return &m, nil
 }
 
-func (m *Model) GetGraph() *graph.Graph {
-	grph := graph.NewGraph()
-	for objectName := range m.Objects {
-		grph.AddNode(string(objectName))
-	}
-	for objectName, obj := range m.Objects {
-		for relName, rel := range obj.Relations {
-			for _, rl := range rel {
-				if string(rl.Direct) != "" {
-					grph.AddEdge(string(objectName), string(rl.Direct), string(relName))
-				} else if rl.Subject != nil {
-					grph.AddEdge(string(objectName), string(rl.Subject.Object), string(relName))
-				}
-			}
-		}
+type ObjectID string
+
+func (id ObjectID) String() string {
+	return string(id)
+}
+
+func (id ObjectID) IsWildcard() bool {
+	return id == "*"
+}
+
+type relation struct {
+	on  ObjectName
+	oid ObjectID
+	rn  RelationName
+	sn  ObjectName
+	sid ObjectID
+	srn RelationName
+}
+
+func (r *relation) String() string {
+	srn := ""
+	if r.srn != "" {
+		srn = "#" + r.srn.String()
 	}
 
-	return grph
+	return fmt.Sprintf("%s:%s#%s@%s:%s%s", r.on, r.oid, r.rn, r.sn, r.sid, srn)
 }
+
+type objSet set.Set[ObjectName]
+type relSet set.Set[RelationRef]
 
 func (m *Model) Reader() (io.Reader, error) {
 	b := bytes.Buffer{}
@@ -130,43 +80,82 @@ func (m *Model) Write(w io.Writer) error {
 	return enc.Encode(m)
 }
 
-func (m *Model) Diff(newModel *Model) *diff.Diff {
-	// newmodel - m => additions
-	added := newModel.subtract(m)
-	// m - newModel => deletions
-	deleted := m.subtract(newModel)
+// Validate enforces the model's internal consistency.
+//
+// It enforces the following rules:
+//   - Within an object, a permission cannot share the same name as a relation.
+//   - Direct relations must reference existing objects .
+//   - Wildcard relations must reference existing objects.
+//   - Subject relations must reference existing object#relation pairs.
+//   - Arrow permissions (relation->rel_or_perm) must reference existing relations/permissions.
+func (m *Model) Validate() error {
+	// Pass 1 (syntax): ensure no name collisions and all relations reference existing objects/relations.
+	if err := m.validateReferences(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
 
-	return &diff.Diff{Added: *added, Removed: *deleted}
+	// Pass 2: resolve all relations to a set of possible subject types.
+	if err := m.resolveRelations(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
+
+	// Pass 3: validate all arrow operators in permissions. This requires that all relations have already been resolved.
+	if err := m.validatePermissions(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
+
+	// Pass 4: resolve all permissions to a set of possible subject types.
+	if err := m.resolvePermissions(); err != nil {
+		return derr.ErrInvalidArgument.Err(err)
+	}
+
+	return nil
 }
 
-func (m *Model) subtract(newModel *Model) *diff.Changes {
-	chgs := &diff.Changes{
-		Objects:   make([]string, 0),
-		Relations: make(map[string][]string),
+func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, sn ObjectName, sid ObjectID, srn RelationName) error {
+	rel := &relation{on, oid, rn, sn, sid, srn}
+
+	if oid.IsWildcard() {
+		return derr.ErrInvalidRelation.Msgf("[%s] object id cannot be a wildcard", rel)
 	}
 
-	if m == nil {
-		return chgs
+	o := m.Objects[on]
+	if o == nil {
+		return derr.ErrInvalidRelation.Err(derr.ErrObjectTypeNotFound.Msgf("%s", on)).Msgf("[%s]", rel)
 	}
 
-	if newModel == nil {
-		for objName := range m.Objects {
-			chgs.Objects = append(chgs.Objects, string(objName))
+	r := o.Relations[rn]
+	if r == nil {
+		return derr.ErrInvalidRelation.Err(derr.ErrRelationTypeNotFound.Msgf("%s:%s", on, rn)).Msgf("[%s]", rel)
+	}
+
+	// Find all valid assignments for the given subject type.
+	refs := lo.Filter(r.Union, func(rr *RelationRef, _ int) bool {
+		return rr.Object == rel.sn
+	})
+
+	if len(refs) == 0 {
+		return derr.ErrInvalidRelation.Msgf("[%s] subject type '%s' is not valid for relation '%s:%s'", rel, rel.sn, on, rn)
+	}
+
+	if rel.sid.IsWildcard() {
+		// Wildcard assignment.
+		if rel.srn != "" {
+			return derr.ErrInvalidRelation.Msgf("[%s] wildcard assignment cannot include subject relation", rel)
 		}
-		return chgs
-	}
 
-	for objName, obj := range m.Objects {
-		if newModel.Objects[objName] == nil {
-			chgs.Objects = append(chgs.Objects, string(objName))
-		} else {
-			for relname := range obj.Relations {
-				if newModel.Objects[objName].Relations[relname] == nil {
-					chgs.Relations[string(objName)] = append(chgs.Relations[string(objName)], string(relname))
-				}
-			}
+		if !lo.ContainsBy(refs, func(rr *RelationRef) bool { return rr.IsWildcard() }) {
+			return derr.ErrInvalidRelation.Msgf(
+				"[%s] wildcard assignment of '%s' are not allowed on relation '%s:%s'",
+				rel, sn, on, rn,
+			)
 		}
 	}
 
-	return chgs
+	assignment := RelationRef{Object: sn, Relation: srn}
+	if !lo.ContainsBy(refs, func(rr *RelationRef) bool { return *rr == assignment }) {
+		return derr.ErrInvalidRelation.Msgf("[%s] invalid assignment", rel)
+	}
+
+	return nil
 }

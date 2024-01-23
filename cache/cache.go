@@ -5,6 +5,8 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
+	stts "github.com/aserto-dev/azm/stats"
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 )
 
 type Cache struct {
@@ -28,11 +30,10 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 	return nil
 }
 
-// Returns a diff struct resulted between the old and the new model.
-func (c *Cache) Diff(other *model.Model) *diff.Diff {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-	return c.model.Diff(other)
+func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	return diff.CanUpdateModel(c.model, other, stats)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
@@ -57,7 +58,7 @@ func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(on model.ObjectName, pn model.PermissionName) bool {
+func (c *Cache) PermissionExists(on model.ObjectName, pn model.RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -72,4 +73,18 @@ func (c *Cache) Metadata() *model.Metadata {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 	return c.model.Metadata
+}
+
+func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	return c.model.ValidateRelation(
+		model.ObjectName(relation.ObjectType),
+		model.ObjectID(relation.ObjectId),
+		model.RelationName(relation.Relation),
+		model.ObjectName(relation.SubjectType),
+		model.ObjectID(relation.SubjectId),
+		model.RelationName(relation.SubjectRelation),
+	)
 }
