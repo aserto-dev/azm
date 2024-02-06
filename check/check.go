@@ -18,7 +18,7 @@ type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
 
 type Checker struct {
 	m       *model.Model
-	params  *checkParams
+	params  *CheckParams
 	getRels RelationReader
 
 	memo *checkMemo
@@ -27,86 +27,155 @@ type Checker struct {
 func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
 	return &Checker{
 		m: m,
-		params: &checkParams{
-			ot:  model.ObjectName(req.ObjectType),
-			oid: ObjectID(req.ObjectId),
-			rel: model.RelationName(req.Relation),
-			st:  model.ObjectName(req.SubjectType),
-			sid: ObjectID(req.SubjectId),
+		params: &CheckParams{
+			OT:  model.ObjectName(req.ObjectType),
+			OID: ObjectID(req.ObjectId),
+			Rel: model.RelationName(req.Relation),
+			ST:  model.ObjectName(req.SubjectType),
+			SID: ObjectID(req.SubjectId),
 		},
 		getRels: reader,
 		memo:    newCheckMemo(req.Trace),
 	}
 }
 
+func NewGraph(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *Checker {
+	return &Checker{
+		m: m,
+		params: &CheckParams{
+			OT:   model.ObjectName(req.ObjectType),
+			OID:  ObjectID(req.ObjectId),
+			Rel:  model.RelationName(req.Relation),
+			ST:   model.ObjectName(req.SubjectType),
+			SID:  ObjectID(req.SubjectId),
+			SRel: model.RelationName(req.SubjectRelation),
+		},
+		getRels: reader,
+		memo:    newCheckMemo(false),
+	}
+}
+
 func (c *Checker) Check() (bool, error) {
-	o := c.m.Objects[c.params.ot]
+	o := c.m.Objects[c.params.OT]
 	if o == nil {
-		return false, derr.ErrObjectTypeNotFound.Msg(c.params.ot.String())
+		return false, derr.ErrObjectTypeNotFound.Msg(c.params.OT.String())
 	}
 
-	if !o.HasRelOrPerm(c.params.rel) {
-		return false, derr.ErrRelationNotFound.Msg(c.params.rel.String())
+	if !o.HasRelOrPerm(c.params.Rel) {
+		return false, derr.ErrRelationNotFound.Msg(c.params.Rel.String())
 	}
 
-	return c.check(c.params)
+	results, err := c.check(c.params, firstMatch)
+	if err != nil {
+		return false, err
+	}
+
+	return results.status() == checkStatusTrue, nil
+}
+
+func (c *Checker) Search() (CheckResults, error) {
+	o := c.m.Objects[c.params.OT]
+	if o == nil {
+		return nil, derr.ErrObjectTypeNotFound.Msg(c.params.OT.String())
+	}
+
+	checks := []*CheckParams{}
+
+	switch c.params.Rel {
+	case "":
+		for _, rel := range lo.Union(lo.Keys(o.Relations), lo.Keys(o.Permissions)) {
+			check := *c.params
+			check.Rel = rel
+			checks = append(checks, &check)
+		}
+
+	default:
+		if !o.HasRelOrPerm(c.params.Rel) {
+			return nil, derr.ErrRelationNotFound.Msg(c.params.Rel.String())
+		}
+
+		checks = append(checks, c.params)
+	}
+
+	results := CheckResults{}
+	for _, check := range checks {
+		res, err := c.check(check, allPaths)
+		if err != nil {
+			return nil, err
+		}
+
+		results = results.append(res)
+	}
+
+	return results, nil
 }
 
 func (c *Checker) Trace() []string {
 	return c.memo.Trace()
 }
 
-type checkParams struct {
-	ot  model.ObjectName
-	oid ObjectID
-	rel model.RelationName
-	st  model.ObjectName
-	sid ObjectID
+type CheckParams struct {
+	OT   model.ObjectName
+	OID  ObjectID
+	Rel  model.RelationName
+	ST   model.ObjectName
+	SID  ObjectID
+	SRel model.RelationName
 }
 
-func (p *checkParams) String() string {
-	return fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, p.oid, p.rel, p.st, p.sid)
+func (p *CheckParams) String() string {
+	return fmt.Sprintf("%s:%s#%s@%s:%s", p.OT, p.OID, p.Rel, p.ST, p.SID)
 }
 
-func (c *Checker) check(params *checkParams) (bool, error) {
+func (c *Checker) check(params *CheckParams, paths checkPaths) (CheckResults, error) {
 	prior := c.memo.MarkVisited(params)
 	switch prior {
 	case checkStatusPending:
 		// We have a cycle.
-		return false, nil
+		return CheckResults{}, nil
 	case checkStatusTrue, checkStatusFalse:
 		// We already checked this relation.
-		return prior == checkStatusTrue, nil
+		return c.memo.Results(params), nil
 	case checkStatusUnknown:
 		// this is the first time we're running this check.
 	}
 
-	o := c.m.Objects[params.ot]
+	o := c.m.Objects[params.OT]
 
 	var (
-		result bool
-		err    error
+		results CheckResults
+		err     error
 	)
-	if o.HasRelation(params.rel) {
-		result, err = c.checkRelation(params)
+	if o.HasRelation(params.Rel) {
+		results, err = c.checkRelation(params, paths)
 	} else {
-		result, err = c.checkPermission(params)
+		results, err = c.checkPermission(params, paths)
 	}
 
-	c.memo.MarkComplete(params, result)
+	c.memo.MarkComplete(params, results)
 
-	return result, err
+	return results, err
 }
 
-func (c *Checker) checkRelation(params *checkParams) (bool, error) {
-	r := c.m.Objects[params.ot].Relations[params.rel]
-	steps := c.stepRelation(r, params.st)
+type checkPaths bool
 
+const (
+	firstMatch checkPaths = false
+	allPaths   checkPaths = true
+)
+
+func (c *Checker) checkRelation(params *CheckParams, paths checkPaths) (CheckResults, error) {
+	r := c.m.Objects[params.OT].Relations[params.Rel]
+	steps := c.stepRelation(r, params.ST)
+
+	results := CheckResults{}
+
+Loop:
 	for _, step := range steps {
 		req := &dsc.Relation{
-			ObjectType:  params.ot.String(),
-			ObjectId:    params.oid.String(),
-			Relation:    params.rel.String(),
+			ObjectType:  params.OT.String(),
+			ObjectId:    params.OID.String(),
+			Relation:    params.Rel.String(),
 			SubjectType: step.Object.String(),
 		}
 
@@ -119,41 +188,66 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 
 		rels, err := c.getRels(req)
 		if err != nil {
-			return false, err
+			return results, err
 		}
 
 		switch {
 		case step.IsDirect():
 			for _, rel := range rels {
-				if rel.SubjectId == params.sid.String() {
-					return true, nil
+				if params.SID == "" || rel.SubjectId == params.SID.String() {
+					results = results.addResult(rel)
+					switch paths {
+					case firstMatch:
+						break Loop
+					case allPaths:
+						continue
+					}
 				}
 			}
 
 		case step.IsWildcard():
 			if len(rels) > 0 {
 				// We have a wildcard match.
-				return true, nil
+				results = results.addResult(rels...)
+				switch paths {
+				case firstMatch:
+					break Loop
+				case allPaths:
+					continue
+				}
 			}
 
 		case step.IsSubject():
 			for _, rel := range rels {
-				if ok, err := c.check(&checkParams{
-					ot:  step.Object,
-					oid: ObjectID(rel.SubjectId),
-					rel: step.Relation,
-					st:  params.st,
-					sid: params.sid,
-				}); err != nil {
-					return false, err
-				} else if ok {
-					return true, nil
+				if params.SRel == model.RelationName(rel.SubjectRelation) && params.ST == model.ObjectName(rel.SubjectType) {
+					// We're searching for a subject relation (not a Check call) and we have a match.
+					results = results.addResult(rel)
+				}
+
+				check := &CheckParams{
+					OT:  step.Object,
+					OID: ObjectID(rel.SubjectId),
+					Rel: step.Relation,
+					ST:  params.ST,
+					SID: params.SID,
+				}
+
+				if res, err := c.check(check, paths); err != nil {
+					return results, err
+				} else if len(res) > 0 {
+					results = results.append(res)
+					switch paths {
+					case firstMatch:
+						break Loop
+					case allPaths:
+						continue
+					}
 				}
 			}
 		}
 	}
 
-	return false, nil
+	return results, nil
 }
 
 func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
@@ -163,8 +257,12 @@ func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*
 			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
 		}
 
-		// include subject relations that can resolve to the expected types.
-		return rr, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0
+		// include subject relations that match or can resolve to the expected types.
+		include := len(subjs) == 0 ||
+			len(lo.Intersect(c.m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0 ||
+			lo.Contains(subjs, rr.Object)
+
+		return rr, include
 	})
 
 	sort.Slice(steps, func(i, j int) bool {
@@ -182,120 +280,140 @@ func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*
 	return steps
 }
 
-func (c *Checker) checkPermission(params *checkParams) (bool, error) {
-	p := c.m.Objects[params.ot].Permissions[params.rel]
+func (c *Checker) checkPermission(params *CheckParams, paths checkPaths) (CheckResults, error) {
+	p := c.m.Objects[params.OT].Permissions[params.Rel]
 
-	if !lo.Contains(p.SubjectTypes, params.st) {
+	results := CheckResults{}
+
+	if !lo.Contains(p.SubjectTypes, params.ST) {
 		// The subject type cannot have this permission.
-		return false, nil
+		return results, nil
 	}
 
 	terms := p.Terms()
-	termChecks := make([][]*checkParams, 0, len(terms))
+	termChecks := make([][]*CheckParams, 0, len(terms))
 	for _, pt := range terms {
 		// expand arrow operators.
 		expanded, err := c.expandTerm(pt, params)
 		if err != nil {
-			return false, err
+			return results, err
 		}
 		termChecks = append(termChecks, expanded)
 	}
 
 	switch {
 	case p.IsUnion():
-		return c.checkAny(termChecks)
+		return c.checkAny(termChecks, paths)
 	case p.IsIntersection():
-		return c.checkAll(termChecks)
+		return c.checkAll(termChecks, paths)
 	case p.IsExclusion():
-		include, err := c.checkAny(termChecks[:1])
+		include, err := c.checkAny(termChecks[:1], paths)
 		switch {
 		case err != nil:
-			return false, err
-		case !include:
+			return results, err
+		case len(include) == 0:
 			// Short-circuit: The include term is false, so the permission is false.
-			return false, nil
+			return results, nil
 		}
 
-		exclude, err := c.checkAny(termChecks[1:])
+		exclude, err := c.checkAny(termChecks[1:], paths)
 		if err != nil {
-			return false, err
+			return results, err
 		}
 
-		return !exclude, nil
+		results, _ := lo.Difference(include, exclude)
+		return results, nil
 	}
 
-	return false, derr.ErrUnknown.Msg("unknown permission operator")
+	return results, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
-func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
+func (c *Checker) expandTerm(pt *model.PermissionTerm, params *CheckParams) ([]*CheckParams, error) {
 	if pt.IsArrow() {
 		// Resolve the base of the arrow.
 		rels, err := c.getRels(&dsc.Relation{
-			ObjectType: params.ot.String(),
-			ObjectId:   params.oid.String(),
+			ObjectType: params.OT.String(),
+			ObjectId:   params.OID.String(),
 			Relation:   pt.Base.String(),
 		})
 		if err != nil {
-			return []*checkParams{}, err
+			return []*CheckParams{}, err
 		}
 
-		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *checkParams {
-			return &checkParams{
-				ot:  model.ObjectName(rel.SubjectType),
-				oid: ObjectID(rel.SubjectId),
-				rel: pt.RelOrPerm,
-				st:  params.st,
-				sid: params.sid,
+		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *CheckParams {
+			return &CheckParams{
+				OT:  model.ObjectName(rel.SubjectType),
+				OID: ObjectID(rel.SubjectId),
+				Rel: pt.RelOrPerm,
+				ST:  params.ST,
+				SID: params.SID,
 			}
 		})
 
 		return expanded, nil
 	}
 
-	return []*checkParams{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
+	return []*CheckParams{{OT: params.OT, OID: params.OID, Rel: pt.RelOrPerm, ST: params.ST, SID: params.SID}}, nil
 }
 
-func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAny(checks [][]*CheckParams, paths checkPaths) (CheckResults, error) {
+	results := CheckResults{}
+
 	for _, check := range checks {
 		var (
-			ok  bool
+			res CheckResults
 			err error
 		)
 
 		switch len(check) {
 		case 0:
-			ok, err = false, nil
+			res, err = CheckResults{}, nil
 		case 1:
-			ok, err = c.check(check[0])
+			res, err = c.check(check[0], paths)
 		default:
-			ok, err = c.checkAny(lo.Map(check, func(params *checkParams, _ int) []*checkParams {
-				return []*checkParams{params}
-			}))
+			res, err = c.checkAny(lo.Map(check, func(params *CheckParams, _ int) []*CheckParams {
+				return []*CheckParams{params}
+			}), paths)
 		}
 
 		if err != nil {
-			return false, err
+			return res, err
 		}
 
-		if ok {
-			return true, nil
+		if len(res) > 0 && paths == firstMatch {
+			return res, nil
 		}
+
+		results = results.append(res)
 	}
 
-	return false, nil
+	return results, nil
 }
 
-func (c *Checker) checkAll(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAll(checks [][]*CheckParams, paths checkPaths) (CheckResults, error) {
+	results := []CheckResults{}
+
 	for _, check := range checks {
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
 		// then a match on any of them is sufficient.
-		ok, err := c.checkAny([][]*checkParams{check})
+		result, err := c.checkAny([][]*CheckParams{check}, paths)
 		if err != nil {
-			return false, err
+			return CheckResults{}, err
 		}
-		if !ok {
-			return false, nil
+		if len(result) == 0 {
+			return result, nil
 		}
+
+		results = append(results, result)
 	}
-	return true, nil
+
+	intersection := lo.Reduce(results, func(agg CheckResults, item CheckResults, i int) CheckResults {
+		if i == 0 {
+			return item
+		}
+
+		return lo.Intersect(agg, item)
+	}, CheckResults{})
+
+	return intersection, nil
 }

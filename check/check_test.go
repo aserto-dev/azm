@@ -57,30 +57,7 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 }
 
 func TestCheck(t *testing.T) {
-	rels := RelationsReader{
-		{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
-		{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
-		{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
-		{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
-		{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
-		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
-		{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
-		{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
-		{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
-
-		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
-		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
-
-		// mutually recursive groups with users
-		{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
-		{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
-		{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
-		{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
-
-		// mutually recursive groups with no users
-		{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
-		{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
-	}
+	rels := relations()
 
 	tests := []struct {
 		name     string
@@ -122,7 +99,7 @@ func TestCheck(t *testing.T) {
 		{name: "folder owner can create file", check: check("folder", "folder1", "can_create_file", "user", "f1_owner"), expected: true},
 		{name: "folder owner can share", check: check("folder", "folder1", "can_share", "user", "f1_owner"), expected: true},
 
-		// // // intersection
+		// intersection
 		{name: "writer cannot share", check: check("doc", "doc1", "can_share", "user", "d1_owner"), expected: false},
 		{name: "parent owner can share", check: check("doc", "doc1", "can_share", "user", "f1_owner"), expected: true},
 
@@ -152,7 +129,168 @@ func TestCheck(t *testing.T) {
 			assert.Equal(test.expected, res)
 		})
 	}
+}
 
+func TestSearchSubjects(t *testing.T) {
+	rels := relations()
+
+	type subject struct {
+		st  model.ObjectName
+		sid model.ObjectID
+	}
+
+	tests := []struct {
+		name     string
+		search   *dsr.GetGraphRequest
+		expected []subject
+	}{
+		// Relations
+		{name: "folder1 owners", search: graph("folder", "folder1", "owner", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "folder1 viewers", search: graph("folder", "folder1", "viewer", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_viewer"}},
+		},
+		{name: "f1_viewers members", search: graph("group", "f1_viewers", "member", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_viewer"}},
+		},
+		{name: "doc1 parents", search: graph("doc", "doc1", "parent", "folder", "", ""),
+			expected: []subject{{st: "folder", sid: "folder1"}},
+		},
+		{name: "doc1 owners", search: graph("doc", "doc1", "owner", "user", "", ""),
+			expected: []subject{{st: "user", sid: "d1_owner"}},
+		},
+		{name: "doc1 viewer groups", search: graph("doc", "doc1", "viewer", "group", "", "member"),
+			expected: []subject{{st: "group", sid: "d1_viewers"}},
+		},
+		{name: "doc1 viewers", search: graph("doc", "doc1", "viewer", "user", "", ""),
+			expected: []subject{
+				{st: "user", sid: "user1"}, {st: "user", sid: "user2"}, {st: "user", sid: "user3"},
+				{st: "user", sid: "f1_owner"},
+			},
+		},
+		{name: "doc2 viewers (wildcard)", search: graph("doc", "doc2", "viewer", "user", "", ""),
+			expected: []subject{{st: "user", sid: "*"}, {st: "user", sid: "user2"}},
+		},
+		{name: "d1_viewers subgroups", search: graph("group", "d1_viewers", "member", "group", "", "member"),
+			expected: []subject{{st: "group", sid: "d1_subviewers"}},
+		},
+		{name: "d1_viewers members", search: graph("group", "d1_viewers", "member", "user", "", ""),
+			expected: []subject{{st: "user", sid: "user2"}, {st: "user", sid: "user3"}},
+		},
+
+		// Permissions
+		{name: "folder1 can_create_file", search: graph("folder", "folder1", "can_create_file", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "folder1 can_read", search: graph("folder", "folder1", "can_read", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}, {st: "user", sid: "f1_viewer"}},
+		},
+		{name: "folder1 can_share", search: graph("folder", "folder1", "can_share", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc1 can_change_owner", search: graph("doc", "doc1", "can_change_owner", "user", "", ""),
+			expected: []subject{{st: "user", sid: "d1_owner"}, {st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc1 can_write", search: graph("doc", "doc1", "can_write", "user", "", ""),
+			expected: []subject{{st: "user", sid: "d1_owner"}, {st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc1 can_read", search: graph("doc", "doc1", "can_read", "user", "", ""),
+			expected: []subject{
+				{st: "user", sid: "d1_owner"}, {st: "user", sid: "f1_owner"},
+				{st: "user", sid: "user1"}, {st: "user", sid: "user2"}, {st: "user", sid: "user3"},
+				{st: "user", sid: "f1_viewer"},
+			},
+		},
+		{name: "doc1 can_share", search: graph("doc", "doc1", "can_share", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc1 can_invite", search: graph("doc", "doc1", "can_invite", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}, {st: "user", sid: "f1_viewer"}},
+		},
+		{name: "doc2 can_change_owner", search: graph("doc", "doc2", "can_change_owner", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc2 can_write", search: graph("doc", "doc2", "can_write", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc2 can_read", search: graph("doc", "doc2", "can_read", "user", "", ""),
+			expected: []subject{
+				{st: "user", sid: "*"}, {st: "user", sid: "user2"},
+				{st: "user", sid: "f1_owner"}, {st: "user", sid: "f1_viewer"},
+			},
+		},
+		{name: "doc2 can_share", search: graph("doc", "doc2", "can_share", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}},
+		},
+		{name: "doc2 can_invite", search: graph("doc", "doc2", "can_invite", "user", "", ""),
+			expected: []subject{{st: "user", sid: "f1_owner"}, {st: "user", sid: "f1_viewer"}},
+		},
+	}
+
+	r, err := os.Open("./check_test.yaml")
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	m, err := v3.Load(r)
+	assert.NoError(t, err)
+	assert.NotNil(t, m)
+
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			assert := assert.New(tt)
+
+			checker := azmcheck.NewGraph(m, test.search, rels.GetRelations)
+
+			res, err := checker.Search()
+			assert.NoError(err)
+			tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
+
+			subjects := lo.Uniq(lo.Map(res, func(s azmcheck.CheckParams, _ int) subject {
+				return subject{
+					st:  s.ST,
+					sid: s.SID,
+				}
+			}))
+
+			for _, e := range test.expected {
+				assert.Contains(subjects, e)
+			}
+
+			assert.Equal(len(test.expected), len(subjects), subjects)
+
+		})
+	}
+}
+
+func relations() RelationsReader {
+	return RelationsReader{
+		{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
+		{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
+		{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
+		{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
+		{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
+		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
+		{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
+		{"doc", "doc1", "viewer", "user", "f1_owner", ""},                // doc:doc1#viewer@user:f1_owner
+		{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
+		{"doc", "doc2", "parent", "folder", "folder1", ""},               // doc:doc2#parnet@folder:folder1
+		{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
+		{"doc", "doc2", "viewer", "user", "user2", ""},                   // doc:doc2#viewer@user:user2
+
+		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
+		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
+
+		// mutually recursive groups with users
+		{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
+		{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
+		{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
+		{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
+
+		// mutually recursive groups with no users
+		{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
+		{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
+	}
 }
 
 func check(
@@ -169,4 +307,20 @@ func check(
 		Trace:       true,
 	}
 
+}
+
+func graph(
+	objectType model.ObjectName, objectID string,
+	relation model.RelationName,
+	subjectType model.ObjectName, subjectID string,
+	subjectRelation model.RelationName,
+) *dsr.GetGraphRequest {
+	return &dsr.GetGraphRequest{
+		ObjectType:      objectType.String(),
+		ObjectId:        objectID,
+		Relation:        relation.String(),
+		SubjectType:     subjectType.String(),
+		SubjectId:       subjectID,
+		SubjectRelation: subjectRelation.String(),
+	}
 }
