@@ -127,6 +127,22 @@ func (p *CheckParams) String() string {
 	return fmt.Sprintf("%s:%s#%s@%s:%s", p.OT, p.OID, p.Rel, p.ST, p.SID)
 }
 
+func (p *CheckParams) IsMatch(rel *dsc.Relation) bool {
+	return (p.SID == "" || p.SID == ObjectID(rel.SubjectId)) &&
+		(p.OID == "" || p.OID == ObjectID(rel.ObjectId))
+}
+
+func (p *CheckParams) AsRelation() *dsc.Relation {
+	return &dsc.Relation{
+		ObjectType:      p.OT.String(),
+		ObjectId:        p.OID.String(),
+		Relation:        p.Rel.String(),
+		SubjectType:     p.ST.String(),
+		SubjectId:       p.SID.String(),
+		SubjectRelation: p.SRel.String(),
+	}
+}
+
 func (c *Checker) check(params *CheckParams, paths checkPaths) (CheckResults, error) {
 	prior := c.memo.MarkVisited(params)
 	switch prior {
@@ -170,79 +186,28 @@ func (c *Checker) checkRelation(params *CheckParams, paths checkPaths) (CheckRes
 
 	results := CheckResults{}
 
-Loop:
 	for _, step := range steps {
-		req := &dsc.Relation{
-			ObjectType:  params.OT.String(),
-			ObjectId:    params.OID.String(),
-			Relation:    params.Rel.String(),
-			SubjectType: step.Object.String(),
-		}
-
+		var (
+			res CheckResults
+			err error
+		)
 		switch {
+		case step.IsDirect():
+			res, err = c.checkDirect(step, params, paths)
 		case step.IsWildcard():
-			req.SubjectId = "*"
+			res, err = c.checkWildcard(step, params, paths)
 		case step.IsSubject():
-			req.SubjectRelation = step.Relation.String()
+			res, err = c.checkSubject(step, params, paths)
 		}
 
-		rels, err := c.getRels(req)
 		if err != nil {
 			return results, err
 		}
 
-		switch {
-		case step.IsDirect():
-			for _, rel := range rels {
-				if params.SID == "" || rel.SubjectId == params.SID.String() {
-					results = results.addResult(rel)
-					switch paths {
-					case firstMatch:
-						break Loop
-					case allPaths:
-						continue
-					}
-				}
-			}
-
-		case step.IsWildcard():
-			if len(rels) > 0 {
-				// We have a wildcard match.
-				results = results.addResult(rels...)
-				switch paths {
-				case firstMatch:
-					break Loop
-				case allPaths:
-					continue
-				}
-			}
-
-		case step.IsSubject():
-			for _, rel := range rels {
-				if params.SRel == model.RelationName(rel.SubjectRelation) && params.ST == model.ObjectName(rel.SubjectType) {
-					// We're searching for a subject relation (not a Check call) and we have a match.
-					results = results.addResult(rel)
-				}
-
-				check := &CheckParams{
-					OT:  step.Object,
-					OID: ObjectID(rel.SubjectId),
-					Rel: step.Relation,
-					ST:  params.ST,
-					SID: params.SID,
-				}
-
-				if res, err := c.check(check, paths); err != nil {
-					return results, err
-				} else if len(res) > 0 {
-					results = results.append(res)
-					switch paths {
-					case firstMatch:
-						break Loop
-					case allPaths:
-						continue
-					}
-				}
+		if len(res) > 0 {
+			results = results.append(res)
+			if paths == firstMatch {
+				break
 			}
 		}
 	}
@@ -278,6 +243,153 @@ func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*
 	})
 
 	return steps
+}
+
+func (c *Checker) checkDirect(step *model.RelationRef, params *CheckParams, paths checkPaths) (CheckResults, error) {
+	req := &dsc.Relation{
+		ObjectType:  params.OT.String(),
+		ObjectId:    params.OID.String(),
+		Relation:    params.Rel.String(),
+		SubjectType: step.Object.String(),
+		SubjectId:   params.SID.String(),
+	}
+
+	results := CheckResults{}
+
+	rels, err := c.getRels(req)
+	if err != nil {
+		return results, err
+	}
+
+	for _, rel := range rels {
+		if params.IsMatch(rel) {
+			results = results.addResult(rel)
+
+			if paths == firstMatch {
+				return results, nil
+			}
+		}
+	}
+
+	return results, nil
+}
+
+func (c *Checker) checkWildcard(step *model.RelationRef, params *CheckParams, paths checkPaths) (CheckResults, error) {
+	req := &dsc.Relation{
+		ObjectType:  params.OT.String(),
+		ObjectId:    params.OID.String(),
+		Relation:    params.Rel.String(),
+		SubjectType: step.Object.String(),
+		SubjectId:   "*",
+	}
+
+	results := CheckResults{}
+
+	rels, err := c.getRels(req)
+	if err != nil {
+		return results, err
+	}
+
+	if len(rels) > 0 {
+		// We have a wildcard match.
+		results = results.addResult(rels...)
+	}
+
+	return results, nil
+}
+
+func (c *Checker) checkSubject(step *model.RelationRef, params *CheckParams, paths checkPaths) (CheckResults, error) {
+
+	results := CheckResults{}
+
+	if params.OID == "" {
+		check := &CheckParams{
+			OT:   step.Object,
+			Rel:  step.Relation,
+			ST:   c.params.ST,
+			SID:  c.params.SID,
+			SRel: c.params.SRel,
+		}
+		subjects := c.memo.Results(check)
+		switch subjects.status() {
+		case checkStatusUnknown:
+			subs, err := c.check(check, paths)
+			if err != nil {
+				return results, err
+			} else {
+				subjects = subs
+			}
+
+		case checkStatusPending:
+			// We found a cycle and need resolve the relations and
+			// start unwinding the recursion.
+			rels, err := c.getRels(check.AsRelation())
+			if err != nil {
+				return results, err
+			}
+
+			subjects = subjects.addResult(rels...)
+			subjects = append(subjects, CheckParams{OT: params.ST, OID: params.SID})
+		}
+
+		for _, sub := range subjects {
+			rels, err := c.getRels(&dsc.Relation{
+				ObjectType:      params.OT.String(),
+				Relation:        params.Rel.String(),
+				SubjectType:     sub.OT.String(),
+				SubjectId:       sub.OID.String(),
+				SubjectRelation: params.SRel.String(),
+			})
+			if err != nil {
+				return results, err
+			}
+
+			results = results.addResult(rels...)
+		}
+
+		return results, nil
+	}
+
+	req := &dsc.Relation{
+		ObjectType:      params.OT.String(),
+		ObjectId:        params.OID.String(),
+		Relation:        params.Rel.String(),
+		SubjectType:     step.Object.String(),
+		SubjectRelation: step.Relation.String(),
+	}
+	rels, err := c.getRels(req)
+	if err != nil {
+		return results, err
+	}
+
+	for _, rel := range rels {
+		if params.SRel == model.RelationName(rel.SubjectRelation) && params.ST == model.ObjectName(rel.SubjectType) {
+			// We're searching for a subject relation (not a Check call) and we have a match.
+			results = results.addResult(rel)
+		}
+
+		check := &CheckParams{
+			OT:  step.Object,
+			OID: ObjectID(rel.SubjectId),
+			Rel: step.Relation,
+			ST:  params.ST,
+			SID: params.SID,
+		}
+
+		res, err := c.check(check, paths)
+		if err != nil {
+			return results, err
+		}
+
+		if len(res) > 0 {
+			results = results.append(res)
+			if paths == firstMatch {
+				break
+			}
+		}
+	}
+
+	return results, nil
 }
 
 func (c *Checker) checkPermission(params *CheckParams, paths checkPaths) (CheckResults, error) {

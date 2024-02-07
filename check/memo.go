@@ -87,7 +87,7 @@ func (m *checkMemo) MarkVisited(params *CheckParams) checkStatus {
 	prior, ok := m.memo[*params]
 	current := prior
 	if !ok {
-		current = CheckResults{}
+		var current CheckResults
 		m.memo[*params] = current
 	}
 

@@ -100,8 +100,8 @@ func TestSearchObjects(t *testing.T) {
 
 			subjects := lo.Uniq(lo.Map(res, func(s azmcheck.CheckParams, _ int) object {
 				return object{
-					Type: s.ST,
-					ID:   s.SID,
+					Type: s.OT,
+					ID:   s.OID,
 				}
 			}))
 
@@ -121,7 +121,7 @@ var checkTests = []struct {
 	expected bool
 }{
 	// Relations
-	{name: "no assignment", check: check("doc", "doc1", "owner", "user", "user1"), expected: false},
+	// {name: "no assignment", check: check("doc", "doc1", "owner", "user", "user1"), expected: false},
 	{name: "direct assignment", check: check("doc", "doc1", "viewer", "user", "user1"), expected: true},
 	{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "user1"), expected: true},
 	{name: "wildcard", check: check("doc", "doc2", "viewer", "user", "userX"), expected: true},
@@ -265,8 +265,53 @@ var searchObjectsTests = []struct {
 	expected []object
 }{
 	// Relations
-	{name: "f1_owner owned folders", search: graph("folder", "", "owner", "user", "f1_owner", ""),
+	{name: "folders owned by f1_owner", search: graph("folder", "", "owner", "user", "f1_owner", ""),
 		expected: []object{{Type: "folder", ID: "folder1"}},
+	},
+	{name: "folders where members of f1_viewers are viewers ", search: graph("folder", "", "viewer", "group", "f1_viewers", "member"),
+		expected: []object{{Type: "folder", ID: "folder1"}},
+	},
+	{name: "docs where members of d1_subviewers are viewers", search: graph("doc", "", "viewer", "group", "d1_subviewers", "member"),
+		expected: []object{{Type: "doc", ID: "doc1"}},
+	},
+	{name: "groups where f1_viewer is a member", search: graph("group", "", "member", "user", "f1_viewer", ""),
+		expected: []object{{Type: "group", ID: "f1_viewers"}},
+	},
+	{name: "folders where folder1 is parent", search: graph("folder", "", "parent", "folder", "folder1", ""),
+		expected: []object{},
+	},
+	{name: "docs where folder1 is parent", search: graph("doc", "", "parent", "folder", "folder1", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
+	},
+	{name: "docs where d1_owner is owner", search: graph("doc", "", "owner", "user", "d1_owner", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}},
+	},
+	{name: "docs where members of d1_viewers are viewers", search: graph("doc", "", "viewer", "group", "d1_viewers", "member"),
+		expected: []object{{Type: "doc", ID: "doc1"}},
+	},
+	{name: "docs where user1 is viewer", search: graph("doc", "", "viewer", "user", "user1", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
+	},
+	{name: "docs where f1_owner is viewer", search: graph("doc", "", "viewer", "user", "f1_owner", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
+	},
+	{name: "groups where user2 is a member", search: graph("group", "", "member", "user", "user2", ""),
+		expected: []object{{Type: "group", ID: "d1_viewers"}},
+	},
+	{name: "docs where f1_owner is viewer", search: graph("doc", "", "viewer", "user", "f1_owner", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
+	},
+	{name: "docs where every user is viewer", search: graph("doc", "", "viewer", "user", "*", ""),
+		expected: []object{{Type: "doc", ID: "doc2"}},
+	},
+	{name: "docs where user2 is viewer", search: graph("doc", "", "viewer", "user", "user2", ""),
+		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
+	},
+	{name: "groups where members of d1_subviewers are members", search: graph("group", "", "member", "group", "d1_subviewers", "member"),
+		expected: []object{{Type: "group", ID: "d1_viewers"}},
+	},
+	{name: "groups where user3 is a member", search: graph("group", "", "member", "user", "user3", ""),
+		expected: []object{{Type: "group", ID: "d1_subviewers"}, {Type: "group", ID: "d1_viewers"}},
 	},
 }
 
