@@ -35,7 +35,7 @@ types:
       parent: folder
       viewer: user | user:* | group#member
     permissions:
-      is_owner: owner | parent->owner
+      is_owner: owner
       can_create_file: is_owner
       can_read: viewer | owner | parent->can_read
       can_share: can_create_file

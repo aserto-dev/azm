@@ -409,6 +409,10 @@ func (c *Checker) checkPermission(params *CheckParams, paths checkPaths) (CheckR
 		return results, nil
 	}
 
+	if params.OID == "" {
+		return c.searchPermissionObject(p, params)
+	}
+
 	terms := p.Terms()
 	termChecks := make([][]*CheckParams, 0, len(terms))
 	for _, pt := range terms {
@@ -445,6 +449,67 @@ func (c *Checker) checkPermission(params *CheckParams, paths checkPaths) (CheckR
 	}
 
 	return results, derr.ErrUnknown.Msg("unknown permission operator")
+}
+
+func (c *Checker) searchPermissionObject(p *model.Permission, params *CheckParams) (CheckResults, error) {
+	terms := p.Terms()
+
+	results := [][]CheckParams{}
+	for _, pt := range terms {
+		switch {
+		case pt.IsArrow():
+
+		default:
+			res, err := c.check(&CheckParams{
+				OT:   params.OT,
+				OID:  params.OID,
+				Rel:  pt.RelOrPerm,
+				ST:   params.ST,
+				SID:  params.SID,
+				SRel: params.SRel,
+			}, allPaths)
+			if err != nil {
+				return nil, err
+			}
+
+			results = append(results, res)
+		}
+	}
+
+	switch {
+	case p.IsUnion():
+		return lo.Uniq(lo.Flatten(results)), nil
+	case p.IsIntersection():
+		matchIDs := lo.Associate(
+			lo.Reduce(results, func(agg []ObjectID, item []CheckParams, i int) []ObjectID {
+				ids := lo.Map(item, func(p CheckParams, _ int) ObjectID {
+					return p.OID
+				})
+
+				if i == 0 {
+					return ids
+				}
+
+				return lo.Intersect(agg, ids)
+			}, []ObjectID{}),
+			func(id ObjectID) (ObjectID, bool) {
+				return id, true
+			})
+
+		output := CheckResults{}
+		for _, res := range results {
+			for _, r := range res {
+				if _, ok := matchIDs[r.OID]; ok {
+					output = append(output, r)
+				}
+			}
+		}
+
+		return output, nil
+	}
+
+	return CheckResults{}, derr.ErrUnknown.Msg("unknown permission operator")
+
 }
 
 func (c *Checker) expandTerm(pt *model.PermissionTerm, params *CheckParams) ([]*CheckParams, error) {
