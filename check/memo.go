@@ -87,8 +87,8 @@ func (m *checkMemo) MarkVisited(params *CheckParams) checkStatus {
 	prior, ok := m.memo[*params]
 	current := prior
 	if !ok {
-		var current CheckResults
-		m.memo[*params] = current
+		var empty CheckResults
+		m.memo[*params] = empty
 	}
 
 	m.trace(params, current)
