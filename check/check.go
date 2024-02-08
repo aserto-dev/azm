@@ -397,7 +397,14 @@ func (c *Checker) checkPermission(params *CheckParams, paths checkPaths) (CheckR
 
 	results := CheckResults{}
 
-	if !lo.Contains(p.SubjectTypes, params.ST) {
+	subjTypes := []model.ObjectName{}
+	if params.SRel == "" {
+		subjTypes = append(subjTypes, params.ST)
+	} else {
+		subjTypes = c.m.Objects[params.ST].Relations[params.SRel].SubjectTypes
+	}
+
+	if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
 		// The subject type cannot have this permission.
 		return results, nil
 	}
@@ -454,18 +461,19 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *CheckParams) ([]*
 
 		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *CheckParams {
 			return &CheckParams{
-				OT:  model.ObjectName(rel.SubjectType),
-				OID: ObjectID(rel.SubjectId),
-				Rel: pt.RelOrPerm,
-				ST:  params.ST,
-				SID: params.SID,
+				OT:   model.ObjectName(rel.SubjectType),
+				OID:  ObjectID(rel.SubjectId),
+				Rel:  pt.RelOrPerm,
+				ST:   params.ST,
+				SID:  params.SID,
+				SRel: params.SRel,
 			}
 		})
 
 		return expanded, nil
 	}
 
-	return []*CheckParams{{OT: params.OT, OID: params.OID, Rel: pt.RelOrPerm, ST: params.ST, SID: params.SID}}, nil
+	return []*CheckParams{{OT: params.OT, OID: params.OID, Rel: pt.RelOrPerm, ST: params.ST, SID: params.SID, SRel: params.SRel}}, nil
 }
 
 func (c *Checker) checkAny(checks [][]*CheckParams, paths checkPaths) (CheckResults, error) {
