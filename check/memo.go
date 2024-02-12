@@ -112,8 +112,13 @@ func (m *checkMemo) MarkComplete(params *CheckParams, results CheckResults) {
 	m.trace(params, results)
 }
 
-func (m *checkMemo) Results(params *CheckParams) CheckResults {
-	return m.memo[*params]
+func (m *checkMemo) Results(params *CheckParams) (CheckResults, checkStatus) {
+	fmt.Println("Results. Memo keys: ", lo.Keys(m.memo))
+	if res, ok := m.memo[*params]; ok {
+		return res, res.status()
+	}
+
+	return nil, checkStatusUnknown
 }
 
 func (m *checkMemo) Trace() []string {
