@@ -10,6 +10,10 @@ import (
 	"github.com/samber/lo"
 )
 
+type searchPath []*checkParams
+
+type searchResults map[checkParams][]searchPath
+
 type searchStatus int
 
 const (
@@ -19,12 +23,14 @@ const (
 )
 
 type searchMemo struct {
-	visited map[checkParams][]checkParams
+	visited map[checkParams]searchResults
+	history []*checkParams
 }
 
-func newSearchMemo() *searchMemo {
+func newSearchMemo(trace bool) *searchMemo {
 	return &searchMemo{
-		visited: map[checkParams][]checkParams{},
+		visited: map[checkParams]searchResults{},
+		history: lo.Ternary(trace, []*checkParams{}, nil),
 	}
 }
 
@@ -33,6 +39,9 @@ func (m *searchMemo) MarkVisited(params checkParams) searchStatus {
 	switch {
 	case !ok:
 		m.visited[params] = nil
+		if m.history != nil {
+			m.history = append(m.history, &params)
+		}
 		return searchStatusUnknown
 	case results == nil:
 		return searchStatusPending
@@ -53,7 +62,7 @@ func (m *searchMemo) Status(params checkParams) searchStatus {
 	}
 }
 
-func (m *searchMemo) MarkComplete(params checkParams, results []checkParams) {
+func (m *searchMemo) MarkComplete(params checkParams, results searchResults) {
 	m.visited[params] = results
 }
 
@@ -62,10 +71,11 @@ type ObjectSearch struct {
 	params  *checkParams
 	getRels RelationReader
 
-	memo *searchMemo
+	memo    *searchMemo
+	explain bool
 }
 
-func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *ObjectSearch {
+func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, explain, trace bool) *ObjectSearch {
 	return &ObjectSearch{
 		m: m,
 		params: &checkParams{
@@ -77,7 +87,8 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 			srel: model.RelationName(req.SubjectRelation),
 		},
 		getRels: reader,
-		memo:    newSearchMemo(),
+		memo:    newSearchMemo(trace),
+		explain: explain,
 	}
 }
 
@@ -100,7 +111,7 @@ func (f *ObjectSearch) Search() ([]*dsc.ObjectIdentifier, error) {
 		return nil, err
 	}
 
-	return lo.Map(res, func(p checkParams, _ int) *dsc.ObjectIdentifier {
+	return lo.MapToSlice(res, func(p checkParams, _ []searchPath) *dsc.ObjectIdentifier {
 		return &dsc.ObjectIdentifier{
 			ObjectType: p.ot.String(),
 			ObjectId:   p.oid.String(),
@@ -108,7 +119,11 @@ func (f *ObjectSearch) Search() ([]*dsc.ObjectIdentifier, error) {
 	}), nil
 }
 
-func (f *ObjectSearch) search(params *checkParams) ([]checkParams, error) {
+func (f *ObjectSearch) Paths() searchResults {
+	return f.memo.visited[*f.params]
+}
+
+func (f *ObjectSearch) search(params *checkParams) (searchResults, error) {
 	status := f.memo.MarkVisited(*params)
 	switch status {
 	case searchStatusComplete:
@@ -120,7 +135,7 @@ func (f *ObjectSearch) search(params *checkParams) ([]checkParams, error) {
 	o := f.m.Objects[params.ot]
 
 	var (
-		results []checkParams
+		results searchResults
 		err     error
 	)
 
@@ -135,15 +150,15 @@ func (f *ObjectSearch) search(params *checkParams) ([]checkParams, error) {
 	return results, err
 }
 
-func (f *ObjectSearch) searchRelation(params *checkParams) ([]checkParams, error) {
-	results := []checkParams{}
+func (f *ObjectSearch) searchRelation(params *checkParams) (searchResults, error) {
+	results := searchResults{}
 
 	r := f.m.Objects[params.ot].Relations[params.rel]
 	steps := f.stepRelation(r, params.st)
 
 	for _, step := range steps {
 		var (
-			res []checkParams
+			res searchResults
 			err error
 		)
 		switch {
@@ -157,9 +172,7 @@ func (f *ObjectSearch) searchRelation(params *checkParams) ([]checkParams, error
 			return results, err
 		}
 
-		if len(res) > 0 {
-			results = lo.Uniq(append(results, res...))
-		}
+		results = lo.Assign(results, res)
 	}
 
 	return results, nil
@@ -195,7 +208,7 @@ func (f *ObjectSearch) stepRelation(r *model.Relation, subjs ...model.ObjectName
 	return steps
 }
 
-func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams) ([]checkParams, error) {
+func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams) (searchResults, error) {
 	sid := params.sid.String()
 	if step.IsWildcard() {
 		sid = "*"
@@ -208,7 +221,7 @@ func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams
 		SubjectId:   sid,
 	}
 
-	results := []checkParams{}
+	results := searchResults{}
 
 	rels, err := f.getRels(req)
 	if err != nil {
@@ -224,14 +237,20 @@ func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams
 				st:  model.ObjectName(rel.SubjectType),
 				sid: ObjectID(rel.SubjectId),
 			}
-			results = append(results, result)
+
+			var path []searchPath
+			if f.explain {
+				path = append(results[result], []*checkParams{&result})
+			}
+
+			results[result] = path
 		}
 	}
 
 	return results, nil
 }
 
-func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkParams) ([]checkParams, error) {
+func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkParams) (searchResults, error) {
 	expansion := &checkParams{
 		ot:   step.Object,
 		rel:  step.Relation,
@@ -240,7 +259,7 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 		srel: f.params.srel,
 	}
 
-	subjSet := []checkParams{}
+	subjSet := searchResults{}
 
 	switch f.memo.Status(*expansion) {
 	case searchStatusUnknown:
@@ -249,14 +268,17 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 			return nil, err
 		}
 
-		set = append(set, checkParams{
-			ot:   expansion.ot,
-			oid:  expansion.sid,
-			rel:  expansion.rel,
-			st:   expansion.st,
-			sid:  expansion.sid,
-			srel: expansion.srel,
-		})
+		if expansion.rel == expansion.srel {
+			self := &checkParams{
+				ot:   expansion.ot,
+				oid:  expansion.sid,
+				rel:  expansion.rel,
+				st:   expansion.st,
+				sid:  expansion.sid,
+				srel: expansion.srel,
+			}
+			set[*self] = nil
+		}
 
 		subjSet = set
 
@@ -274,8 +296,12 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 		subjSet = f.memo.visited[*expansion]
 	}
 
-	results := []checkParams{}
-	for _, subj := range subjSet {
+	if *params == *expansion {
+		return subjSet, nil
+	}
+
+	results := searchResults{}
+	for subj, paths := range subjSet {
 		search := &dsc.Relation{
 			ObjectType:      params.ot.String(),
 			Relation:        params.rel.String(),
@@ -288,31 +314,45 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 			return nil, err
 		}
 
-		matches := lo.Map(objects, func(rel *dsc.Relation, _ int) checkParams {
-			return checkParams{
+		for _, rel := range objects {
+			p := checkParams{
 				ot:  model.ObjectName(rel.ObjectType),
 				oid: ObjectID(rel.ObjectId),
 				rel: model.RelationName(rel.Relation),
 				st:  model.ObjectName(rel.SubjectType),
 				sid: ObjectID(rel.SubjectId),
 			}
-		})
 
-		results = lo.Uniq(append(results, matches...))
+			var resPaths []searchPath
+			if f.explain {
+				resPaths = append(results[p], paths...)
+			}
+
+			results[p] = resPaths
+		}
 	}
 
 	return results, nil
 }
 
-func (f *ObjectSearch) expandSubjectSet(params *checkParams) ([]checkParams, error) {
-	results := map[checkParams]bool{}
-	stack := []checkParams{*params}
+func (f *ObjectSearch) expandSubjectSet(params *checkParams) (searchResults, error) {
+	results := searchResults{}
+	backlog := map[checkParams][]*checkParams{*params: nil}
 
-	for len(stack) > 0 {
-		// pop
-		size := len(stack) - 1
-		cur := stack[size]
-		stack = stack[:size]
+	for len(backlog) > 0 {
+		// pop item from backlog
+		var (
+			cur  checkParams
+			path []*checkParams
+		)
+
+		for k, v := range backlog {
+			cur = k
+			path = v
+			break
+		}
+
+		delete(backlog, cur)
 
 		rels, err := f.getRels(cur.AsRelation())
 		if err != nil {
@@ -325,8 +365,6 @@ func (f *ObjectSearch) expandSubjectSet(params *checkParams) ([]checkParams, err
 				continue
 			}
 
-			results[*result] = true
-
 			step := checkParams{
 				ot:   params.ot,
 				rel:  params.rel,
@@ -334,13 +372,21 @@ func (f *ObjectSearch) expandSubjectSet(params *checkParams) ([]checkParams, err
 				sid:  result.oid,
 				srel: result.rel,
 			}
-			stack = append(stack, step)
+			stepPath := append(path, result)
+			backlog[step] = stepPath
+
+			var paths []searchPath
+			if f.explain {
+				paths = append(results[*result], stepPath)
+			}
+
+			results[*result] = paths
 		}
 	}
 
-	return lo.Keys(results), nil
+	return results, nil
 }
 
-func (f *ObjectSearch) findPermission(params *checkParams) ([]checkParams, error) {
+func (f *ObjectSearch) findPermission(params *checkParams) (searchResults, error) {
 	return nil, nil
 }

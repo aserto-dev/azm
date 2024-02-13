@@ -28,13 +28,11 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations)
+			checker := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, false, true)
 
 			res, err := checker.Search()
 			assert.NoError(err)
-			// tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
-
-			// subjects := []object{}
+			tt.Logf("trace: +%v\n", checker.Paths())
 
 			subjects := lo.Uniq(lo.Map(res, func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
@@ -65,7 +63,7 @@ var searchObjectsTests = []struct {
 }{
 	// Relations
 	{name: "groups where members of leaf are members", search: graph("group", "", "member", "group", "leaf", "member"),
-		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}, {Type: "group", ID: "root"}},
+		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}},
 	},
 	{name: "groups where members of leaf are guests", search: graph("group", "", "guest", "group", "leaf", "member"),
 		expected: []object{},
