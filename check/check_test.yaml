@@ -26,7 +26,8 @@ types:
   group:
     relations:
       ### display_name: group#member ###
-      member: user | group#member
+      member: user | group#member | group#guest
+      guest: user | group#guest | group#member
 
   ### display_name: Folder ###
   folder:

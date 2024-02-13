@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aserto-dev/azm/model"
-	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/samber/lo"
 )
 
@@ -33,92 +31,47 @@ const (
 	checkStatusFalse
 )
 
-type CheckResults []CheckParams
-
-func (r CheckResults) status() checkStatus {
-	switch {
-	case r == nil:
-		return checkStatusPending
-	case len(r) == 0:
-		return checkStatusFalse
-	default:
-		return checkStatusTrue
-	}
-}
-
-func (r CheckResults) addResult(rels ...*dsc.Relation) CheckResults {
-	results := lo.Map(rels, func(rel *dsc.Relation, _ int) CheckParams {
-		return CheckParams{
-			OT:   model.ObjectName(rel.ObjectType),
-			OID:  ObjectID(rel.ObjectId),
-			Rel:  model.RelationName(rel.Relation),
-			ST:   model.ObjectName(rel.SubjectType),
-			SID:  ObjectID(rel.SubjectId),
-			SRel: model.RelationName(rel.SubjectRelation),
-		}
-	})
-	return r.append(results)
-}
-
-func (r CheckResults) append(results CheckResults) CheckResults {
-	return lo.Uniq(append(r, results...))
-}
-
 type checkCall struct {
-	*CheckParams
-	results CheckResults
+	*checkParams
+	status checkStatus
 }
 
 // checkMemo tracks pending checks to detect cycles, and caches the results of completed checks.
 type checkMemo struct {
-	memo    map[CheckParams]CheckResults
+	memo    map[checkParams]checkStatus
 	history []*checkCall
 }
 
 func newCheckMemo(trace bool) *checkMemo {
 	return &checkMemo{
-		memo:    map[CheckParams]CheckResults{},
+		memo:    map[checkParams]checkStatus{},
 		history: lo.Ternary(trace, []*checkCall{}, nil),
 	}
 }
 
 // MarkVisited returns the status of a check. If the check has not been visited, it is marked as pending.
-func (m *checkMemo) MarkVisited(params *CheckParams) checkStatus {
-	prior, ok := m.memo[*params]
+func (m *checkMemo) MarkVisited(params *checkParams) checkStatus {
+	prior := m.memo[*params]
 	current := prior
-	if !ok {
-		var empty CheckResults
-		m.memo[*params] = empty
+	if prior == checkStatusUnknown {
+		current = checkStatusPending
+		m.memo[*params] = current
 	}
 
 	m.trace(params, current)
 
-	switch {
-	case !ok:
-		return checkStatusUnknown
-	case prior == nil:
-		return checkStatusPending
-	case len(prior) == 0:
-		return checkStatusFalse
-	default:
-		return checkStatusTrue
-	}
+	return prior
 }
 
 // MarkComplete records the result of a check.
-func (m *checkMemo) MarkComplete(params *CheckParams, results CheckResults) {
-	m.memo[*params] = results
-
-	m.trace(params, results)
-}
-
-func (m *checkMemo) Results(params *CheckParams) (CheckResults, checkStatus) {
-	fmt.Println("Results. Memo keys: ", lo.Keys(m.memo))
-	if res, ok := m.memo[*params]; ok {
-		return res, res.status()
+func (m *checkMemo) MarkComplete(params *checkParams, checkResult bool) {
+	status := checkStatusFalse
+	if checkResult {
+		status = checkStatusTrue
 	}
+	m.memo[*params] = status
 
-	return nil, checkStatusUnknown
+	m.trace(params, status)
 }
 
 func (m *checkMemo) Trace() []string {
@@ -130,15 +83,15 @@ func (m *checkMemo) Trace() []string {
 
 	return lo.Map(m.history, func(c *checkCall, _ int) string {
 		call := c.String()
-		status := c.results.status()
+		result := c.status.String()
 
-		if len(callstack) > 0 && callstack[len(callstack)-1] == call && status != checkStatusPending {
+		if len(callstack) > 0 && callstack[len(callstack)-1] == call && c.status != checkStatusPending {
 			callstack = callstack[:len(callstack)-1]
 		}
 
-		s := fmt.Sprintf("%s%s = %s", strings.Repeat("  ", len(callstack)), call, status)
+		s := fmt.Sprintf("%s%s = %s", strings.Repeat("  ", len(callstack)), call, result)
 
-		if status == checkStatusPending {
+		if c.status == checkStatusPending {
 			callstack = append(callstack, call)
 		}
 
@@ -146,8 +99,8 @@ func (m *checkMemo) Trace() []string {
 	})
 }
 
-func (m *checkMemo) trace(params *CheckParams, results CheckResults) {
+func (m *checkMemo) trace(params *checkParams, status checkStatus) {
 	if m.history != nil {
-		m.history = append(m.history, &checkCall{params, results})
+		m.history = append(m.history, &checkCall{params, status})
 	}
 }
