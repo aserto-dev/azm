@@ -63,7 +63,7 @@ var searchObjectsTests = []struct {
 }{
 	// Relations
 	{name: "groups where members of leaf are members", search: graph("group", "", "member", "group", "leaf", "member"),
-		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}},
+		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}, {Type: "group", ID: "root"}},
 	},
 	{name: "groups where members of leaf are guests", search: graph("group", "", "guest", "group", "leaf", "member"),
 		expected: []object{},
