@@ -10,9 +10,9 @@ import (
 	"github.com/samber/lo"
 )
 
-type searchPath []*checkParams
+type searchPath relations
 
-type searchResults map[checkParams][]searchPath
+type searchResults map[relation][]searchPath
 
 type searchStatus int
 
@@ -23,18 +23,18 @@ const (
 )
 
 type searchMemo struct {
-	visited map[checkParams]searchResults
-	history []*checkParams
+	visited map[relation]searchResults
+	history relations
 }
 
 func newSearchMemo(trace bool) *searchMemo {
 	return &searchMemo{
-		visited: map[checkParams]searchResults{},
-		history: lo.Ternary(trace, []*checkParams{}, nil),
+		visited: map[relation]searchResults{},
+		history: lo.Ternary(trace, relations{}, nil),
 	}
 }
 
-func (m *searchMemo) MarkVisited(params checkParams) searchStatus {
+func (m *searchMemo) MarkVisited(params relation) searchStatus {
 	results, ok := m.visited[params]
 	switch {
 	case !ok:
@@ -50,7 +50,7 @@ func (m *searchMemo) MarkVisited(params checkParams) searchStatus {
 	}
 }
 
-func (m *searchMemo) Status(params checkParams) searchStatus {
+func (m *searchMemo) Status(params relation) searchStatus {
 	results, ok := m.visited[params]
 	switch {
 	case !ok:
@@ -62,13 +62,13 @@ func (m *searchMemo) Status(params checkParams) searchStatus {
 	}
 }
 
-func (m *searchMemo) MarkComplete(params checkParams, results searchResults) {
+func (m *searchMemo) MarkComplete(params relation, results searchResults) {
 	m.visited[params] = results
 }
 
 type ObjectSearch struct {
 	m       *model.Model
-	params  *checkParams
+	params  *relation
 	getRels RelationReader
 
 	memo    *searchMemo
@@ -78,7 +78,7 @@ type ObjectSearch struct {
 func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, explain, trace bool) *ObjectSearch {
 	return &ObjectSearch{
 		m: m,
-		params: &checkParams{
+		params: &relation{
 			ot:   model.ObjectName(req.ObjectType),
 			oid:  ObjectID(req.ObjectId),
 			rel:  model.RelationName(req.Relation),
@@ -111,7 +111,7 @@ func (f *ObjectSearch) Search() ([]*dsc.ObjectIdentifier, error) {
 		return nil, err
 	}
 
-	return lo.MapToSlice(res, func(p checkParams, _ []searchPath) *dsc.ObjectIdentifier {
+	return lo.MapToSlice(res, func(p relation, _ []searchPath) *dsc.ObjectIdentifier {
 		return &dsc.ObjectIdentifier{
 			ObjectType: p.ot.String(),
 			ObjectId:   p.oid.String(),
@@ -123,7 +123,7 @@ func (f *ObjectSearch) Paths() searchResults {
 	return f.memo.visited[*f.params]
 }
 
-func (f *ObjectSearch) search(params *checkParams) (searchResults, error) {
+func (f *ObjectSearch) search(params *relation) (searchResults, error) {
 	status := f.memo.MarkVisited(*params)
 	switch status {
 	case searchStatusComplete:
@@ -150,7 +150,7 @@ func (f *ObjectSearch) search(params *checkParams) (searchResults, error) {
 	return results, err
 }
 
-func (f *ObjectSearch) searchRelation(params *checkParams) (searchResults, error) {
+func (f *ObjectSearch) searchRelation(params *relation) (searchResults, error) {
 	results := searchResults{}
 
 	r := f.m.Objects[params.ot].Relations[params.rel]
@@ -208,7 +208,7 @@ func (f *ObjectSearch) stepRelation(r *model.Relation, subjs ...model.ObjectName
 	return steps
 }
 
-func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams) (searchResults, error) {
+func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *relation) (searchResults, error) {
 	sid := params.sid.String()
 	if step.IsWildcard() {
 		sid = "*"
@@ -230,7 +230,7 @@ func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams
 
 	for _, rel := range rels {
 		if rel.SubjectId == "*" || params.sid == ObjectID(rel.SubjectId) {
-			result := checkParams{
+			result := relation{
 				ot:  model.ObjectName(rel.ObjectType),
 				oid: ObjectID(rel.ObjectId),
 				rel: model.RelationName(rel.Relation),
@@ -240,7 +240,7 @@ func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams
 
 			var path []searchPath
 			if f.explain {
-				path = append(results[result], []*checkParams{&result})
+				path = append(results[result], searchPath{&result})
 			}
 
 			results[result] = path
@@ -250,8 +250,8 @@ func (f *ObjectSearch) findNeighbor(step *model.RelationRef, params *checkParams
 	return results, nil
 }
 
-func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkParams) (searchResults, error) {
-	expansion := &checkParams{
+func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relation) (searchResults, error) {
+	expansion := &relation{
 		ot:   step.Object,
 		rel:  step.Relation,
 		st:   f.params.st,
@@ -269,7 +269,7 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 		}
 
 		if expansion.rel == expansion.srel {
-			self := &checkParams{
+			self := &relation{
 				ot:   expansion.ot,
 				oid:  expansion.sid,
 				rel:  expansion.rel,
@@ -315,7 +315,7 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 		}
 
 		for _, rel := range objects {
-			p := checkParams{
+			p := relation{
 				ot:  model.ObjectName(rel.ObjectType),
 				oid: ObjectID(rel.ObjectId),
 				rel: model.RelationName(rel.Relation),
@@ -335,15 +335,15 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 	return results, nil
 }
 
-func (f *ObjectSearch) expandSubjectSet(params *checkParams) (searchResults, error) {
+func (f *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error) {
 	results := searchResults{}
-	backlog := map[checkParams][]*checkParams{*params: nil}
+	backlog := map[relation]searchPath{*params: nil}
 
 	for len(backlog) > 0 {
 		// pop item from backlog
 		var (
-			cur  checkParams
-			path []*checkParams
+			cur  relation
+			path searchPath
 		)
 
 		for k, v := range backlog {
@@ -365,7 +365,7 @@ func (f *ObjectSearch) expandSubjectSet(params *checkParams) (searchResults, err
 				continue
 			}
 
-			step := checkParams{
+			step := relation{
 				ot:   params.ot,
 				rel:  params.rel,
 				st:   result.ot,
@@ -387,6 +387,6 @@ func (f *ObjectSearch) expandSubjectSet(params *checkParams) (searchResults, err
 	return results, nil
 }
 
-func (f *ObjectSearch) findPermission(params *checkParams) (searchResults, error) {
+func (f *ObjectSearch) findPermission(params *relation) (searchResults, error) {
 	return nil, nil
 }
