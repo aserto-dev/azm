@@ -41,9 +41,16 @@ func (m *searchMemo) MarkVisited(params checkParams) searchStatus {
 	}
 }
 
-func (m *searchMemo) IsPending(params checkParams) bool {
+func (m *searchMemo) Status(params checkParams) searchStatus {
 	results, ok := m.visited[params]
-	return ok && results == nil
+	switch {
+	case !ok:
+		return searchStatusUnknown
+	case results == nil:
+		return searchStatusPending
+	default:
+		return searchStatusComplete
+	}
 }
 
 func (m *searchMemo) MarkComplete(params checkParams, results []checkParams) {
@@ -119,9 +126,9 @@ func (f *ObjectSearch) search(params *checkParams) ([]checkParams, error) {
 
 	if o.HasRelation(params.rel) {
 		results, err = f.searchRelation(params)
-	} //else {
-	//     results, err = f.findPermission(params)
-	// }
+	} else {
+		results, err = f.findPermission(params)
+	}
 
 	f.memo.MarkComplete(*params, results)
 
@@ -233,26 +240,39 @@ func (f *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *checkPa
 		srel: f.params.srel,
 	}
 
-	if f.memo.IsPending(*expansion) {
+	subjSet := []checkParams{}
+
+	switch f.memo.Status(*expansion) {
+	case searchStatusUnknown:
+		set, err := f.search(expansion)
+		if err != nil {
+			return nil, err
+		}
+
+		set = append(set, checkParams{
+			ot:   expansion.ot,
+			oid:  expansion.sid,
+			rel:  expansion.rel,
+			st:   expansion.st,
+			sid:  expansion.sid,
+			srel: expansion.srel,
+		})
+
+		subjSet = set
+
+	case searchStatusPending:
 		// This is a recursive structure.
-		// Expand the subject set to find all sets that contain the subject.
-		return f.expandSubjectSet(expansion)
+		// Expand the subject set to find all sets that contain it.
+		set, err := f.expandSubjectSet(expansion)
+		if err != nil {
+			return nil, err
+		}
 
+		subjSet = set
+
+	case searchStatusComplete:
+		subjSet = f.memo.visited[*expansion]
 	}
-
-	subjSet, err := f.search(expansion)
-	if err != nil {
-		return nil, err
-	}
-
-	subjSet = append(subjSet, checkParams{
-		ot:   expansion.ot,
-		oid:  expansion.sid,
-		rel:  expansion.rel,
-		st:   expansion.st,
-		sid:  expansion.sid,
-		srel: expansion.srel,
-	})
 
 	results := []checkParams{}
 	for _, subj := range subjSet {
@@ -319,4 +339,8 @@ func (f *ObjectSearch) expandSubjectSet(params *checkParams) ([]checkParams, err
 	}
 
 	return lo.Keys(results), nil
+}
+
+func (f *ObjectSearch) findPermission(params *checkParams) ([]checkParams, error) {
+	return nil, nil
 }
