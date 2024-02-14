@@ -28,7 +28,7 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, false, true)
+			checker := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, true, true)
 
 			res, err := checker.Search()
 			assert.NoError(err)
@@ -126,7 +126,7 @@ var searchObjectsTests = []struct {
 		expected: []object{{Type: "group", ID: "d1_subviewers"}, {Type: "group", ID: "d1_viewers"}},
 	},
 
-	// // Permissions
+	// Permissions
 	// {name: "folders where f1_owner is_owner", search: graph("folder", "", "is_owner", "user", "f1_owner", ""),
 	//     expected: []object{{Type: "folder", ID: "folder1"}},
 	// },
