@@ -53,3 +53,10 @@ types:
       can_read: viewer | can_write | parent->can_read
       can_share: can_write & parent->can_share
       can_invite: parent->can_read - viewer
+
+  cycle:
+    relations:
+      parent: cycle
+      owner: user
+    permissions:
+      can_delete: owner & parent->can_delete

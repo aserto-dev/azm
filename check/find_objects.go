@@ -50,18 +50,6 @@ func (m *searchMemo) MarkVisited(params relation) searchStatus {
 	}
 }
 
-func (m *searchMemo) Status(params relation) searchStatus {
-	results, ok := m.visited[params]
-	switch {
-	case !ok:
-		return searchStatusUnknown
-	case results == nil:
-		return searchStatusPending
-	default:
-		return searchStatusComplete
-	}
-}
-
 func (m *searchMemo) MarkComplete(params relation, results searchResults) {
 	m.visited[params] = results
 }
@@ -73,6 +61,18 @@ type ObjectSearch struct {
 
 	memo    *searchMemo
 	explain bool
+}
+
+func (m *searchMemo) Status(params relation) searchStatus {
+	results, ok := m.visited[params]
+	switch {
+	case !ok:
+		return searchStatusUnknown
+	case results == nil:
+		return searchStatusPending
+	default:
+		return searchStatusComplete
+	}
 }
 
 func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, explain, trace bool) *ObjectSearch {
@@ -142,7 +142,7 @@ func (f *ObjectSearch) search(params *relation) (searchResults, error) {
 	if o.HasRelation(params.rel) {
 		results, err = f.searchRelation(params)
 	} else {
-		results, err = f.findPermission(params)
+		results, err = f.searchPermission(params)
 	}
 
 	f.memo.MarkComplete(*params, results)
@@ -387,6 +387,113 @@ func (f *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error)
 	return results, nil
 }
 
-func (f *ObjectSearch) findPermission(params *relation) (searchResults, error) {
+func (f *ObjectSearch) searchPermission(params *relation) (searchResults, error) {
+	p := f.m.Objects[params.ot].Permissions[params.rel]
+
+	// Check if the subject type can have this permission.
+	subjTypes := []model.ObjectName{}
+	if params.srel == "" {
+		subjTypes = append(subjTypes, params.st)
+	} else {
+		subjTypes = f.m.Objects[params.st].Relations[params.srel].SubjectTypes
+	}
+	if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
+		// The subject type cannot have this permission.
+		return searchResults{}, nil
+	}
+
+	termResults := []searchResults{}
+	terms := p.Terms()
+	sort.SliceStable(terms, func(i, j int) bool {
+		return !terms[i].IsArrow() && terms[j].IsArrow()
+	})
+
+	for _, term := range terms {
+		res, err := f.expandPermissionTerms(params, term)
+		if err != nil {
+			return searchResults{}, err
+		}
+
+		termResults = append(termResults, res)
+	}
+
+	switch {
+	case p.IsUnion():
+		return lo.Reduce(termResults, func(agg searchResults, res searchResults, _ int) searchResults {
+			for rel, paths := range res {
+				agg[rel] = append(agg[rel], paths...)
+			}
+			return agg
+		}, searchResults{}), nil
+
+	}
 	return nil, nil
+}
+
+func (f *ObjectSearch) expandPermissionTerms(params *relation, term *model.PermissionTerm) (searchResults, error) {
+	if term.IsArrow() {
+		return f.expandArrow(params, term)
+	}
+
+	search := &relation{
+		ot:   params.ot,
+		oid:  params.oid,
+		rel:  term.RelOrPerm,
+		st:   params.st,
+		sid:  params.sid,
+		srel: params.srel,
+	}
+	return f.search(search)
+}
+
+func (f *ObjectSearch) expandArrow(params *relation, pt *model.PermissionTerm) (searchResults, error) {
+	baseRel := f.m.Objects[params.ot].Relations[pt.Base]
+	results := searchResults{}
+
+	for _, baseRR := range baseRel.Union {
+		arrowSearch := &relation{
+			ot:   baseRR.Object,
+			rel:  pt.RelOrPerm,
+			st:   params.st,
+			sid:  params.sid,
+			srel: params.srel,
+		}
+
+		arrowResults, err := f.search(arrowSearch)
+		if err != nil {
+			return nil, err
+		}
+
+		for arrowResult, arrowPaths := range arrowResults {
+			baseSearch := &relation{
+				ot:  params.ot,
+				rel: pt.Base,
+				st:  arrowResult.ot,
+				sid: arrowResult.oid,
+			}
+			baseResults, err := f.search(baseSearch)
+			if err != nil {
+				return nil, err
+			}
+
+			for baseResult, basePaths := range baseResults {
+				result := relation{
+					ot:   baseResult.ot,
+					oid:  baseResult.oid,
+					rel:  params.rel,
+					st:   params.st,
+					sid:  params.sid,
+					srel: params.srel,
+				}
+				var paths []searchPath
+				if f.explain {
+					paths = append(results[result], append(arrowPaths, basePaths...)...)
+				}
+
+				results[result] = paths
+			}
+		}
+	}
+
+	return results, nil
 }
