@@ -1,9 +1,6 @@
 package check
 
 import (
-	"fmt"
-	"sort"
-
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -11,10 +8,6 @@ import (
 
 	"github.com/samber/lo"
 )
-
-type ObjectID = model.ObjectID
-
-type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
 
 type Checker struct {
 	m       *model.Model
@@ -56,43 +49,6 @@ func (c *Checker) Trace() []string {
 	return c.memo.Trace()
 }
 
-type relation struct {
-	ot   model.ObjectName
-	oid  ObjectID
-	rel  model.RelationName
-	st   model.ObjectName
-	sid  ObjectID
-	srel model.RelationName
-}
-
-type relations []*relation
-
-func paramsFromRel(rel *dsc.Relation) *relation {
-	return &relation{
-		ot:   model.ObjectName(rel.ObjectType),
-		oid:  ObjectID(rel.ObjectId),
-		rel:  model.RelationName(rel.Relation),
-		st:   model.ObjectName(rel.SubjectType),
-		sid:  ObjectID(rel.SubjectId),
-		srel: model.RelationName(rel.SubjectRelation),
-	}
-}
-
-func (p *relation) String() string {
-	return fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, p.oid, p.rel, p.st, p.sid)
-}
-
-func (p *relation) AsRelation() *dsc.Relation {
-	return &dsc.Relation{
-		ObjectType:      p.ot.String(),
-		ObjectId:        p.oid.String(),
-		Relation:        p.rel.String(),
-		SubjectType:     p.st.String(),
-		SubjectId:       p.sid.String(),
-		SubjectRelation: p.srel.String(),
-	}
-}
-
 func (c *Checker) check(params *relation) (bool, error) {
 	prior := c.memo.MarkVisited(params)
 	switch prior {
@@ -125,7 +81,7 @@ func (c *Checker) check(params *relation) (bool, error) {
 
 func (c *Checker) checkRelation(params *relation) (bool, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
-	steps := c.stepRelation(r, params.st)
+	steps := c.m.StepRelation(r, params.st)
 
 	for _, step := range steps {
 		req := &dsc.Relation{
@@ -179,32 +135,6 @@ func (c *Checker) checkRelation(params *relation) (bool, error) {
 	}
 
 	return false, nil
-}
-
-func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rr *model.RelationRef, _ int) (*model.RelationRef, bool) {
-		if rr.IsDirect() || rr.IsWildcard() {
-			// include direct or wildcard with the expected types.
-			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
-		}
-
-		// include subject relations that can resolve to the expected types.
-		return rr, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0
-	})
-
-	sort.Slice(steps, func(i, j int) bool {
-		switch {
-		case steps[i].Assignment() > steps[j].Assignment():
-			// Wildcard < Subject < Direct
-			return true
-		case steps[i].Assignment() == steps[j].Assignment():
-			return steps[i].String() < steps[j].String()
-		default:
-			return false
-		}
-	})
-
-	return steps
 }
 
 func (c *Checker) checkPermission(params *relation) (bool, error) {
