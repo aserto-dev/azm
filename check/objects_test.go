@@ -28,11 +28,11 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, true, true)
+			objSearch := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, true, true)
 
-			res, err := checker.Search()
+			res, err := objSearch.Search()
 			assert.NoError(err)
-			tt.Logf("trace: +%v\n", checker.Paths())
+			tt.Logf("trace: +%v\n", objSearch.Explain())
 
 			subjects := lo.Uniq(lo.Map(res, func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
@@ -56,11 +56,13 @@ type object struct {
 	ID   model.ObjectID
 }
 
-var searchObjectsTests = []struct {
+type searchTest struct {
 	name     string
 	search   *dsr.GetGraphRequest
 	expected []object
-}{
+}
+
+var searchObjectsTests = []searchTest{
 	// Relations
 	{name: "groups where members of leaf are members", search: graph("group", "", "member", "group", "leaf", "member"),
 		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}, {Type: "group", ID: "root"}},
@@ -393,7 +395,7 @@ func relations() RelationsReader {
 }
 
 func graph(
-	objectType model.ObjectName, objectID string,
+	objectType model.ObjectName, objectID string, // nolint: unparam
 	relation model.RelationName,
 	subjectType model.ObjectName, subjectID string,
 	subjectRelation model.RelationName,

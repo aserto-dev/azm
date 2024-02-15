@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/aserto-dev/go-directory/pkg/derr"
@@ -158,4 +159,34 @@ func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, s
 	}
 
 	return nil
+}
+
+func (m *Model) StepRelation(r *Relation, subjs ...ObjectName) []*RelationRef {
+	steps := lo.FilterMap(r.Union, func(rr *RelationRef, _ int) (*RelationRef, bool) {
+		if rr.IsDirect() || rr.IsWildcard() {
+			// include direct or wildcard with the expected types.
+			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
+		}
+
+		// include subject relations that match or can resolve to the expected types.
+		include := len(subjs) == 0 ||
+			len(lo.Intersect(m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0 ||
+			lo.Contains(subjs, rr.Object)
+
+		return rr, include
+	})
+
+	sort.Slice(steps, func(i, j int) bool {
+		switch {
+		case steps[i].Assignment() > steps[j].Assignment():
+			// Wildcard < Subject < Direct
+			return true
+		case steps[i].Assignment() == steps[j].Assignment():
+			return steps[i].String() < steps[j].String()
+		default:
+			return false
+		}
+	})
+
+	return steps
 }
