@@ -15,3 +15,17 @@ func (c *Cache) Check(req *dsr.CheckRequest, relReader check.RelationReader) (*d
 
 	return &dsr.CheckResponse{Check: ok}, nil
 }
+
+type graphSearch interface {
+	Search() (*dsr.GetGraphResponse, error)
+}
+
+func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader check.RelationReader) (*dsr.GetGraphResponse, error) {
+	var search graphSearch
+	if req.ObjectId == "" {
+		search = check.NewObjectSearch(c.model, req, relReader)
+	} else {
+		search = check.NewSubjectSearch(c.model, req, relReader)
+	}
+	return search.Search()
+}

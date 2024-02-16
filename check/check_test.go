@@ -57,31 +57,6 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 }
 
 func TestCheck(t *testing.T) {
-	rels := RelationsReader{
-		{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
-		{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
-		{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
-		{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
-		{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
-		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
-		{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
-		{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
-		{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
-
-		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
-		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
-
-		// mutually recursive groups with users
-		{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
-		{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
-		{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
-		{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
-
-		// mutually recursive groups with no users
-		{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
-		{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
-	}
-
 	tests := []struct {
 		name     string
 		check    *dsr.CheckRequest
@@ -122,14 +97,17 @@ func TestCheck(t *testing.T) {
 		{name: "folder owner can create file", check: check("folder", "folder1", "can_create_file", "user", "f1_owner"), expected: true},
 		{name: "folder owner can share", check: check("folder", "folder1", "can_share", "user", "f1_owner"), expected: true},
 
-		// // // intersection
+		// intersection
 		{name: "writer cannot share", check: check("doc", "doc1", "can_share", "user", "d1_owner"), expected: false},
 		{name: "parent owner can share", check: check("doc", "doc1", "can_share", "user", "f1_owner"), expected: true},
 
-		// // negation
+		// negation
 		{name: "f1_owner can read folder1", check: check("folder", "folder1", "can_read", "user", "f1_owner"), expected: true},
 		{name: "f1_owner isn't doc1 viewer", check: check("doc", "doc1", "viewer", "user", "f1_owner"), expected: false},
 		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: true},
+
+		// cycles
+		// {name: "loop owner can_delete", check: check("cycle", "loop", "can_delete", "user", "loop_owner"), expected: true},
 	}
 
 	r, err := os.Open("./check_test.yaml")
@@ -153,6 +131,35 @@ func TestCheck(t *testing.T) {
 		})
 	}
 
+}
+
+var rels = RelationsReader{
+	{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
+	{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
+	{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
+	{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
+	{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
+	{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
+	{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
+	{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
+	{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
+
+	{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
+	{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
+
+	// mutually recursive groups with users
+	{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
+	{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
+	{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
+	{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
+
+	// mutually recursive groups with no users
+	{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
+	{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
+
+	// cyclical permissions
+	{"cycle", "loop", "parent", "cycle", "loop", ""},     // cycle:loop#parent@cycle:loop
+	{"cycle", "loop", "owner", "user", "loop_owner", ""}, // cycle:loop#owner@user:loop_owner
 }
 
 func check(

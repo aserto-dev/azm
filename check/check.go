@@ -1,9 +1,6 @@
 package check
 
 import (
-	"fmt"
-	"sort"
-
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -12,13 +9,9 @@ import (
 	"github.com/samber/lo"
 )
 
-type ObjectID = model.ObjectID
-
-type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
-
 type Checker struct {
 	m       *model.Model
-	params  *checkParams
+	params  *relation
 	getRels RelationReader
 
 	memo *checkMemo
@@ -27,7 +20,7 @@ type Checker struct {
 func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
 	return &Checker{
 		m: m,
-		params: &checkParams{
+		params: &relation{
 			ot:  model.ObjectName(req.ObjectType),
 			oid: ObjectID(req.ObjectId),
 			rel: model.RelationName(req.Relation),
@@ -56,19 +49,7 @@ func (c *Checker) Trace() []string {
 	return c.memo.Trace()
 }
 
-type checkParams struct {
-	ot  model.ObjectName
-	oid ObjectID
-	rel model.RelationName
-	st  model.ObjectName
-	sid ObjectID
-}
-
-func (p *checkParams) String() string {
-	return fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, p.oid, p.rel, p.st, p.sid)
-}
-
-func (c *Checker) check(params *checkParams) (bool, error) {
+func (c *Checker) check(params *relation) (bool, error) {
 	prior := c.memo.MarkVisited(params)
 	switch prior {
 	case checkStatusPending:
@@ -98,9 +79,9 @@ func (c *Checker) check(params *checkParams) (bool, error) {
 	return result, err
 }
 
-func (c *Checker) checkRelation(params *checkParams) (bool, error) {
+func (c *Checker) checkRelation(params *relation) (bool, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
-	steps := c.stepRelation(r, params.st)
+	steps := c.m.StepRelation(r, params.st)
 
 	for _, step := range steps {
 		req := &dsc.Relation{
@@ -138,7 +119,7 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 
 		case step.IsSubject():
 			for _, rel := range rels {
-				if ok, err := c.check(&checkParams{
+				if ok, err := c.check(&relation{
 					ot:  step.Object,
 					oid: ObjectID(rel.SubjectId),
 					rel: step.Relation,
@@ -156,33 +137,7 @@ func (c *Checker) checkRelation(params *checkParams) (bool, error) {
 	return false, nil
 }
 
-func (c *Checker) stepRelation(r *model.Relation, subjs ...model.ObjectName) []*model.RelationRef {
-	steps := lo.FilterMap(r.Union, func(rr *model.RelationRef, _ int) (*model.RelationRef, bool) {
-		if rr.IsDirect() || rr.IsWildcard() {
-			// include direct or wildcard with the expected types.
-			return rr, len(subjs) == 0 || lo.Contains(subjs, rr.Object)
-		}
-
-		// include subject relations that can resolve to the expected types.
-		return rr, len(subjs) == 0 || len(lo.Intersect(c.m.Objects[rr.Object].Relations[rr.Relation].SubjectTypes, subjs)) > 0
-	})
-
-	sort.Slice(steps, func(i, j int) bool {
-		switch {
-		case steps[i].Assignment() > steps[j].Assignment():
-			// Wildcard < Subject < Direct
-			return true
-		case steps[i].Assignment() == steps[j].Assignment():
-			return steps[i].String() < steps[j].String()
-		default:
-			return false
-		}
-	})
-
-	return steps
-}
-
-func (c *Checker) checkPermission(params *checkParams) (bool, error) {
+func (c *Checker) checkPermission(params *relation) (bool, error) {
 	p := c.m.Objects[params.ot].Permissions[params.rel]
 
 	if !lo.Contains(p.SubjectTypes, params.st) {
@@ -191,7 +146,7 @@ func (c *Checker) checkPermission(params *checkParams) (bool, error) {
 	}
 
 	terms := p.Terms()
-	termChecks := make([][]*checkParams, 0, len(terms))
+	termChecks := make([]relations, 0, len(terms))
 	for _, pt := range terms {
 		// expand arrow operators.
 		expanded, err := c.expandTerm(pt, params)
@@ -227,7 +182,7 @@ func (c *Checker) checkPermission(params *checkParams) (bool, error) {
 	return false, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
-func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*checkParams, error) {
+func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relations, error) {
 	if pt.IsArrow() {
 		// Resolve the base of the arrow.
 		rels, err := c.getRels(&dsc.Relation{
@@ -236,11 +191,11 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*
 			Relation:   pt.Base.String(),
 		})
 		if err != nil {
-			return []*checkParams{}, err
+			return relations{}, err
 		}
 
-		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *checkParams {
-			return &checkParams{
+		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
+			return &relation{
 				ot:  model.ObjectName(rel.SubjectType),
 				oid: ObjectID(rel.SubjectId),
 				rel: pt.RelOrPerm,
@@ -252,10 +207,10 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *checkParams) ([]*
 		return expanded, nil
 	}
 
-	return []*checkParams{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
+	return relations{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
 }
 
-func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAny(checks []relations) (bool, error) {
 	for _, check := range checks {
 		var (
 			ok  bool
@@ -268,8 +223,8 @@ func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
 		case 1:
 			ok, err = c.check(check[0])
 		default:
-			ok, err = c.checkAny(lo.Map(check, func(params *checkParams, _ int) []*checkParams {
-				return []*checkParams{params}
+			ok, err = c.checkAny(lo.Map(check, func(params *relation, _ int) relations {
+				return relations{params}
 			}))
 		}
 
@@ -285,11 +240,11 @@ func (c *Checker) checkAny(checks [][]*checkParams) (bool, error) {
 	return false, nil
 }
 
-func (c *Checker) checkAll(checks [][]*checkParams) (bool, error) {
+func (c *Checker) checkAll(checks []relations) (bool, error) {
 	for _, check := range checks {
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
 		// then a match on any of them is sufficient.
-		ok, err := c.checkAny([][]*checkParams{check})
+		ok, err := c.checkAny([]relations{check})
 		if err != nil {
 			return false, err
 		}

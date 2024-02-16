@@ -9,16 +9,24 @@ import (
 
 type checkStatus int
 
+const (
+	statusUnknown  = "unknown"
+	statusPending  = "?"
+	statusTrue     = "true"
+	statusFalse    = "false"
+	statusComplete = "done"
+)
+
 func (s checkStatus) String() string {
 	switch s {
 	case checkStatusUnknown:
-		return "unknown"
+		return statusUnknown
 	case checkStatusPending:
-		return "?"
+		return statusPending
 	case checkStatusTrue:
-		return "true"
+		return statusTrue
 	case checkStatusFalse:
-		return "false"
+		return statusFalse
 	default:
 		return fmt.Sprintf("invalid: %d", s)
 	}
@@ -32,25 +40,25 @@ const (
 )
 
 type checkCall struct {
-	*checkParams
+	*relation
 	status checkStatus
 }
 
 // checkMemo tracks pending checks to detect cycles, and caches the results of completed checks.
 type checkMemo struct {
-	memo    map[checkParams]checkStatus
+	memo    map[relation]checkStatus
 	history []*checkCall
 }
 
 func newCheckMemo(trace bool) *checkMemo {
 	return &checkMemo{
-		memo:    map[checkParams]checkStatus{},
+		memo:    map[relation]checkStatus{},
 		history: lo.Ternary(trace, []*checkCall{}, nil),
 	}
 }
 
 // MarkVisited returns the status of a check. If the check has not been visited, it is marked as pending.
-func (m *checkMemo) MarkVisited(params *checkParams) checkStatus {
+func (m *checkMemo) MarkVisited(params *relation) checkStatus {
 	prior := m.memo[*params]
 	current := prior
 	if prior == checkStatusUnknown {
@@ -64,7 +72,7 @@ func (m *checkMemo) MarkVisited(params *checkParams) checkStatus {
 }
 
 // MarkComplete records the result of a check.
-func (m *checkMemo) MarkComplete(params *checkParams, checkResult bool) {
+func (m *checkMemo) MarkComplete(params *relation, checkResult bool) {
 	status := checkStatusFalse
 	if checkResult {
 		status = checkStatusTrue
@@ -99,7 +107,7 @@ func (m *checkMemo) Trace() []string {
 	})
 }
 
-func (m *checkMemo) trace(params *checkParams, status checkStatus) {
+func (m *checkMemo) trace(params *relation, status checkStatus) {
 	if m.history != nil {
 		m.history = append(m.history, &checkCall{params, status})
 	}

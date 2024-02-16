@@ -16,6 +16,10 @@ github.com/aserto-dev/go-aserto v0.30.0 h1:RZMM8ojXp4O15+qPKsFjQ+6/+KV3pXAwqCJrQ
 github.com/aserto-dev/go-aserto v0.30.0/go.mod h1:y+Mrqm9yl3XgBA0lkZ4Pj2cZN1ytL1pjAwpG9rKQCJA=
 github.com/aserto-dev/go-directory v0.30.10 h1:g4j5lzNndQOG6Uv+oc1Q4UzyZdtgCnGftHNIpahzcos=
 github.com/aserto-dev/go-directory v0.30.10/go.mod h1:XW9IRp2u3TTkaqxcZG4sFXttJO4sia2S0j79CYkJfUg=
+github.com/aserto-dev/go-directory v0.30.12-0.20240214223755-52c087ab19dc h1:1Rj/crqycYJeB47l0gnfqnFZZJPydT+xXkhM4G/J4qM=
+github.com/aserto-dev/go-directory v0.30.12-0.20240214223755-52c087ab19dc/go.mod h1:XW9IRp2u3TTkaqxcZG4sFXttJO4sia2S0j79CYkJfUg=
+github.com/aserto-dev/go-directory v0.30.12-0.20240216170044-f77a10fc9bd2 h1:qVLl26XFu+q1dkv1jy6Ujgucx0Ym0BhCa4TgsWiivpA=
+github.com/aserto-dev/go-directory v0.30.12-0.20240216170044-f77a10fc9bd2/go.mod h1:XW9IRp2u3TTkaqxcZG4sFXttJO4sia2S0j79CYkJfUg=
 github.com/aserto-dev/header v0.0.4 h1:Bb58n1m2X/qRV3N2PS0avuFOyRcG8Iri7/qq0Wsunq8=
 github.com/aserto-dev/header v0.0.4/go.mod h1:LNgRo3gStS71lO1d9Oue9e9kfVvirvUHvdZClzDmNwo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
