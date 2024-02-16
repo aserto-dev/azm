@@ -9,16 +9,24 @@ import (
 
 type checkStatus int
 
+const (
+	statusUnknown  = "unknown"
+	statusPending  = "?"
+	statusTrue     = "true"
+	statusFalse    = "false"
+	statusComplete = "done"
+)
+
 func (s checkStatus) String() string {
 	switch s {
 	case checkStatusUnknown:
-		return "unknown"
+		return statusUnknown
 	case checkStatusPending:
-		return "?"
+		return statusPending
 	case checkStatusTrue:
-		return "true"
+		return statusTrue
 	case checkStatusFalse:
-		return "false"
+		return statusFalse
 	default:
 		return fmt.Sprintf("invalid: %d", s)
 	}

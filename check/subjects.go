@@ -12,7 +12,7 @@ type SubjectSearch struct {
 	graphSearch
 }
 
-func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, explain, trace bool) *SubjectSearch {
+func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *SubjectSearch {
 	return &SubjectSearch{graphSearch{
 		m: m,
 		params: &relation{
@@ -24,22 +24,32 @@ func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationR
 			srel: model.RelationName(req.SubjectRelation),
 		},
 		getRels: reader,
-		memo:    newSearchMemo(trace),
-		explain: explain,
+		memo:    newSearchMemo(req.Trace),
+		explain: req.Explain,
 	}}
 }
 
-func (s *SubjectSearch) Search() ([]*dsc.ObjectIdentifier, error) {
+func (s *SubjectSearch) Search() (*dsr.GetGraphResponse, error) {
+	resp := &dsr.GetGraphResponse{}
+
 	if err := s.validate(); err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	res, err := s.search(s.params)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
-	return res.Subjects(), nil
+	resp.Results = res.Subjects()
+
+	if s.explain {
+		resp.Explanation = res.Explain()
+	}
+
+	resp.Trace = s.memo.Trace()
+
+	return resp, nil
 }
 
 func (s *SubjectSearch) search(params *relation) (searchResults, error) {
@@ -120,22 +130,26 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 	}
 
 	for _, rel := range rels {
-		if rel.SubjectId == "*" || params.oid == ObjectID(rel.ObjectId) {
-			result := relation{
-				ot:  model.ObjectName(rel.ObjectType),
-				oid: ObjectID(rel.ObjectId),
-				rel: model.RelationName(rel.Relation),
-				st:  model.ObjectName(rel.SubjectType),
-				sid: ObjectID(rel.SubjectId),
-			}
-
-			var path []searchPath
-			if s.explain {
-				path = append(results[result], searchPath{&result}) //nolint: gocritic
-			}
-
-			results[result] = path
+		if rel.SubjectId != "*" && params.oid != ObjectID(rel.ObjectId) {
+			continue
 		}
+
+		edge := relation{
+			ot:  model.ObjectName(rel.ObjectType),
+			oid: ObjectID(rel.ObjectId),
+			rel: model.RelationName(rel.Relation),
+			st:  model.ObjectName(rel.SubjectType),
+			sid: ObjectID(rel.SubjectId),
+		}
+
+		subj := edge.Subject()
+
+		var path []searchPath
+		if s.explain {
+			path = append(results[*subj], searchPath{&edge}) //nolint: gocritic
+		}
+
+		results[*subj] = path
 	}
 
 	return results, nil
@@ -162,11 +176,13 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		if params.srel == model.RelationName(rel.SubjectRelation) && params.st == model.ObjectName(rel.SubjectType) {
 			// We're searching for a subject relation (not a Check call) and we have a match.
 
+			subj := current.Subject()
+
 			var path []searchPath
 			if s.explain {
-				path = append(results[*current], searchPath{current}) //nolint: gocritic
+				path = append(results[*subj], searchPath{current}) //nolint: gocritic
 			}
-			results[*current] = path
+			results[*subj] = path
 		}
 
 		check := &relation{
@@ -184,7 +200,7 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		}
 
 		if s.explain {
-			res = lo.MapValues(res, func(paths []searchPath, _ relation) []searchPath {
+			res = lo.MapValues(res, func(paths []searchPath, _ object) []searchPath {
 				return lo.Map(paths, func(p searchPath, _ int) searchPath {
 					return append(searchPath{current}, p...)
 				})

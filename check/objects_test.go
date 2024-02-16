@@ -28,18 +28,19 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			objSearch := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations, true, true)
+			objSearch := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
-			tt.Logf("trace: +%v\n", objSearch.Explain())
+			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
+			tt.Logf("trace: +%v\n", res.Trace)
 
-			subjects := lo.Uniq(lo.Map(res, func(s *dsc.ObjectIdentifier, _ int) object {
+			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
 					Type: model.ObjectName(s.ObjectType),
 					ID:   model.ObjectID(s.ObjectId),
 				}
-			}))
+			})
 
 			for _, e := range test.expected {
 				assert.Contains(subjects, e)
@@ -407,5 +408,7 @@ func graph(
 		SubjectType:     subjectType.String(),
 		SubjectId:       subjectID,
 		SubjectRelation: subjectRelation.String(),
+		Explain:         true,
+		Trace:           true,
 	}
 }

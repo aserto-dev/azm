@@ -12,7 +12,7 @@ type ObjectSearch struct {
 	graphSearch
 }
 
-func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, explain, trace bool) *ObjectSearch {
+func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *ObjectSearch {
 	return &ObjectSearch{graphSearch{
 		m: m,
 		params: &relation{
@@ -24,22 +24,32 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 			srel: model.RelationName(req.SubjectRelation),
 		},
 		getRels: reader,
-		memo:    newSearchMemo(trace),
-		explain: explain,
+		memo:    newSearchMemo(req.Trace),
+		explain: req.Explain,
 	}}
 }
 
-func (s *ObjectSearch) Search() ([]*dsc.ObjectIdentifier, error) {
+func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
+	resp := &dsr.GetGraphResponse{}
+
 	if err := s.validate(); err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	res, err := s.search(s.params)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
-	return res.Objects(), nil
+	resp.Results = res.Objects()
+
+	if s.explain {
+		resp.Explanation = res.Explain()
+	}
+
+	resp.Trace = s.memo.Trace()
+
+	return resp, nil
 }
 
 func (s *ObjectSearch) search(params *relation) (searchResults, error) {
@@ -119,22 +129,26 @@ func (s *ObjectSearch) findNeighbor(step *model.RelationRef, params *relation) (
 	}
 
 	for _, rel := range rels {
-		if rel.SubjectId == "*" || params.sid == ObjectID(rel.SubjectId) {
-			result := relation{
-				ot:  model.ObjectName(rel.ObjectType),
-				oid: ObjectID(rel.ObjectId),
-				rel: model.RelationName(rel.Relation),
-				st:  model.ObjectName(rel.SubjectType),
-				sid: ObjectID(rel.SubjectId),
-			}
-
-			var path []searchPath
-			if s.explain {
-				path = append(results[result], searchPath{&result}) //nolint: gocritic
-			}
-
-			results[result] = path
+		if rel.SubjectId != "*" && params.sid != ObjectID(rel.SubjectId) {
+			continue
 		}
+
+		edge := relation{
+			ot:  model.ObjectName(rel.ObjectType),
+			oid: ObjectID(rel.ObjectId),
+			rel: model.RelationName(rel.Relation),
+			st:  model.ObjectName(rel.SubjectType),
+			sid: ObjectID(rel.SubjectId),
+		}
+
+		obj := edge.Object()
+
+		var path []searchPath
+		if s.explain {
+			path = append(results[*obj], searchPath{&edge}) //nolint: gocritic
+		}
+
+		results[*obj] = path
 	}
 
 	return results, nil
@@ -159,15 +173,7 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 		}
 
 		if expansion.rel == expansion.srel {
-			self := &relation{
-				ot:   expansion.ot,
-				oid:  expansion.sid,
-				rel:  expansion.rel,
-				st:   expansion.st,
-				sid:  expansion.sid,
-				srel: expansion.srel,
-			}
-			set[*self] = nil
+			set[object{expansion.ot, expansion.sid}] = nil
 		}
 
 		subjSet = set
@@ -195,8 +201,8 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 		search := &dsc.Relation{
 			ObjectType:      params.ot.String(),
 			Relation:        params.rel.String(),
-			SubjectType:     subj.ot.String(),
-			SubjectId:       subj.oid.String(),
+			SubjectType:     subj.Type.String(),
+			SubjectId:       subj.ID.String(),
 			SubjectRelation: params.srel.String(),
 		}
 		objects, err := s.getRels(search)
@@ -205,7 +211,7 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 		}
 
 		for _, rel := range objects {
-			p := relation{
+			edge := relation{
 				ot:  model.ObjectName(rel.ObjectType),
 				oid: ObjectID(rel.ObjectId),
 				rel: model.RelationName(rel.Relation),
@@ -213,12 +219,14 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 				sid: ObjectID(rel.SubjectId),
 			}
 
+			obj := edge.Object()
+
 			var resPaths []searchPath
 			if s.explain {
-				resPaths = append(results[p], paths...) //nolint: gocritic
+				resPaths = append(results[*obj], paths...) //nolint: gocritic
 			}
 
-			results[p] = resPaths
+			results[*obj] = resPaths
 		}
 	}
 
@@ -251,7 +259,8 @@ func (s *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error)
 
 		for _, rel := range rels {
 			result := relationFromProto(rel)
-			if _, ok := results[*result]; ok {
+			obj := result.Object()
+			if _, ok := results[*obj]; ok {
 				continue
 			}
 
@@ -267,10 +276,10 @@ func (s *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error)
 
 			var paths []searchPath
 			if s.explain {
-				paths = append(results[*result], stepPath) //nolint: gocritic
+				paths = append(results[*obj], stepPath) //nolint: gocritic
 			}
 
-			results[*result] = paths
+			results[*obj] = paths
 		}
 	}
 
