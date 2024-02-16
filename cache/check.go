@@ -22,10 +22,10 @@ type graphSearch interface {
 
 func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader check.RelationReader) (*dsr.GetGraphResponse, error) {
 	var search graphSearch
-	if req.ObjectId != "" {
-		search = check.NewSubjectSearch(c.model, req, relReader)
-	} else {
+	if req.ObjectId == "" {
 		search = check.NewObjectSearch(c.model, req, relReader)
+	} else {
+		search = check.NewSubjectSearch(c.model, req, relReader)
 	}
 	return search.Search()
 }
