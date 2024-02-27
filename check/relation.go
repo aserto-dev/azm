@@ -65,6 +65,54 @@ func (p *relation) subject() *object {
 	}
 }
 
+// func (p *relation) clone(overrides ...fieldOverride) *relation {
+//     clone := *p
+
+//     for _, override := range overrides {
+//         override(&clone)
+//     }
+
+//     return &clone
+// }
+
+// type fieldOverride func(*relation)
+
+// func withObjectType(ot model.ObjectName) fieldOverride {
+//     return func(p *relation) {
+//         p.ot = ot
+//     }
+// }
+
+// func withObjectID(oid ObjectID) fieldOverride {
+//     return func(p *relation) {
+//         p.oid = oid
+//     }
+// }
+
+// func withRelation(rel model.RelationName) fieldOverride {
+//     return func(p *relation) {
+//         p.rel = rel
+//     }
+// }
+
+// func withSubjectType(st model.ObjectName) fieldOverride {
+//     return func(p *relation) {
+//         p.st = st
+//     }
+// }
+
+// func withSubjectID(sid ObjectID) fieldOverride {
+//     return func(p *relation) {
+//         p.sid = sid
+//     }
+// }
+
+// func withSubjectRelation(srel model.RelationName) fieldOverride {
+//     return func(p *relation) {
+//         p.srel = srel
+//     }
+// }
+
 func displayID(id ObjectID) string {
 	if id == "" {
 		return "?"

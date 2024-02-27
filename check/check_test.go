@@ -108,6 +108,7 @@ func TestCheck(t *testing.T) {
 
 		// cycles
 		{name: "loop owner can_delete", check: check("cycle", "loop", "can_delete", "user", "loop_owner"), expected: true},
+		{name: "non loop-owner can't delete", check: check("cycle", "loop", "can_delete", "user", "user1"), expected: false},
 	}
 
 	r, err := os.Open("./check_test.yaml")
