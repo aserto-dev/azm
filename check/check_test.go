@@ -107,7 +107,7 @@ func TestCheck(t *testing.T) {
 		{name: "parent owner can invite", check: check("doc", "doc1", "can_invite", "user", "f1_owner"), expected: true},
 
 		// cycles
-		// {name: "loop owner can_delete", check: check("cycle", "loop", "can_delete", "user", "loop_owner"), expected: true},
+		{name: "loop owner can_delete", check: check("cycle", "loop", "can_delete", "user", "loop_owner"), expected: true},
 	}
 
 	r, err := os.Open("./check_test.yaml")

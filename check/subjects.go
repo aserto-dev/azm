@@ -142,7 +142,7 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 			sid: ObjectID(rel.SubjectId),
 		}
 
-		subj := edge.Subject()
+		subj := edge.subject()
 
 		var path []searchPath
 		if s.explain {
@@ -176,7 +176,7 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		if params.srel == model.RelationName(rel.SubjectRelation) && params.st == model.ObjectName(rel.SubjectType) {
 			// We're searching for a subject relation (not a Check call) and we have a match.
 
-			subj := current.Subject()
+			subj := current.subject()
 
 			var path []searchPath
 			if s.explain {

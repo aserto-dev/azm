@@ -141,7 +141,7 @@ func (s *ObjectSearch) findNeighbor(step *model.RelationRef, params *relation) (
 			sid: ObjectID(rel.SubjectId),
 		}
 
-		obj := edge.Object()
+		obj := edge.object()
 
 		var path []searchPath
 		if s.explain {
@@ -219,7 +219,7 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 				sid: ObjectID(rel.SubjectId),
 			}
 
-			obj := edge.Object()
+			obj := edge.object()
 
 			var resPaths []searchPath
 			if s.explain {
@@ -252,14 +252,14 @@ func (s *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error)
 
 		delete(backlog, cur)
 
-		rels, err := s.getRels(cur.AsRelation())
+		rels, err := s.getRels(cur.toProto())
 		if err != nil {
 			return nil, err
 		}
 
 		for _, rel := range rels {
 			result := relationFromProto(rel)
-			obj := result.Object()
+			obj := result.object()
 			if _, ok := results[*obj]; ok {
 				continue
 			}

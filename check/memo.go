@@ -10,7 +10,15 @@ import (
 type checkStatus int
 
 const (
-	statusUnknown  = "unknown"
+	checkStatusNew checkStatus = iota
+	checkStatusPending
+	checkStatusTrue
+	checkStatusFalse
+	checkStatusCycle
+)
+
+const (
+	statusUnknown  = "new"
 	statusPending  = "?"
 	statusTrue     = "true"
 	statusFalse    = "false"
@@ -19,7 +27,7 @@ const (
 
 func (s checkStatus) String() string {
 	switch s {
-	case checkStatusUnknown:
+	case checkStatusNew:
 		return statusUnknown
 	case checkStatusPending:
 		return statusPending
@@ -31,13 +39,6 @@ func (s checkStatus) String() string {
 		return fmt.Sprintf("invalid: %d", s)
 	}
 }
-
-const (
-	checkStatusUnknown checkStatus = iota
-	checkStatusPending
-	checkStatusTrue
-	checkStatusFalse
-)
 
 type checkCall struct {
 	*relation
@@ -61,7 +62,7 @@ func newCheckMemo(trace bool) *checkMemo {
 func (m *checkMemo) MarkVisited(params *relation) checkStatus {
 	prior := m.memo[*params]
 	current := prior
-	if prior == checkStatusUnknown {
+	if prior == checkStatusNew {
 		current = checkStatusPending
 		m.memo[*params] = current
 	}
@@ -72,11 +73,7 @@ func (m *checkMemo) MarkVisited(params *relation) checkStatus {
 }
 
 // MarkComplete records the result of a check.
-func (m *checkMemo) MarkComplete(params *relation, checkResult bool) {
-	status := checkStatusFalse
-	if checkResult {
-		status = checkStatusTrue
-	}
+func (m *checkMemo) MarkComplete(params *relation, status checkStatus) {
 	m.memo[*params] = status
 
 	m.trace(params, status)
