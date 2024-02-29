@@ -1,4 +1,4 @@
-package check
+package graph
 
 import (
 	"github.com/aserto-dev/azm/model"

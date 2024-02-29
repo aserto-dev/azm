@@ -1,11 +1,11 @@
-package check_test
+package graph_test
 
 import (
 	"os"
 	"strings"
 	"testing"
 
-	azmcheck "github.com/aserto-dev/azm/check"
+	azmgraph "github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -123,7 +123,7 @@ func TestCheck(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmcheck.New(m, test.check, rels.GetRelations)
+			checker := azmgraph.NewCheck(m, test.check, rels.GetRelations)
 
 			res, err := checker.Check()
 			assert.NoError(err)

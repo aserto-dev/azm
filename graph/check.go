@@ -1,4 +1,4 @@
-package check
+package graph
 
 import (
 	"github.com/aserto-dev/azm/model"
@@ -17,7 +17,7 @@ type Checker struct {
 	memo *checkMemo
 }
 
-func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
+func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
 	return &Checker{
 		m: m,
 		params: &relation{

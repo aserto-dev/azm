@@ -1,12 +1,12 @@
 package cache
 
 import (
-	"github.com/aserto-dev/azm/check"
+	"github.com/aserto-dev/azm/graph"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 )
 
-func (c *Cache) Check(req *dsr.CheckRequest, relReader check.RelationReader) (*dsr.CheckResponse, error) {
-	checker := check.New(c.model, req, relReader)
+func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
+	checker := graph.NewCheck(c.model, req, relReader)
 
 	ok, err := checker.Check()
 	if err != nil {
@@ -20,12 +20,12 @@ type graphSearch interface {
 	Search() (*dsr.GetGraphResponse, error)
 }
 
-func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader check.RelationReader) (*dsr.GetGraphResponse, error) {
+func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReader) (*dsr.GetGraphResponse, error) {
 	var search graphSearch
 	if req.ObjectId == "" {
-		search = check.NewObjectSearch(c.model, req, relReader)
+		search = graph.NewObjectSearch(c.model, req, relReader)
 	} else {
-		search = check.NewSubjectSearch(c.model, req, relReader)
+		search = graph.NewSubjectSearch(c.model, req, relReader)
 	}
 	return search.Search()
 }

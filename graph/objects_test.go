@@ -1,10 +1,10 @@
-package check_test
+package graph_test
 
 import (
 	"os"
 	"testing"
 
-	azmcheck "github.com/aserto-dev/azm/check"
+	azmgraph "github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -28,7 +28,7 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			objSearch := azmcheck.NewObjectSearch(m, test.search, rels.GetRelations)
+			objSearch := azmgraph.NewObjectSearch(m, test.search, rels.GetRelations)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
