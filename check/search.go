@@ -70,9 +70,15 @@ func (r searchResults) Explain() *structpb.Struct {
 
 type searchStatus int
 
+const (
+	searchStatusNew searchStatus = iota
+	searchStatusPending
+	searchStatusComplete
+)
+
 func (s searchStatus) String() string {
 	switch s {
-	case searchStatusUnknown:
+	case searchStatusNew:
 		return statusUnknown
 	case searchStatusPending:
 		return statusPending
@@ -82,12 +88,6 @@ func (s searchStatus) String() string {
 		return fmt.Sprintf("invalid: %d", s)
 	}
 }
-
-const (
-	searchStatusUnknown searchStatus = iota
-	searchStatusPending
-	searchStatusComplete
-)
 
 type graphSearch struct {
 	m       *model.Model
@@ -138,7 +138,7 @@ func (m *searchMemo) MarkVisited(params *relation) searchStatus {
 	case !ok:
 		m.visited[*params] = nil
 		m.trace(params, searchStatusPending)
-		return searchStatusUnknown
+		return searchStatusNew
 	case results == nil:
 		return searchStatusPending
 	default:
@@ -156,7 +156,7 @@ func (m *searchMemo) Status(params *relation) searchStatus {
 	results, ok := m.visited[*params]
 	switch {
 	case !ok:
-		return searchStatusUnknown
+		return searchStatusNew
 	case results == nil:
 		return searchStatusPending
 	default:

@@ -14,7 +14,6 @@ const (
 	checkStatusPending
 	checkStatusTrue
 	checkStatusFalse
-	checkStatusCycle
 )
 
 const (

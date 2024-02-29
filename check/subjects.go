@@ -58,8 +58,9 @@ func (s *SubjectSearch) search(params *relation) (searchResults, error) {
 	case searchStatusComplete:
 		return s.memo.visited[*params], nil
 	case searchStatusPending:
-		return nil, derr.ErrCycleDetected
-	case searchStatusUnknown:
+		// We have a cycle.
+		return nil, nil
+	case searchStatusNew:
 	}
 
 	o := s.m.Objects[params.ot]
@@ -72,7 +73,7 @@ func (s *SubjectSearch) search(params *relation) (searchResults, error) {
 	if o.HasRelation(params.rel) {
 		results, err = s.searchRelation(params)
 	} else {
-		return nil, derr.ErrNotImplemented.Msg("search on permissions is not supported")
+		results, err = s.searchPermission(params)
 	}
 
 	s.memo.MarkComplete(params, results)
@@ -211,4 +212,176 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 	}
 
 	return results, nil
+}
+
+func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error) {
+	p := s.m.Objects[params.ot].Permissions[params.rel]
+
+	results := searchResults{}
+
+	subjTypes := []model.ObjectName{}
+	if params.srel == "" {
+		subjTypes = append(subjTypes, params.st)
+	} else {
+		subjTypes = s.m.Objects[params.st].Relations[params.srel].SubjectTypes
+	}
+
+	if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
+		// The subject type cannot have this permission.
+		return results, nil
+	}
+
+	terms := p.Terms()
+	termChecks := make([][]*relation, 0, len(terms))
+	for _, pt := range terms {
+		// expand arrow operators.
+		expanded, err := s.expandTerm(pt, params)
+		if err != nil {
+			return results, err
+		}
+		termChecks = append(termChecks, expanded)
+	}
+
+	switch {
+	case p.IsUnion():
+		return s.union(termChecks)
+	case p.IsIntersection():
+		return s.intersection(termChecks)
+	case p.IsExclusion():
+		include, err := s.union(termChecks[:1])
+		switch {
+		case err != nil:
+			return results, err
+		case include == nil:
+			// We have a cycle.
+			return nil, nil
+		case len(include) == 0:
+			// Short-circuit: The include term is false, so the permission is false.
+			return results, nil
+		}
+
+		exclude, err := s.union(termChecks[1:])
+		if err != nil {
+			return results, err
+		}
+
+		return lo.OmitByKeys(include, lo.Keys(exclude)), nil
+	}
+
+	return results, derr.ErrUnknown.Msg("unknown permission operator")
+}
+
+func (s *SubjectSearch) expandTerm(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
+	if pt.IsArrow() {
+		// Resolve the base of the arrow.
+		rels, err := s.getRels(&dsc.Relation{
+			ObjectType: params.ot.String(),
+			ObjectId:   params.oid.String(),
+			Relation:   pt.Base.String(),
+		})
+		if err != nil {
+			return []*relation{}, err
+		}
+
+		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
+			return &relation{
+				ot:   model.ObjectName(rel.SubjectType),
+				oid:  ObjectID(rel.SubjectId),
+				rel:  pt.RelOrPerm,
+				st:   params.st,
+				sid:  params.sid,
+				srel: params.srel,
+			}
+		})
+
+		return expanded, nil
+	}
+
+	return []*relation{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid, srel: params.srel}}, nil
+}
+
+func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
+	results := searchResults{}
+	status := searchStatusPending
+
+	for _, check := range checks {
+		var (
+			res searchResults
+			err error
+		)
+
+		switch len(check) {
+		case 0:
+			res, err = searchResults{}, nil
+		case 1:
+			res, err = s.search(check[0])
+		default:
+			res, err = s.union(lo.Map(check, func(params *relation, _ int) []*relation {
+				return []*relation{params}
+			}))
+		}
+
+		switch {
+		case err != nil:
+			return res, err
+		case res == nil:
+			// We have a cycle.
+			continue
+		}
+
+		results = lo.Assign(results, res)
+		status = searchStatusComplete
+	}
+
+	// return nil if all checks result in a cycle
+	return lo.Ternary(status == searchStatusComplete, results, nil), nil
+}
+
+func (s *SubjectSearch) intersection(checks [][]*relation) (searchResults, error) {
+	results := []searchResults{}
+	status := searchStatusPending
+
+	for _, check := range checks {
+		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
+		// then a match on any of them is sufficient.
+		result, err := s.union([][]*relation{check})
+		switch {
+		case err != nil:
+			return searchResults{}, err
+		case result == nil:
+			// We have a cycle.
+			continue
+		case len(result) == 0:
+			return result, nil
+		}
+
+		status = searchStatusComplete
+		results = append(results, result)
+	}
+
+	if status == searchStatusPending {
+		// All checks result in a cycle.
+		return nil, nil
+	}
+
+	intersection := lo.Reduce(results, func(agg searchResults, item searchResults, i int) searchResults {
+		if i == 0 {
+			return item
+		}
+
+		for subj, paths := range agg {
+			itemPaths, inBoth := item[subj]
+			if inBoth {
+				// add the paths from the current item to the intersection.
+				agg[subj] = append(paths, itemPaths...)
+			} else {
+				// the subject is not in the intersection.
+				delete(agg, subj)
+			}
+		}
+
+		return agg
+	}, searchResults{})
+
+	return intersection, nil
 }

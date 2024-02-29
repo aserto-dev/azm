@@ -59,7 +59,7 @@ func (s *ObjectSearch) search(params *relation) (searchResults, error) {
 		return s.memo.visited[*params], nil
 	case searchStatusPending:
 		return nil, derr.ErrCycleDetected
-	case searchStatusUnknown:
+	case searchStatusNew:
 	}
 
 	o := s.m.Objects[params.ot]
@@ -166,7 +166,7 @@ func (s *ObjectSearch) searchSubjectSet(step *model.RelationRef, params *relatio
 	subjSet := searchResults{}
 
 	switch s.memo.Status(expansion) {
-	case searchStatusUnknown:
+	case searchStatusNew:
 		set, err := s.search(expansion)
 		if err != nil {
 			return nil, err

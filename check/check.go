@@ -59,7 +59,7 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 	switch prior {
 	case checkStatusPending:
 		// We have a cycle.
-		return checkStatusCycle, nil
+		return prior, nil
 	case checkStatusTrue, checkStatusFalse:
 		// We already checked this relation.
 		return prior, nil
@@ -217,7 +217,7 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 }
 
 func (c *Checker) checkAny(checks []relations) (checkStatus, error) {
-	result := checkStatusCycle
+	result := checkStatusPending
 
 	for _, check := range checks {
 		var (
@@ -245,6 +245,9 @@ func (c *Checker) checkAny(checks []relations) (checkStatus, error) {
 			return status, nil
 		case checkStatusFalse:
 			result = checkStatusFalse
+		case checkStatusNew:
+			panic("check can never return checkStatusNew")
+		case checkStatusPending:
 		}
 	}
 
@@ -252,7 +255,7 @@ func (c *Checker) checkAny(checks []relations) (checkStatus, error) {
 }
 
 func (c *Checker) checkAll(checks []relations) (checkStatus, error) {
-	result := checkStatusCycle
+	result := checkStatusPending
 
 	for _, check := range checks {
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
@@ -267,6 +270,9 @@ func (c *Checker) checkAll(checks []relations) (checkStatus, error) {
 			return status, nil
 		case checkStatusTrue:
 			result = checkStatusTrue
+		case checkStatusNew:
+			panic("check can never return checkStatusNew")
+		case checkStatusPending:
 		}
 	}
 
