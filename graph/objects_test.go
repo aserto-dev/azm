@@ -25,10 +25,10 @@ func TestSearchObjects(t *testing.T) {
 	assert.NotNil(t, m)
 
 	for _, test := range searchObjectsTests {
-		t.Run(test.name, func(tt *testing.T) {
+		t.Run(test.search, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			objSearch := azmgraph.NewObjectSearch(m, test.search, rels.GetRelations)
+			objSearch := azmgraph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
@@ -58,76 +58,33 @@ type object struct {
 }
 
 type searchTest struct {
-	name     string
-	search   *dsr.GetGraphRequest
+	search   string
 	expected []object
 }
 
 var searchObjectsTests = []searchTest{
 	// Relations
-	{name: "groups where members of leaf are members", search: graph("group", "", "member", "group", "leaf", "member"),
-		expected: []object{{Type: "group", ID: "branch"}, {Type: "group", ID: "trunk"}, {Type: "group", ID: "root"}},
-	},
-	{name: "groups where members of leaf are guests", search: graph("group", "", "guest", "group", "leaf", "member"),
-		expected: []object{},
-	},
-	{name: "docs where members of leaf are viewers", search: graph("doc", "", "viewer", "group", "leaf", "member"),
-		expected: []object{{Type: "doc", ID: "doc_tree"}},
-	},
-	{name: "groups where members of yang are members", search: graph("group", "", "member", "group", "yang", "member"),
-		expected: []object{{Type: "group", ID: "yin"}, {Type: "group", ID: "yang"}},
-	},
-	{name: "groups where yin_user is a member", search: graph("group", "", "member", "user", "yin_user", ""),
-		expected: []object{{Type: "group", ID: "yin"}, {Type: "group", ID: "yang"}},
-	},
-	{name: "folders owned by f1_owner", search: graph("folder", "", "owner", "user", "f1_owner", ""),
-		expected: []object{{Type: "folder", ID: "folder1"}},
-	},
-	{name: "folders where members of f1_viewers are viewers ", search: graph("folder", "", "viewer", "group", "f1_viewers", "member"),
-		expected: []object{{Type: "folder", ID: "folder1"}},
-	},
-	{name: "docs where members of d1_subviewers are viewers", search: graph("doc", "", "viewer", "group", "d1_subviewers", "member"),
-		expected: []object{{Type: "doc", ID: "doc1"}},
-	},
-	{name: "groups where f1_viewer is a member", search: graph("group", "", "member", "user", "f1_viewer", ""),
-		expected: []object{{Type: "group", ID: "f1_viewers"}},
-	},
-	{name: "folders where folder1 is parent", search: graph("folder", "", "parent", "folder", "folder1", ""),
-		expected: []object{{Type: "folder", ID: "folder2"}},
-	},
-	{name: "docs where folder1 is parent", search: graph("doc", "", "parent", "folder", "folder1", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
-	},
-	{name: "docs where d1_owner is owner", search: graph("doc", "", "owner", "user", "d1_owner", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}},
-	},
-	{name: "docs where members of d1_viewers are viewers", search: graph("doc", "", "viewer", "group", "d1_viewers", "member"),
-		expected: []object{{Type: "doc", ID: "doc1"}},
-	},
-	{name: "docs where user1 is viewer", search: graph("doc", "", "viewer", "user", "user1", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
-	},
-	{name: "docs where f1_owner is viewer", search: graph("doc", "", "viewer", "user", "f1_owner", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
-	},
-	{name: "groups where user2 is a member", search: graph("group", "", "member", "user", "user2", ""),
-		expected: []object{{Type: "group", ID: "d1_viewers"}},
-	},
-	{name: "docs where f1_owner is viewer", search: graph("doc", "", "viewer", "user", "f1_owner", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
-	},
-	{name: "docs where every user is viewer", search: graph("doc", "", "viewer", "user", "*", ""),
-		expected: []object{{Type: "doc", ID: "doc2"}},
-	},
-	{name: "docs where user2 is viewer", search: graph("doc", "", "viewer", "user", "user2", ""),
-		expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
-	},
-	{name: "groups where members of d1_subviewers are members", search: graph("group", "", "member", "group", "d1_subviewers", "member"),
-		expected: []object{{Type: "group", ID: "d1_viewers"}},
-	},
-	{name: "groups where user3 is a member", search: graph("group", "", "member", "user", "user3", ""),
-		expected: []object{{Type: "group", ID: "d1_subviewers"}, {Type: "group", ID: "d1_viewers"}},
-	},
+	{"group:?#member@group:leaf#member", []object{{"group", "branch"}, {"group", "trunk"}, {"group", "root"}}},
+	{"group:?#guest@group:leaf#member", []object{}},
+	{"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
+	{"group:?#member@group:yang#member", []object{{"group", "yin"}, {"group", "yang"}}},
+	{"group:?#member@user:yin_user", []object{{"group", "yin"}, {"group", "yang"}}},
+	{"folder:?#owner@user:f1_owner", []object{{"folder", "folder1"}}},
+	{"folder:?#viewer@group:f1_viewers#member", []object{{"folder", "folder1"}}},
+	{"doc:?#viewer@group:d1_subviewers#member", []object{{"doc", "doc1"}}},
+	{"group:?#member@user:f1_viewer", []object{{"group", "f1_viewers"}}},
+	{"folder:?#parent@folder:folder1", []object{{"folder", "folder2"}}},
+	{"doc:?#parent@folder:folder1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#owner@user:d1_owner", []object{{"doc", "doc1"}}},
+	{"doc:?#viewer@group:d1_viewers#member", []object{{"doc", "doc1"}}},
+	{"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"group:?#member@user:user2", []object{{"group", "d1_viewers"}}},
+	{"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#viewer@user:*", []object{{"doc", "doc2"}}},
+	{"doc:?#viewer@user:user2", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"group:?#member@group:d1_subviewers#member", []object{{"group", "d1_viewers"}}},
+	{"group:?#member@user:user3", []object{{"group", "d1_subviewers"}, {"group", "d1_viewers"}}},
 
 	// Permissions
 	// {name: "folders where f1_owner is_owner", search: graph("folder", "", "is_owner", "user", "f1_owner", ""),
@@ -355,44 +312,44 @@ var searchObjectsTests = []searchTest{
 }
 
 func relations() RelationsReader {
-	return RelationsReader{
-		{"folder", "folder1", "owner", "user", "f1_owner", ""},           // folder:folder1#owner@user:f1_owner
-		{"folder", "folder2", "parent", "folder", "folder1", ""},         // folder:folder2#parent@folder:folder1
-		{"folder", "folder1", "viewer", "group", "f1_viewers", "member"}, // folder:folder1#viewer@group:f1_viewers#member
-		{"group", "f1_viewers", "member", "user", "f1_viewer", ""},       // group:f1_viewers#member@user:f1_viewer
-		{"doc", "doc1", "parent", "folder", "folder1", ""},               // doc:doc1#parent@folder:folder1
-		{"doc", "doc1", "owner", "user", "d1_owner", ""},                 // doc:doc1#owner@user:d1_owner
-		{"doc", "doc1", "viewer", "group", "d1_viewers", "member"},       // doc:doc1#viewer@group:d1_viewers#member
-		{"doc", "doc1", "viewer", "user", "user1", ""},                   // doc:doc1#viewer@user:user1
-		{"doc", "doc1", "viewer", "user", "f1_owner", ""},                // doc:doc1#viewer@user:f1_owner
-		{"group", "d1_viewers", "member", "user", "user2", ""},           // group:d1_viewers#member@user:user2
-		{"doc", "doc2", "parent", "folder", "folder1", ""},               // doc:doc2#parnet@folder:folder1
-		{"doc", "doc2", "viewer", "user", "*", ""},                       // doc:doc2#viewer@user:*
-		{"doc", "doc2", "viewer", "user", "user2", ""},                   // doc:doc2#viewer@user:user2
-		{"doc", "doc3", "parent", "folder", "folder2", ""},               // doc:doc3#parnet@folder:folder2
+	return NewRelationsReader(
+		"folder:folder1#owner@user:f1_owner",
+		"folder:folder2#parent@folder:folder1",
+		"folder:folder1#viewer@group:f1_viewers#member",
+		"group:f1_viewers#member@user:f1_viewer",
+		"doc:doc1#parent@folder:folder1",
+		"doc:doc1#owner@user:d1_owner",
+		"doc:doc1#viewer@group:d1_viewers#member",
+		"doc:doc1#viewer@user:user1",
+		"doc:doc1#viewer@user:f1_owner",
+		"group:d1_viewers#member@user:user2",
+		"doc:doc2#parent@folder:folder1",
+		"doc:doc2#viewer@user:*",
+		"doc:doc2#viewer@user:user2",
+		"doc:doc3#parent@folder:folder2",
 
-		{"group", "d1_viewers", "member", "group", "d1_subviewers", "member"}, // group:d1_viewers#member@group:d1_subviewers#member
-		{"group", "d1_subviewers", "member", "user", "user3", ""},             // group:d1_subviewers#member@user:user3
-		// {"group", "f1_viewers", "member", "group", "f1_subviewers", "member"}, // group:f1_viewers#member@group:f1_subviewers#member
-		// {"group", "f1_subviewers", "member", "user", "user4", ""},             // group:d1_subviewers#member@user:user4
+		"group:d1_viewers#member@group:d1_subviewers#member",
+		"group:d1_subviewers#member@user:user3",
+		// "group:f1_viewers#member@group:f1_subviewers#member",
+		// "group:d1_subviewers#member@user:user4",
 
 		// nested groups
-		{"group", "leaf", "member", "user", "leaf_user", ""},
-		{"group", "branch", "member", "group", "leaf", "member"},
-		{"group", "trunk", "member", "group", "branch", "member"},
-		{"group", "root", "member", "group", "trunk", "member"},
-		{"doc", "doc_tree", "viewer", "group", "root", "member"},
+		"group:leaf#member@user:leaf_user",
+		"group:branch#member@group:leaf#member",
+		"group:trunk#member@group:branch#member",
+		"group:root#member@group:trunk#member",
+		"doc:doc_tree#viewer@group:root#member",
 
 		// mutually recursive groups with users
-		{"group", "yin", "member", "group", "yang", "member"}, // group:yin#member@group:yang#member
-		{"group", "yang", "member", "group", "yin", "member"}, // group:yang#member@group:yin#member
-		{"group", "yin", "member", "user", "yin_user", ""},    // group:yin#member@user:yin_user
-		{"group", "yang", "member", "user", "yang_user", ""},  // group:yang#member@user:yang_user
+		"group:yin#member@group:yang#member",
+		"group:yang#member@group:yin#member",
+		"group:yin#member@user:yin_user",
+		"group:yang#member@user:yang_user",
 
 		// mutually recursive groups with no users
-		{"group", "alpha", "member", "group", "omega", "member"}, // group:alpha#member@group:omega#member
-		{"group", "omega", "member", "group", "alpha", "member"}, // group:omega#member@group:alpha#member
-	}
+		"group:alpha#member@group:omega#member",
+		"group:omega#member@group:alpha#member",
+	)
 }
 
 func graph(
