@@ -1,7 +1,6 @@
 package graph_test
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -64,11 +63,7 @@ func TestCheck(t *testing.T) {
 		{"cycle:loop#can_delete@user:user1", false},
 	}
 
-	r, err := os.Open("./check_test.yaml")
-	assert.NoError(t, err)
-	assert.NotNil(t, r)
-
-	m, err := v3.Load(r)
+	m, err := v3.LoadFile("./check_test.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 

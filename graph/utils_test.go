@@ -56,14 +56,14 @@ func checkReq(expr string) *dsr.CheckRequest {
 func graphReq(expr string) *dsr.GetGraphRequest {
 	rel := ParseRelation(expr)
 	return &dsr.GetGraphRequest{
-		ObjectType:  rel.ObjectType.String(),
-		ObjectId:    rel.ObjectID.String(),
-		Relation:    rel.Relation.String(),
-		SubjectType: rel.SubjectType.String(),
-		SubjectId:   rel.SubjectID.String(),
+		ObjectType:      rel.ObjectType.String(),
+		ObjectId:        rel.ObjectID.String(),
+		Relation:        rel.Relation.String(),
+		SubjectType:     rel.SubjectType.String(),
+		SubjectId:       rel.SubjectID.String(),
 		SubjectRelation: rel.SubjectRelation.String(),
-		Explain:     true,
-		Trace:       true,
+		Explain:         true,
+		Trace:           true,
 	}
 }
 

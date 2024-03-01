@@ -1,7 +1,6 @@
 package graph_test
 
 import (
-	"os"
 	"testing"
 
 	azmgraph "github.com/aserto-dev/azm/graph"
@@ -16,11 +15,7 @@ import (
 func TestSearchObjects(t *testing.T) {
 	rels := relations()
 
-	r, err := os.Open("./check_test.yaml")
-	assert.NoError(t, err)
-	assert.NotNil(t, r)
-
-	m, err := v3.Load(r)
+	m, err := v3.LoadFile("./check_test.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 

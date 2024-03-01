@@ -215,7 +215,7 @@ func TestValidation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
 			assert := stretch.New(tt)
-			m, err := loadManifest(test.manifest)
+			m, err := v3.LoadFile(test.manifest)
 
 			// Log the model for debugging purposes.
 			var b bytes.Buffer
@@ -251,7 +251,7 @@ func TestValidation(t *testing.T) {
 
 func TestResolution(t *testing.T) {
 	assert := stretch.New(t)
-	m, err := loadManifest("./testdata/valid.yaml")
+	m, err := v3.LoadFile("./testdata/valid.yaml")
 	assert.NoError(err)
 
 	// Relations
@@ -278,15 +278,4 @@ func TestResolution(t *testing.T) {
 
 	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Permissions["purge"].SubjectTypes)
 
-}
-
-func loadManifest(path string) (*model.Model, error) {
-	r, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	defer r.Close()
-
-	return v3.Load(r)
 }
