@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -11,7 +12,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var rx = regexp.MustCompile(`^(\w+):([\w\?]+)#(\w+)@(\w+):([\w\?\*]+)(#?\w*)$`)
+func checkReq(expr string) *dsr.CheckRequest {
+	return parseRelation(expr).checkReq()
+}
+
+func graphReq(expr string) *dsr.GetGraphRequest {
+	return parseRelation(expr).graphReq()
+}
+
+func invertedGraphReq(expr string) *dsr.GetGraphRequest {
+	return parseRelation(expr).invert().graphReq()
+}
 
 type relation struct {
 	ObjectType      model.ObjectName
@@ -22,7 +33,9 @@ type relation struct {
 	SubjectRelation model.RelationName
 }
 
-func ParseRelation(r string) *relation {
+var rx = regexp.MustCompile(`^(\w+):([\w\?]+)#(\w+)@(\w+):([\w\?\*]+)(#?\w*)$`)
+
+func parseRelation(r string) *relation {
 	matches := rx.FindStringSubmatch(r)
 	if len(matches) < 7 {
 		return nil
@@ -41,33 +54,7 @@ func ParseRelation(r string) *relation {
 	return rel
 }
 
-func checkReq(expr string) *dsr.CheckRequest {
-	rel := ParseRelation(expr)
-	return &dsr.CheckRequest{
-		ObjectType:  rel.ObjectType.String(),
-		ObjectId:    rel.ObjectID.String(),
-		Relation:    rel.Relation.String(),
-		SubjectType: rel.SubjectType.String(),
-		SubjectId:   rel.SubjectID.String(),
-		Trace:       true,
-	}
-}
-
-func graphReq(expr string) *dsr.GetGraphRequest {
-	rel := ParseRelation(expr)
-	return &dsr.GetGraphRequest{
-		ObjectType:      rel.ObjectType.String(),
-		ObjectId:        rel.ObjectID.String(),
-		Relation:        rel.Relation.String(),
-		SubjectType:     rel.SubjectType.String(),
-		SubjectId:       rel.SubjectID.String(),
-		SubjectRelation: rel.SubjectRelation.String(),
-		Explain:         true,
-		Trace:           true,
-	}
-}
-
-func (r *relation) AsProto() *dsc.Relation {
+func (r *relation) proto() *dsc.Relation {
 	return &dsc.Relation{
 		ObjectType:      r.ObjectType.String(),
 		ObjectId:        r.ObjectID.String(),
@@ -78,11 +65,45 @@ func (r *relation) AsProto() *dsc.Relation {
 	}
 }
 
+func (r *relation) checkReq() *dsr.CheckRequest {
+	return &dsr.CheckRequest{
+		ObjectType:  r.ObjectType.String(),
+		ObjectId:    r.ObjectID.String(),
+		Relation:    r.Relation.String(),
+		SubjectType: r.SubjectType.String(),
+		SubjectId:   r.SubjectID.String(),
+		Trace:       true,
+	}
+}
+
+func (r *relation) graphReq() *dsr.GetGraphRequest {
+	return &dsr.GetGraphRequest{
+		ObjectType:      r.ObjectType.String(),
+		ObjectId:        r.ObjectID.String(),
+		Relation:        r.Relation.String(),
+		SubjectType:     r.SubjectType.String(),
+		SubjectId:       r.SubjectID.String(),
+		SubjectRelation: r.SubjectRelation.String(),
+		Explain:         true,
+		Trace:           true,
+	}
+}
+
+func (r *relation) invert() *relation {
+	return &relation{
+		ObjectType:  r.SubjectType,
+		ObjectID:    r.SubjectID,
+		Relation:    model.RelationName(fmt.Sprintf("%s_%s", r.ObjectType, r.Relation)),
+		SubjectType: r.ObjectType,
+		SubjectID:   r.ObjectID,
+	}
+}
+
 type RelationsReader []*relation
 
 func NewRelationsReader(rels ...string) RelationsReader {
 	return lo.Map(rels, func(rel string, _ int) *relation {
-		r := ParseRelation(rel)
+		r := parseRelation(rel)
 		if r == nil {
 			panic("invalid relation: " + rel)
 		}
@@ -108,7 +129,7 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 	})
 
 	return lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
-		return r.AsProto()
+		return r.proto()
 	}), nil
 }
 
@@ -127,7 +148,7 @@ func TestParseRelation(t *testing.T) {
 		{"obj:oid#rel@subj:?#srel", [6]string{"obj", "oid", "rel", "subj", "", "srel"}},
 	} {
 		t.Run(test.expr, func(tt *testing.T) {
-			r := ParseRelation(test.expr)
+			r := parseRelation(test.expr)
 			assert.NotNil(tt, r)
 			assert.Equal(tt, relation{
 				ObjectType:      model.ObjectName(test.expected[0]),

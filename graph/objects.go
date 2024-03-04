@@ -1,10 +1,11 @@
 package graph
 
 import (
+	"sort"
+
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/samber/lo"
 )
 
@@ -58,7 +59,7 @@ func (s *ObjectSearch) search(params *relation) (searchResults, error) {
 	case searchStatusComplete:
 		return s.memo.visited[*params], nil
 	case searchStatusPending:
-		return nil, derr.ErrCycleDetected
+		return nil, nil
 	case searchStatusNew:
 	}
 
@@ -72,7 +73,7 @@ func (s *ObjectSearch) search(params *relation) (searchResults, error) {
 	if o.HasRelation(params.rel) {
 		results, err = s.searchRelation(params)
 	} else {
-		return nil, derr.ErrNotImplemented.Msg("search on permissions is not supported")
+		results, err = s.searchPermission(params)
 	}
 
 	s.memo.MarkComplete(params, results)
@@ -286,115 +287,118 @@ func (s *ObjectSearch) expandSubjectSet(params *relation) (searchResults, error)
 	return results, nil
 }
 
-// func (f *ObjectSearch) searchPermission(params *relation) (searchResults, error) {
-//     p := f.m.Objects[params.ot].Permissions[params.rel]
+func (s *ObjectSearch) searchPermission(params *relation) (searchResults, error) {
+	p := s.m.Objects[params.ot].Permissions[params.rel]
 
-//     // Check if the subject type can have this permission.
-//     subjTypes := []model.ObjectName{}
-//     if params.srel == "" {
-//         subjTypes = append(subjTypes, params.st)
-//     } else {
-//         subjTypes = f.m.Objects[params.st].Relations[params.srel].SubjectTypes
-//     }
-//     if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
-//         // The subject type cannot have this permission.
-//         return searchResults{}, nil
-//     }
+	// Check if the subject type can have this permission.
+	subjTypes := []model.ObjectName{}
+	if params.srel == "" {
+		subjTypes = append(subjTypes, params.st)
+	} else {
+		subjTypes = s.m.Objects[params.st].Relations[params.srel].SubjectTypes
+	}
+	if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
+		// The subject type cannot have this permission.
+		return searchResults{}, nil
+	}
 
-//     termResults := []searchResults{}
-//     terms := p.Terms()
-//     sort.SliceStable(terms, func(i, j int) bool {
-//         return !terms[i].IsArrow() && terms[j].IsArrow()
-//     })
+	termResults := []searchResults{}
+	terms := p.Terms()
+	sort.SliceStable(terms, func(i, j int) bool {
+		return !terms[i].IsArrow() && terms[j].IsArrow()
+	})
 
-//     for _, term := range terms {
-//         res, err := f.expandPermissionTerms(params, term)
-//         if err != nil {
-//             return searchResults{}, err
-//         }
+	for _, term := range terms {
+		res, err := s.expandPermissionTerms(params, term)
+		if err != nil {
+			return searchResults{}, err
+		}
 
-//         termResults = append(termResults, res)
-//     }
+		termResults = append(termResults, res)
+	}
 
-//     switch {
-//     case p.IsUnion():
-//         return lo.Reduce(termResults, func(agg searchResults, res searchResults, _ int) searchResults {
-//             for rel, paths := range res {
-//                 agg[rel] = append(agg[rel], paths...)
-//             }
-//             return agg
-//         }, searchResults{}), nil
-//     case p.IsIntersection():
-//     case p.IsExclusion():
+	switch {
+	case p.IsUnion():
+		return lo.Reduce(termResults, func(agg searchResults, res searchResults, _ int) searchResults {
+			for rel, paths := range res {
+				agg[rel] = append(agg[rel], paths...)
+			}
+			return agg
+		}, searchResults{}), nil
+	case p.IsIntersection():
+	case p.IsExclusion():
 
-//     }
-//     return nil, nil
-// }
+	}
+	return nil, nil
+}
 
-// func (f *ObjectSearch) expandPermissionTerms(params *relation, term *model.PermissionTerm) (searchResults, error) {
-//     if term.IsArrow() {
-//         return f.expandArrow(params, term)
-//     }
+func (s *ObjectSearch) expandPermissionTerms(params *relation, term *model.PermissionTerm) (searchResults, error) {
+	if term.IsArrow() {
+		return s.expandArrow(params, term)
+	}
 
-//     search := &relation{
-//         ot:   params.ot,
-//         oid:  params.oid,
-//         rel:  term.RelOrPerm,
-//         st:   params.st,
-//         sid:  params.sid,
-//         srel: params.srel,
-//     }
-//     return f.search(search)
-// }
+	search := &relation{
+		ot:   params.ot,
+		oid:  params.oid,
+		rel:  term.RelOrPerm,
+		st:   params.st,
+		sid:  params.sid,
+		srel: params.srel,
+	}
+	return s.search(search)
+}
 
-// func (f *ObjectSearch) expandArrow(params *relation, pt *model.PermissionTerm) (searchResults, error) {
-//     baseRel := f.m.Objects[params.ot].Relations[pt.Base]
-//     results := searchResults{}
+func (s *ObjectSearch) expandArrow(params *relation, pt *model.PermissionTerm) (searchResults, error) {
+	baseRel := s.m.Objects[params.ot].Relations[pt.Base]
+	results := searchResults{}
 
-//     for _, baseRR := range baseRel.Union {
-//         arrowSearch := &relation{
-//             ot:   baseRR.Object,
-//             rel:  pt.RelOrPerm,
-//             st:   params.st,
-//             sid:  params.sid,
-//             srel: params.srel,
-//         }
+	for _, baseRR := range baseRel.Union {
+		arrowSearch := &relation{
+			ot:   baseRR.Object,
+			rel:  pt.RelOrPerm,
+			st:   params.st,
+			sid:  params.sid,
+			srel: params.srel,
+		}
 
-//         arrowResults, err := f.search(arrowSearch)
-//         if err != nil {
-//             return nil, err
-//         }
+		arrowResults, err := s.search(arrowSearch)
+		if err != nil {
+			return nil, err
+		}
 
-//         for arrowResult, arrowPaths := range arrowResults {
-//             baseSearch := &relation{
-//                 ot:  params.ot,
-//                 rel: pt.Base,
-//                 st:  arrowResult.ot,
-//                 sid: arrowResult.oid,
-//             }
-//             baseResults, err := f.search(baseSearch)
-//             if err != nil {
-//                 return nil, err
-//             }
+		for arrowResult, arrowPaths := range arrowResults {
+			baseSearch := &relation{
+				ot:  params.ot,
+				rel: pt.Base,
+				st:  arrowResult.Type,
+				sid: arrowResult.ID,
+			}
+			baseResults, err := s.search(baseSearch)
+			if err != nil {
+				return nil, err
+			}
 
-//             for baseResult, basePaths := range baseResults {
-//                 result := relation{
-//                     ot:   baseResult.ot,
-//                     oid:  baseResult.oid,
-//                     rel:  params.rel,
-//                     st:   params.st,
-//                     sid:  params.sid,
-//                     srel: params.srel,
-//                 }
-//                 var paths []searchPath
-//                 if f.explain {
-//                     paths = append(results[result], append(arrowPaths, basePaths...)...) //nolint: gocritic
-//                 }
+			for baseResult, basePaths := range baseResults {
+				result := object{
+					Type: baseResult.Type,
+					ID:   baseResult.ID,
+				}
+				//     ot:   baseResult.Type,
+				//     oid:  baseResult.ID,
+				//     rel:  params.rel,
+				//     st:   params.st,
+				//     sid:  params.sid,
+				//     srel: params.srel,
+				// }
+				var paths []searchPath
+				if s.explain {
+					paths = append(results[result], append(arrowPaths, basePaths...)...) //nolint: gocritic
+				}
 
-//                 results[result] = paths
-//             }
-//         }
-//     }
+				results[result] = paths
+			}
+		}
+	}
 
-//     return results, nil
-// }
+	return results, nil
+}

@@ -3,11 +3,10 @@ package graph_test
 import (
 	"testing"
 
-	azmgraph "github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
-	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +22,7 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.search, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			objSearch := azmgraph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations)
+			objSearch := graph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
@@ -81,22 +80,12 @@ var searchObjectsTests = []searchTest{
 	{"group:?#member@group:d1_subviewers#member", []object{{"group", "d1_viewers"}}},
 	{"group:?#member@user:user3", []object{{"group", "d1_subviewers"}, {"group", "d1_viewers"}}},
 
-	// Permissions
-	// {name: "folders where f1_owner is_owner", search: graph("folder", "", "is_owner", "user", "f1_owner", ""),
-	//     expected: []object{{Type: "folder", ID: "folder1"}},
-	// },
-	// {name: "folders where f1_owner can_create_file", search: graph("folder", "", "can_create_file", "user", "f1_owner", ""),
-	//     expected: []object{{Type: "folder", ID: "folder1"}},
-	// },
-	// {name: "folders where f1_owner can_read", search: graph("folder", "", "can_read", "user", "f1_owner", ""),
-	//     expected: []object{{Type: "folder", ID: "folder1"}},
-	// },
-	// {name: "folders where f1_owner can_share", search: graph("folder", "", "can_share", "user", "f1_owner", ""),
-	//     expected: []object{{Type: "folder", ID: "folder1"}},
-	// },
-	// {name: "docs where f1_owner can_change_owner", search: graph("doc", "", "can_change_owner", "user", "f1_owner", ""),
-	//     expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}, {Type: "doc", ID: "doc3"}},
-	// },
+	// // Permissions
+	// {"folder:?#is_owner@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
+	// {"folder:?#can_create_file@user:f1_owner", []object{{"folder", "folder1"}}},
+	// {"folder:?#can_read@user:f1_owner", []object{{"folder", "folder1"}}},
+	// {"folder:?#can_share@user:f1_owner", []object{{"folder", "folder1"}}},
+	// {"doc:?#can_change_owner@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	// {name: "docs where f1_owner can_write", search: graph("doc", "", "can_write", "user", "f1_owner", ""),
 	//     expected: []object{{Type: "doc", ID: "doc1"}, {Type: "doc", ID: "doc2"}},
 	// },
@@ -345,22 +334,4 @@ func relations() RelationsReader {
 		"group:alpha#member@group:omega#member",
 		"group:omega#member@group:alpha#member",
 	)
-}
-
-func graph(
-	objectType model.ObjectName, objectID string, // nolint: unparam
-	relation model.RelationName,
-	subjectType model.ObjectName, subjectID string,
-	subjectRelation model.RelationName,
-) *dsr.GetGraphRequest {
-	return &dsr.GetGraphRequest{
-		ObjectType:      objectType.String(),
-		ObjectId:        objectID,
-		Relation:        relation.String(),
-		SubjectType:     subjectType.String(),
-		SubjectId:       subjectID,
-		SubjectRelation: subjectRelation.String(),
-		Explain:         true,
-		Trace:           true,
-	}
 }
