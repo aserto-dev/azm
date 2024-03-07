@@ -28,7 +28,7 @@ func newParser(input string) *AzmParser {
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	p := NewAzmParser(stream)
 	p.AddErrorListener(&antlr.DefaultErrorListener{})
-	if os.Getenv("AZM_DEBUG") == "1" {
+	if os.Getenv("AZM_DIAGNOSTICS") == "1" {
 		p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	}
 	return p
