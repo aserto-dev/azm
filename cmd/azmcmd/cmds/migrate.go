@@ -32,7 +32,7 @@ func (cmd *MigrateCmd) Run(c *Common) error {
 
 	m := migrate.NewMigrator()
 
-	if err := m.Load(clnt.Conn); err != nil {
+	if err := m.Load(clnt); err != nil {
 		return err
 	}
 
