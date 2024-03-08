@@ -15,7 +15,7 @@ union
     ;
 
 intersection
-    :   perm ('&' perm)*
+    :   perm '&' perm ('&' perm)*
     ;
 
 exclusion
