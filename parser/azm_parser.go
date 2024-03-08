@@ -43,39 +43,39 @@ func azmParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 9, 87, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
+		4, 1, 9, 89, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7, 4,
 		2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7, 10,
 		1, 0, 1, 0, 1, 0, 5, 0, 26, 8, 0, 10, 0, 12, 0, 29, 9, 0, 1, 0, 1, 0, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 42, 8, 1, 1, 2,
-		1, 2, 1, 2, 5, 2, 47, 8, 2, 10, 2, 12, 2, 50, 9, 2, 1, 3, 1, 3, 1, 3, 5,
-		3, 55, 8, 3, 10, 3, 12, 3, 58, 9, 3, 1, 4, 1, 4, 1, 4, 1, 4, 1, 5, 1, 5,
-		1, 5, 3, 5, 67, 8, 5, 1, 6, 1, 6, 3, 6, 71, 8, 6, 1, 7, 1, 7, 1, 8, 1,
-		8, 1, 8, 1, 8, 1, 9, 1, 9, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10,
-		0, 0, 11, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 0, 0, 83, 0, 22, 1, 0,
-		0, 0, 2, 41, 1, 0, 0, 0, 4, 43, 1, 0, 0, 0, 6, 51, 1, 0, 0, 0, 8, 59, 1,
-		0, 0, 0, 10, 66, 1, 0, 0, 0, 12, 70, 1, 0, 0, 0, 14, 72, 1, 0, 0, 0, 16,
-		74, 1, 0, 0, 0, 18, 78, 1, 0, 0, 0, 20, 82, 1, 0, 0, 0, 22, 27, 3, 10,
-		5, 0, 23, 24, 5, 1, 0, 0, 24, 26, 3, 10, 5, 0, 25, 23, 1, 0, 0, 0, 26,
-		29, 1, 0, 0, 0, 27, 25, 1, 0, 0, 0, 27, 28, 1, 0, 0, 0, 28, 30, 1, 0, 0,
-		0, 29, 27, 1, 0, 0, 0, 30, 31, 5, 0, 0, 1, 31, 1, 1, 0, 0, 0, 32, 33, 3,
-		4, 2, 0, 33, 34, 5, 0, 0, 1, 34, 42, 1, 0, 0, 0, 35, 36, 3, 6, 3, 0, 36,
-		37, 5, 0, 0, 1, 37, 42, 1, 0, 0, 0, 38, 39, 3, 8, 4, 0, 39, 40, 5, 0, 0,
-		1, 40, 42, 1, 0, 0, 0, 41, 32, 1, 0, 0, 0, 41, 35, 1, 0, 0, 0, 41, 38,
-		1, 0, 0, 0, 42, 3, 1, 0, 0, 0, 43, 48, 3, 12, 6, 0, 44, 45, 5, 1, 0, 0,
-		45, 47, 3, 12, 6, 0, 46, 44, 1, 0, 0, 0, 47, 50, 1, 0, 0, 0, 48, 46, 1,
-		0, 0, 0, 48, 49, 1, 0, 0, 0, 49, 5, 1, 0, 0, 0, 50, 48, 1, 0, 0, 0, 51,
-		56, 3, 12, 6, 0, 52, 53, 5, 2, 0, 0, 53, 55, 3, 12, 6, 0, 54, 52, 1, 0,
-		0, 0, 55, 58, 1, 0, 0, 0, 56, 54, 1, 0, 0, 0, 56, 57, 1, 0, 0, 0, 57, 7,
-		1, 0, 0, 0, 58, 56, 1, 0, 0, 0, 59, 60, 3, 12, 6, 0, 60, 61, 5, 3, 0, 0,
-		61, 62, 3, 12, 6, 0, 62, 9, 1, 0, 0, 0, 63, 67, 3, 14, 7, 0, 64, 67, 3,
-		18, 9, 0, 65, 67, 3, 16, 8, 0, 66, 63, 1, 0, 0, 0, 66, 64, 1, 0, 0, 0,
-		66, 65, 1, 0, 0, 0, 67, 11, 1, 0, 0, 0, 68, 71, 3, 14, 7, 0, 69, 71, 3,
-		20, 10, 0, 70, 68, 1, 0, 0, 0, 70, 69, 1, 0, 0, 0, 71, 13, 1, 0, 0, 0,
-		72, 73, 5, 8, 0, 0, 73, 15, 1, 0, 0, 0, 74, 75, 5, 8, 0, 0, 75, 76, 5,
-		5, 0, 0, 76, 77, 5, 8, 0, 0, 77, 17, 1, 0, 0, 0, 78, 79, 5, 8, 0, 0, 79,
-		80, 5, 6, 0, 0, 80, 81, 5, 7, 0, 0, 81, 19, 1, 0, 0, 0, 82, 83, 5, 8, 0,
-		0, 83, 84, 5, 4, 0, 0, 84, 85, 5, 8, 0, 0, 85, 21, 1, 0, 0, 0, 6, 27, 41,
-		48, 56, 66, 70,
+		1, 2, 1, 2, 5, 2, 47, 8, 2, 10, 2, 12, 2, 50, 9, 2, 1, 3, 1, 3, 1, 3, 1,
+		3, 1, 3, 5, 3, 57, 8, 3, 10, 3, 12, 3, 60, 9, 3, 1, 4, 1, 4, 1, 4, 1, 4,
+		1, 5, 1, 5, 1, 5, 3, 5, 69, 8, 5, 1, 6, 1, 6, 3, 6, 73, 8, 6, 1, 7, 1,
+		7, 1, 8, 1, 8, 1, 8, 1, 8, 1, 9, 1, 9, 1, 9, 1, 9, 1, 10, 1, 10, 1, 10,
+		1, 10, 1, 10, 0, 0, 11, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 0, 0, 85,
+		0, 22, 1, 0, 0, 0, 2, 41, 1, 0, 0, 0, 4, 43, 1, 0, 0, 0, 6, 51, 1, 0, 0,
+		0, 8, 61, 1, 0, 0, 0, 10, 68, 1, 0, 0, 0, 12, 72, 1, 0, 0, 0, 14, 74, 1,
+		0, 0, 0, 16, 76, 1, 0, 0, 0, 18, 80, 1, 0, 0, 0, 20, 84, 1, 0, 0, 0, 22,
+		27, 3, 10, 5, 0, 23, 24, 5, 1, 0, 0, 24, 26, 3, 10, 5, 0, 25, 23, 1, 0,
+		0, 0, 26, 29, 1, 0, 0, 0, 27, 25, 1, 0, 0, 0, 27, 28, 1, 0, 0, 0, 28, 30,
+		1, 0, 0, 0, 29, 27, 1, 0, 0, 0, 30, 31, 5, 0, 0, 1, 31, 1, 1, 0, 0, 0,
+		32, 33, 3, 4, 2, 0, 33, 34, 5, 0, 0, 1, 34, 42, 1, 0, 0, 0, 35, 36, 3,
+		6, 3, 0, 36, 37, 5, 0, 0, 1, 37, 42, 1, 0, 0, 0, 38, 39, 3, 8, 4, 0, 39,
+		40, 5, 0, 0, 1, 40, 42, 1, 0, 0, 0, 41, 32, 1, 0, 0, 0, 41, 35, 1, 0, 0,
+		0, 41, 38, 1, 0, 0, 0, 42, 3, 1, 0, 0, 0, 43, 48, 3, 12, 6, 0, 44, 45,
+		5, 1, 0, 0, 45, 47, 3, 12, 6, 0, 46, 44, 1, 0, 0, 0, 47, 50, 1, 0, 0, 0,
+		48, 46, 1, 0, 0, 0, 48, 49, 1, 0, 0, 0, 49, 5, 1, 0, 0, 0, 50, 48, 1, 0,
+		0, 0, 51, 52, 3, 12, 6, 0, 52, 53, 5, 2, 0, 0, 53, 58, 3, 12, 6, 0, 54,
+		55, 5, 2, 0, 0, 55, 57, 3, 12, 6, 0, 56, 54, 1, 0, 0, 0, 57, 60, 1, 0,
+		0, 0, 58, 56, 1, 0, 0, 0, 58, 59, 1, 0, 0, 0, 59, 7, 1, 0, 0, 0, 60, 58,
+		1, 0, 0, 0, 61, 62, 3, 12, 6, 0, 62, 63, 5, 3, 0, 0, 63, 64, 3, 12, 6,
+		0, 64, 9, 1, 0, 0, 0, 65, 69, 3, 14, 7, 0, 66, 69, 3, 18, 9, 0, 67, 69,
+		3, 16, 8, 0, 68, 65, 1, 0, 0, 0, 68, 66, 1, 0, 0, 0, 68, 67, 1, 0, 0, 0,
+		69, 11, 1, 0, 0, 0, 70, 73, 3, 14, 7, 0, 71, 73, 3, 20, 10, 0, 72, 70,
+		1, 0, 0, 0, 72, 71, 1, 0, 0, 0, 73, 13, 1, 0, 0, 0, 74, 75, 5, 8, 0, 0,
+		75, 15, 1, 0, 0, 0, 76, 77, 5, 8, 0, 0, 77, 78, 5, 5, 0, 0, 78, 79, 5,
+		8, 0, 0, 79, 17, 1, 0, 0, 0, 80, 81, 5, 8, 0, 0, 81, 82, 5, 6, 0, 0, 82,
+		83, 5, 7, 0, 0, 83, 19, 1, 0, 0, 0, 84, 85, 5, 8, 0, 0, 85, 86, 5, 4, 0,
+		0, 86, 87, 5, 8, 0, 0, 87, 21, 1, 0, 0, 0, 6, 27, 41, 48, 58, 68, 72,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -858,7 +858,19 @@ func (p *AzmParser) Intersection() (localctx IIntersectionContext) {
 		p.SetState(51)
 		p.Perm()
 	}
-	p.SetState(56)
+	{
+		p.SetState(52)
+		p.Match(AzmParserT__1)
+		if p.HasError() {
+			// Recognition error - abort rule
+			goto errorExit
+		}
+	}
+	{
+		p.SetState(53)
+		p.Perm()
+	}
+	p.SetState(58)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -867,7 +879,7 @@ func (p *AzmParser) Intersection() (localctx IIntersectionContext) {
 
 	for _la == AzmParserT__1 {
 		{
-			p.SetState(52)
+			p.SetState(54)
 			p.Match(AzmParserT__1)
 			if p.HasError() {
 				// Recognition error - abort rule
@@ -875,11 +887,11 @@ func (p *AzmParser) Intersection() (localctx IIntersectionContext) {
 			}
 		}
 		{
-			p.SetState(53)
+			p.SetState(55)
 			p.Perm()
 		}
 
-		p.SetState(58)
+		p.SetState(60)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -1011,11 +1023,11 @@ func (p *AzmParser) Exclusion() (localctx IExclusionContext) {
 	p.EnterRule(localctx, 8, AzmParserRULE_exclusion)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(59)
+		p.SetState(61)
 		p.Perm()
 	}
 	{
-		p.SetState(60)
+		p.SetState(62)
 		p.Match(AzmParserT__2)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1023,7 +1035,7 @@ func (p *AzmParser) Exclusion() (localctx IExclusionContext) {
 		}
 	}
 	{
-		p.SetState(61)
+		p.SetState(63)
 		p.Perm()
 	}
 
@@ -1229,7 +1241,7 @@ func (s *WildcardRelContext) Accept(visitor antlr.ParseTreeVisitor) interface{} 
 func (p *AzmParser) Rel() (localctx IRelContext) {
 	localctx = NewRelContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 10, AzmParserRULE_rel)
-	p.SetState(66)
+	p.SetState(68)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -1240,7 +1252,7 @@ func (p *AzmParser) Rel() (localctx IRelContext) {
 		localctx = NewDirectRelContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(63)
+			p.SetState(65)
 			p.Direct()
 		}
 
@@ -1248,7 +1260,7 @@ func (p *AzmParser) Rel() (localctx IRelContext) {
 		localctx = NewWildcardRelContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(64)
+			p.SetState(66)
 			p.Wildcard()
 		}
 
@@ -1256,7 +1268,7 @@ func (p *AzmParser) Rel() (localctx IRelContext) {
 		localctx = NewSubjectRelContext(p, localctx)
 		p.EnterOuterAlt(localctx, 3)
 		{
-			p.SetState(65)
+			p.SetState(67)
 			p.Subject()
 		}
 
@@ -1422,7 +1434,7 @@ func (s *DirectPermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 func (p *AzmParser) Perm() (localctx IPermContext) {
 	localctx = NewPermContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 12, AzmParserRULE_perm)
-	p.SetState(70)
+	p.SetState(72)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -1433,7 +1445,7 @@ func (p *AzmParser) Perm() (localctx IPermContext) {
 		localctx = NewDirectPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 1)
 		{
-			p.SetState(68)
+			p.SetState(70)
 			p.Direct()
 		}
 
@@ -1441,7 +1453,7 @@ func (p *AzmParser) Perm() (localctx IPermContext) {
 		localctx = NewArrowPermContext(p, localctx)
 		p.EnterOuterAlt(localctx, 2)
 		{
-			p.SetState(69)
+			p.SetState(71)
 			p.Arrow()
 		}
 
@@ -1535,7 +1547,7 @@ func (p *AzmParser) Direct() (localctx IDirectContext) {
 	p.EnterRule(localctx, 14, AzmParserRULE_direct)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(72)
+		p.SetState(74)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1639,7 +1651,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 	p.EnterRule(localctx, 16, AzmParserRULE_subject)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(74)
+		p.SetState(76)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1647,7 +1659,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 		}
 	}
 	{
-		p.SetState(75)
+		p.SetState(77)
 		p.Match(AzmParserHASH)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1655,7 +1667,7 @@ func (p *AzmParser) Subject() (localctx ISubjectContext) {
 		}
 	}
 	{
-		p.SetState(76)
+		p.SetState(78)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1759,7 +1771,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 	p.EnterRule(localctx, 18, AzmParserRULE_wildcard)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(78)
+		p.SetState(80)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1767,7 +1779,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 		}
 	}
 	{
-		p.SetState(79)
+		p.SetState(81)
 		p.Match(AzmParserCOLON)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1775,7 +1787,7 @@ func (p *AzmParser) Wildcard() (localctx IWildcardContext) {
 		}
 	}
 	{
-		p.SetState(80)
+		p.SetState(82)
 		p.Match(AzmParserASTERISK)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1879,7 +1891,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 	p.EnterRule(localctx, 20, AzmParserRULE_arrow)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(82)
+		p.SetState(84)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1887,7 +1899,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 		}
 	}
 	{
-		p.SetState(83)
+		p.SetState(85)
 		p.Match(AzmParserARROW)
 		if p.HasError() {
 			// Recognition error - abort rule
@@ -1895,7 +1907,7 @@ func (p *AzmParser) Arrow() (localctx IArrowContext) {
 		}
 	}
 	{
-		p.SetState(84)
+		p.SetState(86)
 		p.Match(AzmParserID)
 		if p.HasError() {
 			// Recognition error - abort rule
