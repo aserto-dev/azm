@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"os"
+
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/aserto-dev/azm/model"
 )
@@ -25,6 +27,9 @@ func newParser(input string) *AzmParser {
 	lexer := NewAzmLexer(antlr.NewInputStream(input))
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 	p := NewAzmParser(stream)
-	p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+	p.AddErrorListener(&antlr.DefaultErrorListener{})
+	if os.Getenv("AZM_DIAGNOSTICS") == "1" {
+		p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
+	}
 	return p
 }
