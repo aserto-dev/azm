@@ -22,7 +22,8 @@ func TestSearchSubjects(t *testing.T) {
 		t.Run(test.search, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			subjSearch := azmgraph.NewSubjectSearch(m, graphReq(test.search), rels.GetRelations)
+			subjSearch, err := azmgraph.NewSubjectSearch(m, graphReq(test.search), rels.GetRelations)
+			assert.NoError(err)
 
 			res, err := subjSearch.Search()
 			assert.NoError(err)

@@ -12,29 +12,23 @@ type SubjectSearch struct {
 	graphSearch
 }
 
-func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *SubjectSearch {
+func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) (*SubjectSearch, error) {
+	params := searchParams(req)
+	if err := validate(m, params); err != nil {
+		return nil, err
+	}
+
 	return &SubjectSearch{graphSearch{
-		m: m,
-		params: &relation{
-			ot:   model.ObjectName(req.ObjectType),
-			oid:  ObjectID(req.ObjectId),
-			rel:  model.RelationName(req.Relation),
-			st:   model.ObjectName(req.SubjectType),
-			sid:  ObjectID(req.SubjectId),
-			srel: model.RelationName(req.SubjectRelation),
-		},
+		m:       m,
+		params:  params,
 		getRels: reader,
 		memo:    newSearchMemo(req.Trace),
 		explain: req.Explain,
-	}}
+	}}, nil
 }
 
 func (s *SubjectSearch) Search() (*dsr.GetGraphResponse, error) {
 	resp := &dsr.GetGraphResponse{}
-
-	if err := s.validate(); err != nil {
-		return resp, err
-	}
 
 	res, err := s.search(s.params)
 	if err != nil {

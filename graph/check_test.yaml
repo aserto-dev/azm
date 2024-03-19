@@ -26,8 +26,7 @@ types:
   group:
     relations:
       ### display_name: group#member ###
-      member: user | group#member | group#guest
-      guest: user | group#guest | group#member
+      member: user | group#member
 
   ### display_name: Folder ###
   folder:
@@ -51,12 +50,12 @@ types:
       can_change_owner: owner | parent->is_owner
       can_write: owner | parent->is_owner
       can_read: viewer | can_write | parent->can_read
-      # can_share: can_write & parent->can_share
-      # can_invite: parent->can_read - viewer
+      can_share: can_write & parent->can_share
+      can_invite: parent->can_read - viewer
 
   cycle:
     relations:
       parent: cycle
       owner: user
     permissions:
-      # can_delete: owner & parent->can_delete
+      can_delete: owner & parent->can_delete

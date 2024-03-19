@@ -30,8 +30,7 @@ func TestInversion(t *testing.T) {
 	require.NoError(err)
 
 	t.Logf("inverted model:\n%s\n", b)
-	require.Fail("inverted model")
-
+	// require.Fail("inverted model")
 }
 
 func TestReverseSearch(t *testing.T) {
@@ -66,7 +65,8 @@ func TestReverseSearch(t *testing.T) {
 			assert := req.New(tt)
 
 			req := invertedGraphReq(test.search)
-			s := graph.NewSubjectSearch(rm, req, reverseLookup(rm, rels.GetRelations))
+			s, err := graph.NewSubjectSearch(rm, req, reverseLookup(rm, rels.GetRelations))
+			assert.NoError(err)
 
 			res, err := s.Search()
 			assert.NoError(err)

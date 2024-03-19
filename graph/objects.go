@@ -11,22 +11,71 @@ import (
 )
 
 type ObjectSearch struct {
-	graphSearch
+	subjectSearch  *SubjectSearch
+	wildcardSearch *SubjectSearch
 }
 
-func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) *SubjectSearch {
+func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) (*ObjectSearch, error) {
+	params := searchParams(req)
+	if err := validate(m, params); err != nil {
+		return nil, err
+	}
+
 	im := m.Invert()
 	if err := im.Validate(); err != nil {
+		// TODO: we should persist the inverted model instead of computing it on the fly.
 		panic(err)
 	}
 
-	return &SubjectSearch{graphSearch{
-		m:       im,
-		params:  invertGetGraphRequest(im, req),
-		getRels: invertedRelationReader(reader),
-		memo:    newSearchMemo(req.Trace),
-		explain: req.Explain,
-	}}
+	iParams := invertGetGraphRequest(im, req)
+
+	return &ObjectSearch{
+		subjectSearch: &SubjectSearch{graphSearch{
+			m:       im,
+			params:  iParams,
+			getRels: invertedRelationReader(reader),
+			memo:    newSearchMemo(req.Trace),
+			explain: req.Explain,
+		}},
+		wildcardSearch: &SubjectSearch{graphSearch{
+			m:       im,
+			params:  wildcardParams(iParams),
+			getRels: invertedRelationReader(reader),
+			memo:    newSearchMemo(req.Trace),
+			explain: req.Explain,
+		}},
+	}, nil
+}
+
+func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
+	resp := &dsr.GetGraphResponse{}
+
+	res, err := s.subjectSearch.search(s.subjectSearch.params)
+	if err != nil {
+		return resp, err
+	}
+
+	wildRes, err := s.wildcardSearch.search(s.wildcardSearch.params)
+	if err != nil {
+		return resp, err
+	}
+
+	for obj, paths := range wildRes {
+		res[obj] = append(res[obj], paths...)
+	}
+
+	memo := s.subjectSearch.memo
+	memo.history = append(memo.history, s.wildcardSearch.memo.history...)
+
+	resp.Results = res.Subjects()
+
+	if s.subjectSearch.explain {
+		resp.Explanation = res.Explain()
+	}
+
+	resp.Trace = memo.Trace()
+
+	return resp, nil
 }
 
 func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation {
@@ -46,6 +95,12 @@ func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation 
 	}
 
 	return iReq
+}
+
+func wildcardParams(params *relation) *relation {
+	wildcard := *params
+	wildcard.oid = "*"
+	return &wildcard
 }
 
 func invertedRelationReader(reader RelationReader) RelationReader {

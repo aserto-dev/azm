@@ -35,20 +35,17 @@ func (i *inverter) invert() *Model {
 		}
 
 		for pn, p := range o.Permissions {
-			if !p.IsUnion() {
-				panic("don't know how to invert non-union permissions yet :-(")
-			}
-
+			kind := kindOf(p)
 			ipn := i.iName(on, pn)
 
-			for _, pt := range p.Union {
+			for _, pt := range p.Terms() {
 				switch {
 				case pt.IsArrow():
 					baseRel := o.Relations[pt.Base]
 					itip := i.iName(on, pt.Base)
 
 					for _, subj := range p.SubjectTypes {
-						ip := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
+						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
 						for _, baseSubj := range baseRel.SubjectTypes {
 							ip.AddTerm(&PermissionTerm{Base: i.iName(baseSubj, pt.RelOrPerm), RelOrPerm: itip})
 
@@ -60,7 +57,7 @@ func (i *inverter) invert() *Model {
 
 				case o.HasRelation(pt.RelOrPerm):
 					for _, rr := range o.Relations[pt.RelOrPerm].Union {
-						ip := permissionOrNew(i.im.Objects[rr.Object], ipn, permissionKindUnion)
+						ip := permissionOrNew(i.im.Objects[rr.Object], ipn, kind)
 						ip.AddTerm(&PermissionTerm{RelOrPerm: i.iName(on, pt.RelOrPerm)})
 
 						if rr.IsSubject() {
@@ -68,7 +65,7 @@ func (i *inverter) invert() *Model {
 							ip.AddTerm(term)
 
 							for _, subj := range subjs(i.m.Objects[rr.Object], rr.Relation) {
-								ip = permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
+								ip = permissionOrNew(i.im.Objects[subj], ipn, kind)
 								ip.AddTerm(term)
 							}
 						}
@@ -76,7 +73,7 @@ func (i *inverter) invert() *Model {
 
 				case o.HasPermission(pt.RelOrPerm):
 					for _, subj := range subjs(o, pt.RelOrPerm) {
-						ip := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
+						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
 						ip.AddTerm(&PermissionTerm{RelOrPerm: i.iName(on, pt.RelOrPerm)})
 					}
 				}
@@ -127,6 +124,19 @@ const (
 	permissionKindIntersection
 	permissionKindExclusion
 )
+
+func kindOf(p *Permission) permissionKind {
+	switch {
+	case p.IsUnion():
+		return permissionKindUnion
+	case p.IsIntersection():
+		return permissionKindIntersection
+	case p.IsExclusion():
+		return permissionKindExclusion
+	}
+
+	panic("unknown permission kind")
+}
 
 func relationOrNew(o *Object, rn RelationName) *Relation {
 	r := o.Relations[rn]

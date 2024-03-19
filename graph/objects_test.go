@@ -34,7 +34,8 @@ func TestSearchObjects(t *testing.T) {
 		t.Run(test.search, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			objSearch := graph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations)
+			objSearch, err := graph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations)
+			assert.NoError(err)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
@@ -80,7 +81,6 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#parent@folder:folder1", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 
 	{"group:?#member@group:leaf#member", []object{{"group", "branch"}, {"group", "trunk"}, {"group", "root"}}},
-	{"group:?#guest@group:leaf#member", []object{}},
 	// {"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
 	{"group:?#member@group:yang#member", []object{{"group", "yin"}, {"group", "yang"}}},
 	{"group:?#member@user:user3", []object{{"group", "d1_subviewers"}, {"group", "d1_viewers"}}},
@@ -88,22 +88,22 @@ var searchObjectsTests = []searchTest{
 	// {"doc:?#viewer@group:d1_subviewers#member", []object{{"doc", "doc1"}}},
 
 	// wildcard
-	// {"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#viewer@user:user2", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#viewer@user:*", []object{{"doc", "doc2"}}},
+	{"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#viewer@user:user2", []object{{"doc", "doc2"}}},
+	{"doc:?#viewer@user:*", []object{{"doc", "doc2"}}},
 
 	// // Permissions
 	{"folder:?#is_owner@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_create_file@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_read@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 
-	// {"folder:?#can_share@user:f1_owner", []object{{"folder", "folder1"}}},
+	{"folder:?#can_share@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"doc:?#can_change_owner@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_write@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_read@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
-	// {"doc:?#can_share@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:#can_invite@user:f1_owner", []object{}},
+	{"doc:?#can_share@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
+	{"doc:?#can_invite@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	// {"folder:?#is_owner@group:f1_viewers", []object{}},
 	// {"folder:?#can_create_file@group:f1_viewers", []object{}},
 	// {"folder:?#can_read@group:f1_viewers", []object{{"folder", "folder1"}}},
@@ -117,20 +117,20 @@ var searchObjectsTests = []searchTest{
 	{"folder:?#is_owner@user:f1_viewer", []object{}},
 	{"folder:?#can_create_file@user:f1_viewer", []object{}},
 	{"folder:?#can_read@user:f1_viewer", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
-	// {"folder:?#can_share@user:f1_viewer", []object{}},
+	{"folder:?#can_share@user:f1_viewer", []object{}},
 	{"doc:?#can_change_owner@user:f1_viewer", []object{}},
 	{"doc:?#can_write@user:f1_viewer", []object{}},
 	{"doc:?#can_read@user:f1_viewer", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
-	// {"doc:?#can_share@user:f1_viewer", []object{}},
+	{"doc:?#can_share@user:f1_viewer", []object{}},
 	// {"doc:?#can_invite@user:f1_viewer", []object{{"doc", "doc1"}}},
 	{"folder:?#is_owner@user:d1_owner", []object{}},
 	{"folder:?#can_create_file@user:d1_owner", []object{}},
 	{"folder:?#can_read@user:d1_owner", []object{}},
-	// {"folder:?#can_share@user:d1_owner", []object{}},
+	{"folder:?#can_share@user:d1_owner", []object{}},
 	{"doc:?#can_change_owner@user:d1_owner", []object{{"doc", "doc1"}}},
 	{"doc:?#can_write@user:d1_owner", []object{{"doc", "doc1"}}},
 	// {"doc:?#can_read@user:d1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#can_share@user:d1_owner", []object{}},
+	{"doc:?#can_share@user:d1_owner", []object{}},
 	// {"doc:?#can_invite@user:d1_owner", []object{}},
 	// {"folder:?#is_owner@group:d1_viewers", []object{}},
 	// {"folder:?#can_create_file@group:d1_viewers", []object{}},

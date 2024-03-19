@@ -6,6 +6,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -98,21 +99,33 @@ type graphSearch struct {
 	explain bool
 }
 
-func (s *graphSearch) validate() error {
-	o := s.m.Objects[s.params.ot]
+func validate(m *model.Model, params *relation) error {
+	o := m.Objects[params.ot]
 	if o == nil {
-		return derr.ErrObjectTypeNotFound.Msg(s.params.ot.String())
+		return derr.ErrObjectTypeNotFound.Msg(params.ot.String())
 	}
 
-	if !o.HasRelOrPerm(s.params.rel) {
-		return derr.ErrRelationNotFound.Msg(s.params.rel.String())
+	if !o.HasRelOrPerm(params.rel) {
+		return derr.ErrRelationNotFound.Msg(params.rel.String())
 	}
 
-	if _, ok := s.m.Objects[s.params.st]; !ok {
-		return derr.ErrObjectTypeNotFound.Msg(s.params.st.String())
+	if _, ok := m.Objects[params.st]; !ok {
+		return derr.ErrObjectTypeNotFound.Msg(params.st.String())
 	}
 
 	return nil
+}
+
+func searchParams(req *dsr.GetGraphRequest) *relation {
+	return &relation{
+		ot:   model.ObjectName(req.ObjectType),
+		oid:  ObjectID(req.ObjectId),
+		rel:  model.RelationName(req.Relation),
+		st:   model.ObjectName(req.SubjectType),
+		sid:  ObjectID(req.SubjectId),
+		srel: model.RelationName(req.SubjectRelation),
+	}
+
 }
 
 type searchCall struct {

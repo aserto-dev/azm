@@ -21,11 +21,20 @@ type graphSearch interface {
 }
 
 func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReader) (*dsr.GetGraphResponse, error) {
-	var search graphSearch
+	var (
+		search graphSearch
+		err    error
+	)
+
 	if req.ObjectId == "" {
-		search = graph.NewObjectSearch(c.model, req, relReader)
+		search, err = graph.NewObjectSearch(c.model, req, relReader)
 	} else {
-		search = graph.NewSubjectSearch(c.model, req, relReader)
+		search, err = graph.NewSubjectSearch(c.model, req, relReader)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	return search.Search()
 }
