@@ -192,14 +192,13 @@ func (m *Model) resolveRelation(r *Relation, seen relSet) []ObjectName {
 
 	subjectTypes := set.NewSet[ObjectName]()
 	for _, rr := range r.Union {
-		switch {
-		case rr.IsSubject():
+		subjectTypes.Add(rr.Object)
+
+		if rr.IsSubject() {
 			if !seen.Contains(*rr) {
 				seen.Add(*rr)
 				subjectTypes.Append(m.resolveRelation(m.Objects[rr.Object].Relations[rr.Relation], seen)...)
 			}
-		default:
-			subjectTypes.Add(rr.Object)
 		}
 	}
 	return subjectTypes.ToSlice()

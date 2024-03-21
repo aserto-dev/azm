@@ -70,6 +70,7 @@ type searchTest struct {
 
 var searchObjectsTests = []searchTest{
 	// Relations
+	// {"doc:?#viewer@user:f1_viewer", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"folder:?#owner@user:f1_owner", []object{{"folder", "folder1"}}},
 	{"folder:?#viewer@group:f1_viewers#member", []object{{"folder", "folder1"}}},
 	{"group:?#member@user:user2", []object{{"group", "d1_viewers"}}},
@@ -90,7 +91,7 @@ var searchObjectsTests = []searchTest{
 	// wildcard
 	{"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	{"doc:?#viewer@user:user2", []object{{"doc", "doc2"}}},
+	{"doc:?#viewer@user:user2", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#viewer@user:*", []object{{"doc", "doc2"}}},
 
 	// // Permissions
@@ -103,7 +104,7 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#can_write@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_read@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_share@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
-	{"doc:?#can_invite@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
+	{"doc:?#can_invite@user:f1_owner", []object{{"doc", "doc2"}, {"doc", "doc3"}}},
 	// {"folder:?#is_owner@group:f1_viewers", []object{}},
 	// {"folder:?#can_create_file@group:f1_viewers", []object{}},
 	// {"folder:?#can_read@group:f1_viewers", []object{{"folder", "folder1"}}},

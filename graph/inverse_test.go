@@ -121,7 +121,6 @@ func manifest(m *model.Model) (*v3.Manifest, error) {
 					case p.IsExclusion():
 						terms = []*model.PermissionTerm{p.Exclusion.Include, p.Exclusion.Exclude}
 						operator = " - "
-
 					}
 
 					return name, strings.Join(lo.Map(terms, func(pt *model.PermissionTerm, _ int) string {
