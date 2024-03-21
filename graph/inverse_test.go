@@ -23,14 +23,12 @@ func TestInversion(t *testing.T) {
 	im := m.Invert()
 	require.NotNil(im)
 
-	mnfst, err := manifest(im)
-	require.NoError(err)
+	mnfst := manifest(im)
 
 	b, err := yaml.Marshal(mnfst)
 	require.NoError(err)
 
 	t.Logf("inverted model:\n%s\n", b)
-	// require.Fail("inverted model")
 }
 
 func TestReverseSearch(t *testing.T) {
@@ -64,14 +62,14 @@ func TestReverseSearch(t *testing.T) {
 		t.Run(test.search, func(tt *testing.T) {
 			assert := req.New(tt)
 
-			req := invertedGraphReq(test.search)
-			s, err := graph.NewSubjectSearch(rm, req, reverseLookup(rm, rels.GetRelations))
+			request := invertedGraphReq(test.search)
+			s, err := graph.NewSubjectSearch(rm, request, reverseLookup(rm, rels.GetRelations))
 			assert.NoError(err)
 
 			res, err := s.Search()
 			assert.NoError(err)
 
-			tt.Logf("request: +%v\n", req)
+			tt.Logf("request: +%v\n", request)
 			tt.Logf("explanation: +%v\n", res.Explanation)
 			tt.Logf("trace: +%v\n", res.Trace)
 
@@ -92,7 +90,7 @@ func TestReverseSearch(t *testing.T) {
 
 }
 
-func manifest(m *model.Model) (*v3.Manifest, error) {
+func manifest(m *model.Model) *v3.Manifest {
 	mnfst := v3.Manifest{
 		ModelInfo: &v3.ModelInfo{Version: v3.SchemaVersion(v3.SupportedSchemaVersion)},
 		ObjectTypes: lo.MapEntries(m.Objects, func(on model.ObjectName, o *model.Object) (v3.ObjectTypeName, *v3.ObjectType) {
@@ -131,7 +129,7 @@ func manifest(m *model.Model) (*v3.Manifest, error) {
 		}),
 	}
 
-	return &mnfst, nil
+	return &mnfst
 }
 
 var reverseSearchTests = []searchTest{

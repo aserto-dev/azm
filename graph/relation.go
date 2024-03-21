@@ -31,31 +31,12 @@ func relationFromProto(rel *dsc.Relation) *relation {
 	}
 }
 
-// converts a relation to a dsc.Relation.
-func (p *relation) toProto() *dsc.Relation {
-	return &dsc.Relation{
-		ObjectType:      p.ot.String(),
-		ObjectId:        p.oid.String(),
-		Relation:        p.rel.String(),
-		SubjectType:     p.st.String(),
-		SubjectId:       p.sid.String(),
-		SubjectRelation: p.srel.String(),
-	}
-}
-
 func (p *relation) String() string {
 	str := fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, displayID(p.oid), p.rel, p.st, displayID(p.sid))
 	if p.srel != "" {
 		str += fmt.Sprintf("#%s", p.srel)
 	}
 	return str
-}
-
-func (p *relation) object() *object {
-	return &object{
-		Type: p.ot,
-		ID:   p.oid,
-	}
 }
 
 func (p *relation) subject() *object {

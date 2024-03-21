@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aserto-dev/azm/model"
@@ -82,16 +81,17 @@ func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation 
 	iReq := &relation{
 		ot:  model.ObjectName(req.SubjectType),
 		oid: ObjectID(req.SubjectId),
-		rel: model.RelationName(fmt.Sprintf("%s_%s", req.ObjectType, req.Relation)),
+		rel: model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation)),
 		st:  model.ObjectName(req.ObjectType),
 		sid: ObjectID(req.ObjectId),
 		// TODO: what do we do with subject relations
 		// srel: model.RelationName(req.SubjectRelation),
 	}
 
-	o := im.Objects[model.ObjectName(iReq.ot)]
-	if o.HasRelation(model.RelationName(iReq.rel)) && o.HasPermission(model.RelationName("r_"+iReq.rel)) {
-		iReq.rel = model.RelationName("r_" + iReq.rel)
+	o := im.Objects[iReq.ot]
+	srPerm := model.SubjectRelationPrefix + iReq.rel
+	if o.HasRelation(iReq.rel) && o.HasPermission(srPerm) {
+		iReq.rel = srPerm
 	}
 
 	return iReq
@@ -105,7 +105,7 @@ func wildcardParams(params *relation) *relation {
 
 func invertedRelationReader(reader RelationReader) RelationReader {
 	return func(r *dsc.Relation) ([]*dsc.Relation, error) {
-		x := strings.SplitN(r.Relation, "_", 2)
+		x := strings.SplitN(r.Relation, model.ObjectNameSeparator, 2)
 
 		rr := &dsc.Relation{
 			ObjectType:  r.SubjectType,

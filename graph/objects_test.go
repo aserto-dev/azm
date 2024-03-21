@@ -22,8 +22,7 @@ func TestSearchObjects(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(m)
 
-	mnfst, err := manifest(m.Invert())
-	require.NoError(err)
+	mnfst := manifest(m.Invert())
 
 	b, err := yaml.Marshal(mnfst)
 	require.NoError(err)

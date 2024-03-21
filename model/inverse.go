@@ -6,6 +6,11 @@ import (
 	"github.com/samber/lo"
 )
 
+const (
+	ObjectNameSeparator   = "^"
+	SubjectRelationPrefix = "$"
+)
+
 func (m *Model) Invert() *Model {
 	return newInverter(m).invert()
 }
@@ -29,6 +34,9 @@ func newInverter(m *Model) *inverter {
 }
 
 func (i *inverter) invert() *Model {
+	// invert all relations before inverting permissions.
+	// this is necessary to create synthetic permissions for subject relations.
+	// these permissions are stored in the substitution map (i.subst) and used in inverted permissions.
 	for on, o := range i.m.Objects {
 		for rn, r := range o.Relations {
 			i.invertRelation(on, rn, r)
@@ -38,7 +46,7 @@ func (i *inverter) invert() *Model {
 	for on, o := range i.m.Objects {
 		for pn, p := range o.Permissions {
 			kind := kindOf(p)
-			ipn := irel(on, pn)
+			ipn := InverseRelation(on, pn)
 
 			for _, pt := range p.Terms() {
 				switch {
@@ -62,16 +70,6 @@ func (i *inverter) invert() *Model {
 					for _, rr := range r.Union {
 						ip := permissionOrNew(i.im.Objects[rr.Object], ipn, kind)
 						ip.AddTerm(&PermissionTerm{RelOrPerm: i.irelSub(on, pt.RelOrPerm)})
-
-						// if rr.IsSubject() {
-						//     term := &PermissionTerm{Base: i.irelSub(rr.Object, rr.Relation), RelOrPerm: ipn}
-						//     ip.AddTerm(term)
-
-						//     for _, subj := range subjs(i.m.Objects[rr.Object], rr.Relation) {
-						//         ip = permissionOrNew(i.im.Objects[subj], ipn, kind)
-						//         ip.AddTerm(term)
-						//     }
-						// }
 					}
 
 				case o.HasPermission(pt.RelOrPerm):
@@ -89,7 +87,7 @@ func (i *inverter) invert() *Model {
 
 func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 	for _, rr := range r.Union {
-		irn := irel(on, rn)
+		irn := InverseRelation(on, rn)
 		i.im.Objects[rr.Object].Relations[irn] = &Relation{Union: []*RelationRef{{Object: on}}}
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
@@ -99,7 +97,7 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 			for _, subj := range subjects {
 				p := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
 				p.AddTerm(&PermissionTerm{RelOrPerm: irn})
-				rel := irel(rr.Object, rr.Relation)
+				rel := InverseRelation(rr.Object, rr.Relation)
 				base := lo.Ternary(rr.Object == on, rel, i.sub(rel))
 				p.AddTerm(&PermissionTerm{Base: base, RelOrPerm: ipn})
 				i.addSubstitution(irn, ipn)
@@ -109,7 +107,7 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 }
 
 func (i *inverter) irelSub(on ObjectName, rn RelationName) RelationName {
-	return i.sub(irel(on, rn))
+	return i.sub(InverseRelation(on, rn))
 }
 
 func (i *inverter) sub(rn RelationName) RelationName {
@@ -179,12 +177,12 @@ func permissionOrNew(o *Object, pn RelationName, kind permissionKind) *Permissio
 	return p
 }
 
-func irel(on ObjectName, rn RelationName) RelationName {
-	return RelationName(fmt.Sprintf("%s_%s", on, rn))
+func InverseRelation(on ObjectName, rn RelationName) RelationName {
+	return RelationName(fmt.Sprintf("%s%s%s", on, ObjectNameSeparator, rn))
 }
 
 func rsrel(on ObjectName, rn RelationName) RelationName {
-	return RelationName(fmt.Sprintf("r_%s", irel(on, rn)))
+	return RelationName(fmt.Sprintf("%s%s", SubjectRelationPrefix, InverseRelation(on, rn)))
 }
 
 func subjs(o *Object, rn RelationName) []ObjectName {
