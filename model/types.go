@@ -66,8 +66,13 @@ func (o *Object) SubjectTypes(name RelationName) []ObjectName {
 }
 
 type Relation struct {
-	Union        []*RelationRef `json:"union,omitempty"`
-	SubjectTypes []ObjectName   `json:"subject_types,omitempty"`
+	Union             []*RelationRef `json:"union,omitempty"`
+	SubjectTypes      []ObjectName   `json:"subject_types,omitempty"`
+	IntermediateTypes []ObjectName   `json:"intermediate_types,omitempty"`
+}
+
+func (r *Relation) AllTypes() []ObjectName {
+	return append(r.SubjectTypes, r.IntermediateTypes...)
 }
 
 func (r *Relation) AddRef(rr *RelationRef) {

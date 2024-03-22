@@ -56,7 +56,7 @@ func (i *inverter) invert() *Model {
 
 					for _, subj := range p.SubjectTypes {
 						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
-						for _, baseSubj := range baseRel.SubjectTypes {
+						for _, baseSubj := range baseRel.AllTypes() {
 							ip.AddTerm(&PermissionTerm{Base: i.irelSub(baseSubj, pt.RelOrPerm), RelOrPerm: itip})
 
 							// create a subject relation to expand the recursive permission
@@ -92,7 +92,7 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
 			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
-			subjects := lo.Uniq(append([]ObjectName{rr.Object}, srel.SubjectTypes...))
+			subjects := lo.Uniq(append(srel.AllTypes(), rr.Object))
 			ipn := rsrel(on, rn)
 			for _, subj := range subjects {
 				p := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
@@ -187,7 +187,7 @@ func rsrel(on ObjectName, rn RelationName) RelationName {
 
 func subjs(o *Object, rn RelationName) []ObjectName {
 	if o.HasRelation(rn) {
-		return o.Relations[rn].SubjectTypes
+		return o.Relations[rn].AllTypes()
 	}
 
 	return o.Permissions[rn].SubjectTypes

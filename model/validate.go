@@ -169,7 +169,7 @@ func (m *Model) resolveRelations() error {
 	for on, o := range m.Objects {
 		for rn, r := range o.Relations {
 			seen := set.NewSet(RelationRef{Object: on, Relation: rn})
-			subs := m.resolveRelation(r, seen)
+			subs, intermediates := m.resolveRelation(r, seen)
 			switch len(subs) {
 			case 0:
 				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
@@ -177,6 +177,7 @@ func (m *Model) resolveRelations() error {
 				)
 			default:
 				r.SubjectTypes = subs
+				r.IntermediateTypes = intermediates
 			}
 		}
 	}
@@ -184,24 +185,28 @@ func (m *Model) resolveRelations() error {
 	return errs
 }
 
-func (m *Model) resolveRelation(r *Relation, seen relSet) []ObjectName {
+func (m *Model) resolveRelation(r *Relation, seen relSet) ([]ObjectName, []ObjectName) {
 	if len(r.SubjectTypes) > 0 {
 		// already resolved
-		return r.SubjectTypes
+		return r.SubjectTypes, r.IntermediateTypes
 	}
 
 	subjectTypes := set.NewSet[ObjectName]()
+	intermediateTypes := set.NewSet[ObjectName]()
 	for _, rr := range r.Union {
-		subjectTypes.Add(rr.Object)
-
 		if rr.IsSubject() {
+			intermediateTypes.Add(rr.Object)
 			if !seen.Contains(*rr) {
 				seen.Add(*rr)
-				subjectTypes.Append(m.resolveRelation(m.Objects[rr.Object].Relations[rr.Relation], seen)...)
+				subs, intermediates := m.resolveRelation(m.Objects[rr.Object].Relations[rr.Relation], seen)
+				subjectTypes.Append(subs...)
+				intermediateTypes.Append(intermediates...)
 			}
+		} else {
+			subjectTypes.Add(rr.Object)
 		}
 	}
-	return subjectTypes.ToSlice()
+	return subjectTypes.ToSlice(), intermediateTypes.ToSlice()
 }
 
 func (m *Model) resolvePermissions() error {

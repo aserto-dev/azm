@@ -15,7 +15,7 @@ import (
 )
 
 var m1 = model.Model{
-	Version: 2,
+	Version: 3,
 	Objects: map[model.ObjectName]*model.Object{
 		model.ObjectName("user"): {},
 		model.ObjectName("group"): {
