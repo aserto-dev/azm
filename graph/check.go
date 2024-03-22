@@ -1,4 +1,4 @@
-package check
+package graph
 
 import (
 	"github.com/aserto-dev/azm/model"
@@ -17,7 +17,7 @@ type Checker struct {
 	memo *checkMemo
 }
 
-func New(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
+func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
 	return &Checker{
 		m: m,
 		params: &relation{
@@ -42,30 +42,35 @@ func (c *Checker) Check() (bool, error) {
 		return false, derr.ErrRelationNotFound.Msg(c.params.rel.String())
 	}
 
-	return c.check(c.params)
+	status, err := c.check(c.params)
+	if err != nil {
+		return false, err
+	}
+
+	return status == checkStatusTrue, nil
 }
 
 func (c *Checker) Trace() []string {
 	return c.memo.Trace()
 }
 
-func (c *Checker) check(params *relation) (bool, error) {
+func (c *Checker) check(params *relation) (checkStatus, error) {
 	prior := c.memo.MarkVisited(params)
 	switch prior {
 	case checkStatusPending:
 		// We have a cycle.
-		return false, nil
+		return prior, nil
 	case checkStatusTrue, checkStatusFalse:
 		// We already checked this relation.
-		return prior == checkStatusTrue, nil
-	case checkStatusUnknown:
+		return prior, nil
+	case checkStatusNew:
 		// this is the first time we're running this check.
 	}
 
 	o := c.m.Objects[params.ot]
 
 	var (
-		result bool
+		result checkStatus
 		err    error
 	)
 	if o.HasRelation(params.rel) {
@@ -79,7 +84,7 @@ func (c *Checker) check(params *relation) (bool, error) {
 	return result, err
 }
 
-func (c *Checker) checkRelation(params *relation) (bool, error) {
+func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
 	steps := c.m.StepRelation(r, params.st)
 
@@ -100,49 +105,50 @@ func (c *Checker) checkRelation(params *relation) (bool, error) {
 
 		rels, err := c.getRels(req)
 		if err != nil {
-			return false, err
+			return checkStatusFalse, err
 		}
 
 		switch {
 		case step.IsDirect():
 			for _, rel := range rels {
 				if rel.SubjectId == params.sid.String() {
-					return true, nil
+					return checkStatusTrue, nil
 				}
 			}
 
 		case step.IsWildcard():
 			if len(rels) > 0 {
 				// We have a wildcard match.
-				return true, nil
+				return checkStatusTrue, nil
 			}
 
 		case step.IsSubject():
 			for _, rel := range rels {
-				if ok, err := c.check(&relation{
+				if status, err := c.check(&relation{
 					ot:  step.Object,
 					oid: ObjectID(rel.SubjectId),
 					rel: step.Relation,
 					st:  params.st,
 					sid: params.sid,
 				}); err != nil {
-					return false, err
-				} else if ok {
-					return true, nil
+					return checkStatusFalse, err
+				} else if status == checkStatusTrue {
+					return status, nil
 				}
+				// TODO: handle cycles?
 			}
 		}
 	}
 
-	return false, nil
+	return checkStatusFalse, nil
 }
 
-func (c *Checker) checkPermission(params *relation) (bool, error) {
+func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 	p := c.m.Objects[params.ot].Permissions[params.rel]
 
 	if !lo.Contains(p.SubjectTypes, params.st) {
 		// The subject type cannot have this permission.
-		return false, nil
+		return checkStatusFalse, nil
 	}
 
 	terms := p.Terms()
@@ -151,7 +157,7 @@ func (c *Checker) checkPermission(params *relation) (bool, error) {
 		// expand arrow operators.
 		expanded, err := c.expandTerm(pt, params)
 		if err != nil {
-			return false, err
+			return checkStatusFalse, err
 		}
 		termChecks = append(termChecks, expanded)
 	}
@@ -165,21 +171,21 @@ func (c *Checker) checkPermission(params *relation) (bool, error) {
 		include, err := c.checkAny(termChecks[:1])
 		switch {
 		case err != nil:
-			return false, err
-		case !include:
+			return checkStatusFalse, err
+		case include == checkStatusFalse:
 			// Short-circuit: The include term is false, so the permission is false.
-			return false, nil
+			return checkStatusFalse, nil
 		}
 
 		exclude, err := c.checkAny(termChecks[1:])
 		if err != nil {
-			return false, err
+			return checkStatusFalse, err
 		}
 
-		return !exclude, nil
+		return lo.Ternary(exclude == checkStatusFalse, checkStatusTrue, checkStatusFalse), nil
 	}
 
-	return false, derr.ErrUnknown.Msg("unknown permission operator")
+	return checkStatusFalse, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
 func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relations, error) {
@@ -210,47 +216,65 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 	return relations{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid}}, nil
 }
 
-func (c *Checker) checkAny(checks []relations) (bool, error) {
+func (c *Checker) checkAny(checks []relations) (checkStatus, error) {
+	result := checkStatusPending
+
 	for _, check := range checks {
 		var (
-			ok  bool
-			err error
+			status checkStatus
+			err    error
 		)
 
 		switch len(check) {
 		case 0:
-			ok, err = false, nil
+			status, err = checkStatusFalse, nil
 		case 1:
-			ok, err = c.check(check[0])
+			status, err = c.check(check[0])
 		default:
-			ok, err = c.checkAny(lo.Map(check, func(params *relation, _ int) relations {
+			status, err = c.checkAny(lo.Map(check, func(params *relation, _ int) relations {
 				return relations{params}
 			}))
 		}
 
 		if err != nil {
-			return false, err
+			return checkStatusFalse, err
 		}
 
-		if ok {
-			return true, nil
+		switch status {
+		case checkStatusTrue:
+			return status, nil
+		case checkStatusFalse:
+			result = checkStatusFalse
+		case checkStatusNew:
+			panic("check can never return checkStatusNew")
+		case checkStatusPending:
 		}
 	}
 
-	return false, nil
+	return result, nil
 }
 
-func (c *Checker) checkAll(checks []relations) (bool, error) {
+func (c *Checker) checkAll(checks []relations) (checkStatus, error) {
+	result := checkStatusPending
+
 	for _, check := range checks {
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
 		// then a match on any of them is sufficient.
-		ok, err := c.checkAny([]relations{check})
+		status, err := c.checkAny([]relations{check})
 		if err != nil {
-			return false, err
+			return checkStatusFalse, err
 		}
-		if !ok {
-			return false, nil
+
+		switch status {
+		case checkStatusFalse:
+			return status, nil
+		case checkStatusTrue:
+			result = checkStatusTrue
+		case checkStatusNew:
+			panic("check can never return checkStatusNew")
+		case checkStatusPending:
 		}
 	}
-	return true, nil
+
+	return result, nil
 }

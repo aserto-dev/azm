@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"github.com/aserto-dev/azm/internal/lox"
 	"github.com/aserto-dev/azm/model"
 	stts "github.com/aserto-dev/azm/stats"
 	"github.com/aserto-dev/go-directory/pkg/derr"
@@ -82,7 +83,7 @@ func calculateDelta(from, sub *model.Model) delta {
 				continue
 			}
 
-			relDiff, _ := DifferencePtr(rel.Union, sub.Objects[objName].Relations[relname].Union)
+			relDiff, _ := lox.DifferencePtr(rel.Union, sub.Objects[objName].Relations[relname].Union)
 			if len(relDiff) > 0 {
 				relsDiff[relname] = lo.Associate(relDiff, func(r *model.RelationRef) (model.RelationRef, struct{}) { return *r, struct{}{} })
 			}
@@ -101,34 +102,3 @@ type (
 	dRelations map[RelationName]dRelation
 	dRelation  map[model.RelationRef]struct{}
 )
-
-// Similar to lo.Difference but for slices of pointers.
-func DifferencePtr[T comparable](list1, list2 []*T) ([]*T, []*T) {
-	left := []*T{}
-	right := []*T{}
-
-	seenLeft := map[T]struct{}{}
-	seenRight := map[T]struct{}{}
-
-	for _, elem := range list1 {
-		seenLeft[*elem] = struct{}{}
-	}
-
-	for _, elem := range list2 {
-		seenRight[*elem] = struct{}{}
-	}
-
-	for _, elem := range list1 {
-		if _, ok := seenRight[*elem]; !ok {
-			left = append(left, elem)
-		}
-	}
-
-	for _, elem := range list2 {
-		if _, ok := seenLeft[*elem]; !ok {
-			right = append(right, elem)
-		}
-	}
-
-	return left, right
-}

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "types": {
     "document": {
       "relations": {
@@ -72,7 +72,8 @@
             { "object": "user" },
             { "object": "group", "relation": "member" }
           ],
-          "subject_types": ["user"]
+          "subject_types": ["user"],
+          "intermediate_types": ["group"]
         }
       }
     },

@@ -30,10 +30,7 @@ func TestManifestUnmarshal(t *testing.T) {
 }
 
 func TestLoadModel(t *testing.T) {
-	r, err := os.Open("./manifest.yaml")
-	require.NoError(t, err)
-
-	m1, err := v3.Load(r)
+	m1, err := v3.LoadFile("./manifest.yaml")
 	require.NoError(t, err)
 	require.NotNil(t, m1)
 
@@ -68,10 +65,7 @@ func TestLoadEmptyManifest(t *testing.T) {
 }
 
 func TestLoadManifestWithNullObject(t *testing.T) {
-	r, err := os.Open("./manifest_empty_user.yaml")
-	require.NoError(t, err)
-
-	m1, err := v3.Load(r)
+	m1, err := v3.LoadFile("./manifest_empty_user.yaml")
 	require.NoError(t, err)
 	require.NotNil(t, m1)
 

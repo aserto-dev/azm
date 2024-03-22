@@ -1,6 +1,10 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/aserto-dev/azm/internal/lox"
+)
 
 type ObjectName Identifier
 type RelationName Identifier
@@ -16,6 +20,13 @@ func (rn RelationName) String() string {
 type Object struct {
 	Relations   map[RelationName]*Relation   `json:"relations,omitempty"`
 	Permissions map[RelationName]*Permission `json:"permissions,omitempty"`
+}
+
+func NewObject() *Object {
+	return &Object{
+		Relations:   map[RelationName]*Relation{},
+		Permissions: map[RelationName]*Permission{},
+	}
 }
 
 func (o *Object) HasRelation(name RelationName) bool {
@@ -37,9 +48,37 @@ func (o *Object) HasRelOrPerm(name RelationName) bool {
 	return o.HasRelation(name) || o.HasPermission(name)
 }
 
+// SubjectTypes returns the list of possible subject types for the given relation or permission.
+func (o *Object) SubjectTypes(name RelationName) []ObjectName {
+	if o == nil {
+		return nil
+	}
+
+	if r := o.Relations[name]; r != nil {
+		return r.SubjectTypes
+	}
+
+	if p := o.Permissions[name]; p != nil {
+		return p.SubjectTypes
+	}
+
+	return nil
+}
+
 type Relation struct {
-	Union        []*RelationRef `json:"union,omitempty"`
-	SubjectTypes []ObjectName   `json:"subject_types,omitempty"`
+	Union             []*RelationRef `json:"union,omitempty"`
+	SubjectTypes      []ObjectName   `json:"subject_types,omitempty"`
+	IntermediateTypes []ObjectName   `json:"intermediate_types,omitempty"`
+}
+
+func (r *Relation) AllTypes() []ObjectName {
+	return append(r.SubjectTypes, r.IntermediateTypes...)
+}
+
+func (r *Relation) AddRef(rr *RelationRef) {
+	if !lox.ContainsPtr(r.Union, rr) {
+		r.Union = append(r.Union, rr)
+	}
 }
 
 type RelationRef struct {
@@ -103,8 +142,8 @@ func (rr *RelationRef) IsSubject() bool {
 }
 
 type Permission struct {
-	Union        []*PermissionTerm    `json:"union,omitempty"`
-	Intersection []*PermissionTerm    `json:"intersection,omitempty"`
+	Union        PermissionTerms      `json:"union,omitempty"`
+	Intersection PermissionTerms      `json:"intersection,omitempty"`
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 
 	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
@@ -137,6 +176,21 @@ func (p *Permission) Terms() []*PermissionTerm {
 	return refs
 }
 
+func (p *Permission) AddTerm(pt *PermissionTerm) {
+	switch {
+	case p.IsUnion() && !p.Union.Contains(pt):
+		p.Union = append(p.Union, pt)
+	case p.IsIntersection() && !p.Intersection.Contains(pt):
+		p.Intersection = append(p.Intersection, pt)
+	case p.IsExclusion():
+		if p.Exclusion.Include == nil {
+			p.Exclusion.Include = pt
+		} else {
+			p.Exclusion.Exclude = pt
+		}
+	}
+}
+
 type PermissionTerm struct {
 	Base      RelationName `json:"base,omitempty"`
 	RelOrPerm RelationName `json:"rel_or_perm"`
@@ -144,8 +198,27 @@ type PermissionTerm struct {
 	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
 }
 
+func (pr *PermissionTerm) String() string {
+	s := string(pr.RelOrPerm)
+	if pr.Base != "" {
+		s = string(pr.Base) + "->" + s
+	}
+	return s
+}
+
 func (pr *PermissionTerm) IsArrow() bool {
 	return pr.Base != ""
+}
+
+type PermissionTerms []*PermissionTerm
+
+func (pts PermissionTerms) Contains(pt *PermissionTerm) bool {
+	for _, t := range pts {
+		if t.Base == pt.Base && t.RelOrPerm == pt.RelOrPerm {
+			return true
+		}
+	}
+	return false
 }
 
 type ExclusionPermission struct {

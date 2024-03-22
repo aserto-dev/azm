@@ -2,6 +2,7 @@ package v3
 
 import (
 	"io"
+	"os"
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/parser"
@@ -58,4 +59,15 @@ func Load(r io.Reader) (*model.Model, error) {
 	}
 
 	return &m, m.Validate()
+}
+
+func LoadFile(path string) (*model.Model, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	return Load(f)
 }

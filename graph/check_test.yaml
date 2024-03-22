@@ -22,12 +22,15 @@ types:
       ### display_name: identity#identifier ###
       identifier: user
 
+  team:
+    relations:
+      mate: user
+
   ### display_name: Group ###
   group:
     relations:
       ### display_name: group#member ###
-      member: user | group#member | group#guest
-      guest: user | group#guest | group#member
+      member: user | group#member | team#mate
 
   ### display_name: Folder ###
   folder:
@@ -48,6 +51,7 @@ types:
       parent: folder
       viewer: user | user:* | group#member
     permissions:
+      can_view: viewer
       can_change_owner: owner | parent->is_owner
       can_write: owner | parent->is_owner
       can_read: viewer | can_write | parent->can_read

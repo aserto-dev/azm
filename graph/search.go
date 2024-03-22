@@ -1,4 +1,4 @@
-package check
+package graph
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -15,71 +16,6 @@ type ObjectID = model.ObjectID
 
 // RelationReader retrieves relations that match the given filter.
 type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
-
-// relation is a comparable representation of a relation. It can be used as a map key.
-type relation struct {
-	ot   model.ObjectName
-	oid  ObjectID
-	rel  model.RelationName
-	st   model.ObjectName
-	sid  ObjectID
-	srel model.RelationName
-}
-
-// converts a dsc.Relation to a relation.
-func relationFromProto(rel *dsc.Relation) *relation {
-	return &relation{
-		ot:   model.ObjectName(rel.ObjectType),
-		oid:  ObjectID(rel.ObjectId),
-		rel:  model.RelationName(rel.Relation),
-		st:   model.ObjectName(rel.SubjectType),
-		sid:  ObjectID(rel.SubjectId),
-		srel: model.RelationName(rel.SubjectRelation),
-	}
-}
-
-func (p *relation) String() string {
-	str := fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, displayID(p.oid), p.rel, p.st, displayID(p.sid))
-	if p.srel != "" {
-		str += fmt.Sprintf("#%s", p.srel)
-	}
-	return str
-}
-
-func displayID(id ObjectID) string {
-	if id == "" {
-		return "?"
-	}
-	return id.String()
-}
-
-// converts a relation to a dsc.Relation.
-func (p *relation) AsRelation() *dsc.Relation {
-	return &dsc.Relation{
-		ObjectType:      p.ot.String(),
-		ObjectId:        p.oid.String(),
-		Relation:        p.rel.String(),
-		SubjectType:     p.st.String(),
-		SubjectId:       p.sid.String(),
-		SubjectRelation: p.srel.String(),
-	}
-}
-
-func (p *relation) Object() *object {
-	return &object{
-		Type: p.ot,
-		ID:   p.oid,
-	}
-}
-
-func (p *relation) Subject() *object {
-	return &object{
-		Type: p.st,
-		ID:   p.sid,
-	}
-}
-
-type relations []*relation
 
 type searchPath relations
 
@@ -135,9 +71,15 @@ func (r searchResults) Explain() *structpb.Struct {
 
 type searchStatus int
 
+const (
+	searchStatusNew searchStatus = iota
+	searchStatusPending
+	searchStatusComplete
+)
+
 func (s searchStatus) String() string {
 	switch s {
-	case searchStatusUnknown:
+	case searchStatusNew:
 		return statusUnknown
 	case searchStatusPending:
 		return statusPending
@@ -148,12 +90,6 @@ func (s searchStatus) String() string {
 	}
 }
 
-const (
-	searchStatusUnknown searchStatus = iota
-	searchStatusPending
-	searchStatusComplete
-)
-
 type graphSearch struct {
 	m       *model.Model
 	params  *relation
@@ -163,21 +99,33 @@ type graphSearch struct {
 	explain bool
 }
 
-func (s *graphSearch) validate() error {
-	o := s.m.Objects[s.params.ot]
+func validate(m *model.Model, params *relation) error {
+	o := m.Objects[params.ot]
 	if o == nil {
-		return derr.ErrObjectTypeNotFound.Msg(s.params.ot.String())
+		return derr.ErrObjectTypeNotFound.Msg(params.ot.String())
 	}
 
-	if !o.HasRelOrPerm(s.params.rel) {
-		return derr.ErrRelationNotFound.Msg(s.params.rel.String())
+	if !o.HasRelOrPerm(params.rel) {
+		return derr.ErrRelationNotFound.Msg(params.rel.String())
 	}
 
-	if _, ok := s.m.Objects[s.params.st]; !ok {
-		return derr.ErrObjectTypeNotFound.Msg(s.params.st.String())
+	if _, ok := m.Objects[params.st]; !ok {
+		return derr.ErrObjectTypeNotFound.Msg(params.st.String())
 	}
 
 	return nil
+}
+
+func searchParams(req *dsr.GetGraphRequest) *relation {
+	return &relation{
+		ot:   model.ObjectName(req.ObjectType),
+		oid:  ObjectID(req.ObjectId),
+		rel:  model.RelationName(req.Relation),
+		st:   model.ObjectName(req.SubjectType),
+		sid:  ObjectID(req.SubjectId),
+		srel: model.RelationName(req.SubjectRelation),
+	}
+
 }
 
 type searchCall struct {
@@ -203,7 +151,7 @@ func (m *searchMemo) MarkVisited(params *relation) searchStatus {
 	case !ok:
 		m.visited[*params] = nil
 		m.trace(params, searchStatusPending)
-		return searchStatusUnknown
+		return searchStatusNew
 	case results == nil:
 		return searchStatusPending
 	default:
@@ -221,7 +169,7 @@ func (m *searchMemo) Status(params *relation) searchStatus {
 	results, ok := m.visited[*params]
 	switch {
 	case !ok:
-		return searchStatusUnknown
+		return searchStatusNew
 	case results == nil:
 		return searchStatusPending
 	default:
