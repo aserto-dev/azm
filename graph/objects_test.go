@@ -148,7 +148,7 @@ var searchObjectsTests = []searchTest{
 	// {"folder:?#can_share@user:user1", []object{}},
 	{"doc:?#can_change_owner@user:user1", []object{}},
 	{"doc:?#can_write@user:user1", []object{}},
-	// {"doc:?#can_read@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#can_read@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	// {"doc:?#can_share@user:user1", []object{}},
 	// {"doc:?#can_invite@user:user1", []object{}},
 	{"folder:?#is_owner@user:user2", []object{}},

@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	ObjectNameSeparator   = "^"
-	SubjectRelationPrefix = "$"
+	ObjectNameSeparator       = "^"
+	SubjectRelationSeparator  = "#"
+	GeneratedPermissionPrefix = "$"
 )
 
 func (m *Model) Invert() *Model {
@@ -67,8 +68,8 @@ func (i *inverter) invert() *Model {
 
 				case o.HasRelation(pt.RelOrPerm):
 					r := o.Relations[pt.RelOrPerm]
-					for _, rr := range r.Union {
-						ip := permissionOrNew(i.im.Objects[rr.Object], ipn, kind)
+					for _, subj := range r.SubjectTypes {
+						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
 						ip.AddTerm(&PermissionTerm{RelOrPerm: i.irelSub(on, pt.RelOrPerm)})
 					}
 
@@ -86,17 +87,21 @@ func (i *inverter) invert() *Model {
 }
 
 func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
+	unionObjs := lo.Associate(r.Union, func(rr *RelationRef) (ObjectName, bool) { return rr.Object, true })
+
 	for _, rr := range r.Union {
 		irn := InverseRelation(on, rn)
 		i.im.Objects[rr.Object].Relations[irn] = &Relation{Union: []*RelationRef{{Object: on}}}
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
-			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
-			subjects := lo.Uniq(append(srel.AllTypes(), rr.Object))
 			ipn := rsrel(on, rn)
-			for _, subj := range subjects {
+			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
+
+			for _, subj := range srel.AllTypes() {
 				p := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
-				p.AddTerm(&PermissionTerm{RelOrPerm: irn})
+				if _, ok := unionObjs[subj]; ok {
+					p.AddTerm(&PermissionTerm{RelOrPerm: irn})
+				}
 				rel := InverseRelation(rr.Object, rr.Relation)
 				base := lo.Ternary(rr.Object == on, rel, i.sub(rel))
 				p.AddTerm(&PermissionTerm{Base: base, RelOrPerm: ipn})
@@ -177,12 +182,21 @@ func permissionOrNew(o *Object, pn RelationName, kind permissionKind) *Permissio
 	return p
 }
 
-func InverseRelation(on ObjectName, rn RelationName) RelationName {
-	return RelationName(fmt.Sprintf("%s%s%s", on, ObjectNameSeparator, rn))
+func InverseRelation(on ObjectName, rn RelationName, srn ...RelationName) RelationName {
+	irn := RelationName(fmt.Sprintf("%s%s%s", on, ObjectNameSeparator, rn))
+
+	switch {
+	case len(srn) == 0 || srn[0] == "":
+		return irn
+	case len(srn) == 1:
+		return RelationName(fmt.Sprintf("%s%s%s", irn, SubjectRelationSeparator, srn[0]))
+	default:
+		panic("too many subject relations")
+	}
 }
 
 func rsrel(on ObjectName, rn RelationName) RelationName {
-	return RelationName(fmt.Sprintf("%s%s", SubjectRelationPrefix, InverseRelation(on, rn)))
+	return RelationName(fmt.Sprintf("%s%s", GeneratedPermissionPrefix, InverseRelation(on, rn)))
 }
 
 func subjs(o *Object, rn RelationName) []ObjectName {

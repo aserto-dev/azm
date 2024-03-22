@@ -89,7 +89,7 @@ func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation 
 	}
 
 	o := im.Objects[iReq.ot]
-	srPerm := model.SubjectRelationPrefix + iReq.rel
+	srPerm := model.GeneratedPermissionPrefix + iReq.rel
 	if o.HasRelation(iReq.rel) && o.HasPermission(srPerm) {
 		iReq.rel = srPerm
 	}
