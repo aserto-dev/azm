@@ -63,13 +63,12 @@ func (s *SubjectSearch) search(params *relation) (searchResults, error) {
 	case searchStatusNew:
 	}
 
-	o := s.m.Objects[params.ot]
-
 	var (
 		results searchResults
 		err     error
 	)
 
+	o := s.m.Objects[params.ot]
 	if o.HasRelation(params.rel) {
 		results, err = s.searchRelation(params)
 	} else {
@@ -215,7 +214,8 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 }
 
 func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error) {
-	p := s.m.Objects[params.ot].Permissions[params.rel]
+	o := s.m.Objects[params.ot]
+	p := o.Permissions[params.rel]
 
 	results := searchResults{}
 
@@ -235,7 +235,7 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 	termChecks := make([][]*relation, 0, len(terms))
 	for _, pt := range terms {
 		// expand arrow operators.
-		expanded, err := s.expandTerm(pt, params)
+		expanded, err := s.expandTerm(o, pt, params)
 		if err != nil {
 			return results, err
 		}
@@ -271,38 +271,105 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 	return results, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
-func (s *SubjectSearch) expandTerm(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
+func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, params *relation) ([]*relation, error) {
 	if pt.IsArrow() {
-		// Resolve the base of the arrow.
-		rels, err := s.getRels(&dsc.Relation{
-			ObjectType: params.ot.String(),
-			ObjectId:   params.oid.String(),
-			Relation:   pt.Base.String(),
-		})
-		if err != nil {
-			return []*relation{}, err
+		if o.HasRelation(pt.Base) {
+			return s.expandRelationArrow(pt, params)
 		}
-
-		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
-			return &relation{
-				ot:   model.ObjectName(rel.SubjectType),
-				oid:  ObjectID(rel.SubjectId),
-				rel:  pt.RelOrPerm,
-				st:   params.st,
-				sid:  params.sid,
-				srel: params.srel,
-			}
-		})
-
-		return expanded, nil
+		return s.expandPermissionArrow(o, pt, params)
 	}
 
 	return []*relation{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid, srel: params.srel}}, nil
 }
 
+func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
+	// Resolve the base of the arrow.
+	rels, err := s.getRels(&dsc.Relation{
+		ObjectType: params.ot.String(),
+		ObjectId:   params.oid.String(),
+		Relation:   pt.Base.String(),
+	})
+	if err != nil {
+		return []*relation{}, err
+	}
+
+	expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
+		return &relation{
+			ot:   model.ObjectName(rel.SubjectType),
+			oid:  ObjectID(rel.SubjectId),
+			rel:  pt.RelOrPerm,
+			st:   params.st,
+			sid:  params.sid,
+			srel: params.srel,
+		}
+	})
+
+	return expanded, nil
+}
+
+func (s *SubjectSearch) expandPermissionArrow(o *model.Object, pt *model.PermissionTerm, params *relation) ([]*relation, error) {
+	expanded := []*relation{}
+
+	pBase := o.Permissions[pt.Base]
+	for _, subjType := range pBase.SubjectTypes {
+		var subs []model.ObjectName
+
+		oBase := s.m.Objects[subjType]
+		if oBase.HasRelation(pt.RelOrPerm) {
+			subs = oBase.Relations[pt.RelOrPerm].SubjectTypes
+		} else {
+			subs = oBase.Permissions[pt.RelOrPerm].SubjectTypes
+		}
+
+		if !lo.Contains(subs, params.st) {
+			// The subject type cannot have this permission.
+			continue
+		}
+
+		baseSearch := &relation{
+			ot:  params.ot,
+			oid: params.oid,
+			rel: pt.Base,
+			st:  subjType,
+		}
+		res, err := s.search(baseSearch)
+		if err != nil {
+			return nil, err
+		}
+
+		if res == nil {
+			// We have a cycle.
+			// We can't expand the permission arrow until we have the results of the base.
+			// We leave the object ID empty to indicate that we need to defer the check.
+			expanded = append(expanded, &relation{
+				ot:   subjType,
+				rel:  pt.RelOrPerm,
+				st:   params.st,
+				sid:  params.sid,
+				srel: params.srel,
+			})
+			continue
+		}
+
+		expanded = append(expanded, lo.Map(lo.Keys(res), func(subj object, _ int) *relation {
+			return &relation{
+				ot:   subj.Type,
+				oid:  subj.ID,
+				rel:  pt.RelOrPerm,
+				st:   params.st,
+				sid:  params.sid,
+				srel: params.srel,
+			}
+		})...)
+	}
+
+	return expanded, nil
+}
+
 func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
 	results := searchResults{}
 	status := searchStatusPending
+	deferred := []*relation{}
 
 	for _, check := range checks {
 		var (
@@ -314,7 +381,11 @@ func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
 		case 0:
 			res, err = searchResults{}, nil
 		case 1:
-			res, err = s.search(check[0])
+			if check[0].oid != "" {
+				res, err = s.search(check[0])
+			} else {
+				deferred = append(deferred, check[0])
+			}
 		default:
 			res, err = s.union(lo.Map(check, func(params *relation, _ int) []*relation {
 				return []*relation{params}
@@ -331,6 +402,29 @@ func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
 
 		results = lo.Assign(results, res)
 		status = searchStatusComplete
+	}
+
+	if len(deferred) > 0 {
+		// We have deferred checks that depend on the results of other checks.
+		// Fill in the object IDs and re-run the search.
+		checks := lo.Map(deferred, func(params *relation, _ int) []*relation {
+			return lo.Map(lo.Keys(results), func(subj object, _ int) *relation {
+				return &relation{
+					ot:   params.ot,
+					oid:  subj.ID,
+					rel:  params.rel,
+					st:   params.st,
+					sid:  params.sid,
+					srel: params.srel,
+				}
+			})
+		})
+
+		res, err := s.union(checks)
+		if err != nil {
+			return nil, err
+		}
+		results = lo.Assign(results, res)
 	}
 
 	// return nil if all checks result in a cycle

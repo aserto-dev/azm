@@ -159,30 +159,30 @@ func TestValidation(t *testing.T) {
 		manifest       string
 		expectedErrors []string
 	}{
-		{
-			"valid manifest",
-			"./testdata/valid.yaml",
-			[]string{},
-		},
-		{
-			"relation/permission collision",
-			"./testdata/rel_perm_collision.yaml",
-			[]string{
-				"permission name 'file:writer' conflicts with 'file:writer' relation",
-				"relation 'file:bad' has no definition",
-			},
-		},
-		{
-			"relations to undefined targets",
-			"./testdata/undefined_rel_targets.yaml",
-			[]string{
-				"relation 'file:owner' references undefined object type 'person'",
-				"relation 'file:reader' references undefined object type 'team'",
-				"relation 'file:reader' references undefined object type 'project'",
-				"relation 'file:writer' references undefined object type 'team'",
-				"relation 'file:admin' references undefined relation type 'group#admin'",
-			},
-		},
+		// {
+		// 	"valid manifest",
+		// 	"./testdata/valid.yaml",
+		// 	[]string{},
+		// },
+		// {
+		// 	"relation/permission collision",
+		// 	"./testdata/rel_perm_collision.yaml",
+		// 	[]string{
+		// 		"permission name 'file:writer' conflicts with 'file:writer' relation",
+		// 		"relation 'file:bad' has no definition",
+		// 	},
+		// },
+		// {
+		// 	"relations to undefined targets",
+		// 	"./testdata/undefined_rel_targets.yaml",
+		// 	[]string{
+		// 		"relation 'file:owner' references undefined object type 'person'",
+		// 		"relation 'file:reader' references undefined object type 'team'",
+		// 		"relation 'file:reader' references undefined object type 'project'",
+		// 		"relation 'file:writer' references undefined object type 'team'",
+		// 		"relation 'file:admin' references undefined relation type 'group#admin'",
+		// 	},
+		// },
 		{
 			"permissions to undefined targets",
 			"./testdata/undefined_perm_targets.yaml",

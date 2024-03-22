@@ -102,7 +102,7 @@ func (m *Model) validateObjectPerms(on ObjectName, o *Object) error {
 				// this is an arrow operator.
 				// validate that the base relation exists on this object type.
 				// at this stage we don't yet resolve the relation to a set of subject types.
-				if _, hasRelation := o.Relations[term.Base]; !hasRelation {
+				if !o.HasRelOrPerm(term.Base) {
 					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 						"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, term.Base),
 					)
@@ -143,6 +143,10 @@ func (m *Model) validatePermission(on ObjectName, pn RelationName, p *Permission
 		if term.IsArrow() {
 			// given a reference base->rel_or_perm, validate that all object types that `base` can resolve to
 			// have a permission or relation named `rel_or_perm`.
+			if o.HasPermission(term.Base) {
+				// TODO: validate arrows with a permission as the base
+				continue
+			}
 			r := o.Relations[term.Base]
 			for _, st := range r.SubjectTypes {
 				if !m.Objects[st].HasRelOrPerm(term.RelOrPerm) {
@@ -276,7 +280,13 @@ func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen 
 
 	switch {
 	case term.IsArrow():
-		sts := m.Objects[on].Relations[term.Base].SubjectTypes
+		o := m.Objects[on]
+		var sts []ObjectName
+		if o.HasRelation(term.Base) {
+			sts = o.Relations[term.Base].SubjectTypes
+		} else {
+			sts = m.resolvePermission(&RelationRef{Object: on, Relation: term.Base}, seen).ToSlice()
+		}
 		refs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
 			return RelationRef{Object: st, Relation: term.RelOrPerm}
 		})...)

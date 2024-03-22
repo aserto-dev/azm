@@ -10,7 +10,29 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/samber/lo"
 	req "github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
+
+func TestInversion(t *testing.T) {
+	require := req.New(t)
+
+	m, err := v3.Load(strings.NewReader(folderModel))
+	require.NoError(err)
+	require.NotNil(m)
+
+	im := m.Invert()
+	require.NotNil(im)
+
+	mnfst, err := manifest(im)
+	require.NoError(err)
+
+	b, err := yaml.Marshal(mnfst)
+	require.NoError(err)
+
+	t.Logf("inverted model:\n%s\n", b)
+	require.Fail("inverted model")
+
+}
 
 func TestReverseSearch(t *testing.T) {
 	require := req.New(t)
@@ -22,6 +44,11 @@ func TestReverseSearch(t *testing.T) {
 	rm, err := v3.Load(strings.NewReader(inverseModel))
 	require.NoError(err)
 	require.NotNil(rm)
+
+	folderIsOwner := rm.Objects["user"].Permissions["folder_is_owner"]
+	require.NotNil(folderIsOwner)
+
+	require.Equal([]model.ObjectName{"folder"}, folderIsOwner.SubjectTypes)
 
 	rels := NewRelationsReader(
 		"folder:leaf#parent@folder:branch",
@@ -38,11 +65,13 @@ func TestReverseSearch(t *testing.T) {
 		t.Run(test.search, func(tt *testing.T) {
 			assert := req.New(tt)
 
-			s := graph.NewSubjectSearch(rm, invertedGraphReq(test.search), reverseLookup(rm, rels.GetRelations))
+			req := invertedGraphReq(test.search)
+			s := graph.NewSubjectSearch(rm, req, reverseLookup(rm, rels.GetRelations))
 
 			res, err := s.Search()
 			assert.NoError(err)
 
+			tt.Logf("request: +%v\n", req)
 			tt.Logf("explanation: +%v\n", res.Explanation)
 			tt.Logf("trace: +%v\n", res.Trace)
 
@@ -63,11 +92,57 @@ func TestReverseSearch(t *testing.T) {
 
 }
 
+func manifest(m *model.Model) (*v3.Manifest, error) {
+	mnfst := v3.Manifest{
+		ModelInfo: &v3.ModelInfo{Version: v3.SchemaVersion(v3.SupportedSchemaVersion)},
+		ObjectTypes: lo.MapEntries(m.Objects, func(on model.ObjectName, o *model.Object) (v3.ObjectTypeName, *v3.ObjectType) {
+			return v3.ObjectTypeName(on), &v3.ObjectType{
+				Relations: lo.MapEntries(o.Relations, func(rn model.RelationName, r *model.Relation) (v3.RelationName, string) {
+					return v3.RelationName(rn), strings.Join(
+						lo.Map(r.Union, func(rr *model.RelationRef, _ int) string {
+							return rr.String()
+						}),
+						" | ",
+					)
+				}),
+				Permissions: lo.MapEntries(o.Permissions, func(pn model.RelationName, p *model.Permission) (v3.PermissionName, string) {
+					name := v3.PermissionName(pn)
+					var (
+						terms    []*model.PermissionTerm
+						operator string
+					)
+					switch {
+					case p.IsUnion():
+						terms = p.Union
+						operator = " | "
+					case p.IsIntersection():
+						terms = p.Intersection
+						operator = " & "
+					case p.IsExclusion():
+						terms = []*model.PermissionTerm{p.Exclusion.Include, p.Exclusion.Exclude}
+						operator = " - "
+
+					}
+
+					return name, strings.Join(lo.Map(terms, func(pt *model.PermissionTerm, _ int) string {
+						return pt.String()
+					}), operator)
+				}),
+			}
+		}),
+	}
+
+	return &mnfst, nil
+}
+
 var reverseSearchTests = []searchTest{
 	{"folder:?#is_owner@user:admin", []object{{"folder", "leaf"}, {"folder", "branch"}, {"folder", "root"}}},
 	{"doc:?#is_owner@user:admin", []object{{"doc", "leaf_doc"}, {"doc", "root_doc"}}},
 	{"folder:?#is_owner@user:su", []object{{"folder", "leaf"}, {"folder", "branch"}, {"folder", "root"}}},
 	{"folder:?#is_owner@group:superusers#member", []object{{"folder", "leaf"}, {"folder", "branch"}, {"folder", "root"}}},
+	{"doc:?#is_owner@group:admins#member", []object{{"doc", "leaf_doc"}, {"doc", "root_doc"}}},
+	{"group:?#member@user:admin", []object{{"group", "admins"}}},
+	// {"group:?#member@user:su", []object{{"group", "admins"}, {"group", "superusers"}}},
 }
 
 const folderModel = `
@@ -92,8 +167,10 @@ types:
     relations:
       parent: folder
       owner: user | group#member
+      reader: user | group#member
     permissions:
       is_owner: owner | parent->is_owner
+      can_read: reader | is_owner
 `
 
 const inverseModel = `
@@ -110,21 +187,27 @@ types:
 
   group:
     relations:
-      group_member: user | group#group_member
+      group_member: group
       folder_owner: folder
       doc_owner: doc
+      doc_reader: doc
     permissions:
-      folder_is_owner: folder_owner | folder_owner->folder_parent | group_member->folder_is_owner
-      doc_is_owner: doc_owner | folder_owner->doc_parent | group_member->doc_is_owner
+      folder_is_owner: folder_owner | group_member->folder_is_owner | folder_owner->folder_parent
+      doc_is_owner: doc_owner | group_member->doc_is_owner | folder_owner->doc_parent
+      doc_can_read: doc_reader | group_member->doc_can_read | doc_is_owner
+      r_group_member: group_member | group_member->r_group_member
 
   user:
     relations:
       group_member: group
-      folder_owner: folder | group#folder_owner
+      folder_owner: folder
       doc_owner: doc
+      doc_reader: doc
     permissions:
-      folder_is_owner: folder_owner | folder_owner->folder_parent | group_member->folder_is_owner
-      doc_is_owner: doc_owner | folder_owner->doc_parent | group_member->doc_is_owner
+      folder_is_owner: folder_owner | group_member->folder_is_owner | folder_is_owner->folder_parent
+      doc_is_owner: doc_owner | group_member->doc_is_owner | folder_is_owner->doc_parent
+      doc_can_read: doc_reader | group_member->doc_can_read | doc_is_owner
+      r_group_member: group_member | group_member->r_group_member
 `
 
 func reverseLookup(_ *model.Model, reader graph.RelationReader) graph.RelationReader {
