@@ -32,14 +32,14 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 		subjectSearch: &SubjectSearch{graphSearch{
 			m:       im,
 			params:  iParams,
-			getRels: invertedRelationReader(reader),
+			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
 		}},
 		wildcardSearch: &SubjectSearch{graphSearch{
 			m:       im,
 			params:  wildcardParams(iParams),
-			getRels: invertedRelationReader(reader),
+			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
 		}},
@@ -78,10 +78,18 @@ func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
 }
 
 func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation {
+	rel := model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation))
+	relPerm := model.PermForRel(rel)
+	if im.Objects[model.ObjectName(req.SubjectType)].HasPermission(relPerm) {
+		rel = relPerm
+	} else if req.SubjectRelation != "" {
+		rel = model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation), model.RelationName(req.SubjectRelation))
+	}
+
 	iReq := &relation{
 		ot:  model.ObjectName(req.SubjectType),
 		oid: ObjectID(req.SubjectId),
-		rel: model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation)),
+		rel: rel,
 		st:  model.ObjectName(req.ObjectType),
 		sid: ObjectID(req.ObjectId),
 		// TODO: what do we do with subject relations
@@ -103,16 +111,29 @@ func wildcardParams(params *relation) *relation {
 	return &wildcard
 }
 
-func invertedRelationReader(reader RelationReader) RelationReader {
+func invertedRelationReader(m *model.Model, reader RelationReader) RelationReader {
 	return func(r *dsc.Relation) ([]*dsc.Relation, error) {
-		x := strings.SplitN(r.Relation, model.ObjectNameSeparator, 2)
+		objSplit := strings.SplitN(r.Relation, model.ObjectNameSeparator, 2)
+		obj := model.ObjectName(objSplit[0])
+		relSplit := strings.SplitN(objSplit[1], model.SubjectRelationSeparator, 2)
+		rel := relSplit[0]
+		srel := ""
+		if len(relSplit) > 1 {
+			srel = relSplit[1]
+		}
+
+		perm := model.PermForRel(model.RelationName(rel))
+		if m.Objects[obj].HasPermission(perm) {
+			rel = perm.String()
+		}
 
 		rr := &dsc.Relation{
-			ObjectType:  r.SubjectType,
-			ObjectId:    r.SubjectId,
-			Relation:    x[1],
-			SubjectType: r.ObjectType,
-			SubjectId:   r.ObjectId,
+			ObjectType:      r.SubjectType,
+			ObjectId:        r.SubjectId,
+			Relation:        rel,
+			SubjectType:     r.ObjectType,
+			SubjectId:       r.ObjectId,
+			SubjectRelation: srel,
 		}
 
 		res, err := reader(rr)

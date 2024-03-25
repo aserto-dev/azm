@@ -73,7 +73,7 @@
             { "object": "group", "relation": "member" }
           ],
           "subject_types": ["user"],
-          "intermediate_types": ["group"]
+          "intermediates": [{"object": "group", "relation": "member"}]
         }
       }
     },

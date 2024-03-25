@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aserto-dev/azm/internal/lox"
+	"github.com/samber/lo"
 )
 
 type ObjectName Identifier
@@ -66,19 +67,33 @@ func (o *Object) SubjectTypes(name RelationName) []ObjectName {
 }
 
 type Relation struct {
-	Union             []*RelationRef `json:"union,omitempty"`
-	SubjectTypes      []ObjectName   `json:"subject_types,omitempty"`
-	IntermediateTypes []ObjectName   `json:"intermediate_types,omitempty"`
+	Union         []*RelationRef `json:"union,omitempty"`
+	SubjectTypes  []ObjectName   `json:"subject_types,omitempty"`
+	Intermediates RelationRefs   `json:"intermediates,omitempty"`
 }
 
 func (r *Relation) AllTypes() []ObjectName {
-	return append(r.SubjectTypes, r.IntermediateTypes...)
+	return append(r.SubjectTypes, r.Intermediates.Objects()...)
+}
+
+func (r *Relation) AllRefs() []RelationRef {
+	return append(lo.Map(r.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+		return RelationRef{Object: on}
+	}), r.Intermediates...)
 }
 
 func (r *Relation) AddRef(rr *RelationRef) {
 	if !lox.ContainsPtr(r.Union, rr) {
 		r.Union = append(r.Union, rr)
 	}
+}
+
+type RelationRefs []RelationRef
+
+func (rrs RelationRefs) Objects() []ObjectName {
+	return lo.Map(rrs, func(rr RelationRef, _ int) ObjectName {
+		return rr.Object
+	})
 }
 
 type RelationRef struct {
@@ -146,7 +161,8 @@ type Permission struct {
 	Intersection PermissionTerms      `json:"intersection,omitempty"`
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+	SubjectTypes  []ObjectName `json:"subject_types,omitempty"`
+	Intermediates RelationRefs `json:"intermediates,omitempty"`
 }
 
 func (p *Permission) IsUnion() bool {
@@ -195,7 +211,8 @@ type PermissionTerm struct {
 	Base      RelationName `json:"base,omitempty"`
 	RelOrPerm RelationName `json:"rel_or_perm"`
 
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+	SubjectTypes  []ObjectName `json:"subject_types,omitempty"`
+	Intermediates RelationRefs `json:"intermediates,omitempty"`
 }
 
 func (pr *PermissionTerm) String() string {

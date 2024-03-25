@@ -210,6 +210,10 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error) {
 	o := s.m.Objects[params.ot]
 	p := o.Permissions[params.rel]
+	if p == nil {
+		// This permission isn't defined on the object type.
+		return searchResults{}, nil
+	}
 
 	results := searchResults{}
 

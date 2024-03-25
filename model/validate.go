@@ -177,7 +177,7 @@ func (m *Model) resolveRelations() error {
 				)
 			default:
 				r.SubjectTypes = subs
-				r.IntermediateTypes = intermediates
+				r.Intermediates = intermediates
 			}
 		}
 	}
@@ -185,17 +185,17 @@ func (m *Model) resolveRelations() error {
 	return errs
 }
 
-func (m *Model) resolveRelation(r *Relation, seen relSet) ([]ObjectName, []ObjectName) {
+func (m *Model) resolveRelation(r *Relation, seen relSet) ([]ObjectName, RelationRefs) {
 	if len(r.SubjectTypes) > 0 {
 		// already resolved
-		return r.SubjectTypes, r.IntermediateTypes
+		return r.SubjectTypes, r.Intermediates
 	}
 
 	subjectTypes := set.NewSet[ObjectName]()
-	intermediateTypes := set.NewSet[ObjectName]()
+	intermediateTypes := set.NewSet[RelationRef]()
 	for _, rr := range r.Union {
 		if rr.IsSubject() {
-			intermediateTypes.Add(rr.Object)
+			intermediateTypes.Add(*rr)
 			if !seen.Contains(*rr) {
 				seen.Add(*rr)
 				subs, intermediates := m.resolveRelation(m.Objects[rr.Object].Relations[rr.Relation], seen)
@@ -215,7 +215,7 @@ func (m *Model) resolvePermissions() error {
 	seen := set.NewSet[RelationRef]()
 	for on, o := range m.Objects {
 		for pn := range o.Permissions {
-			subjs := m.resolvePermission(&RelationRef{on, pn}, seen)
+			subjs, _ := m.resolvePermission(&RelationRef{on, pn}, seen)
 			if subjs.IsEmpty() {
 				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 					"permission '%s:%s' cannot be satisfied by any type", on, pn),
@@ -227,22 +227,22 @@ func (m *Model) resolvePermissions() error {
 	return errs
 }
 
-func (m *Model) resolvePermission(ref *RelationRef, seen relSet) objSet {
+func (m *Model) resolvePermission(ref *RelationRef, seen relSet) (objSet, relSet) {
 	p := m.Objects[ref.Object].Permissions[ref.Relation]
 
 	if len(p.SubjectTypes) > 0 {
 		// already resolved
-		return set.NewSet(p.SubjectTypes...)
+		return set.NewSet(p.SubjectTypes...), set.NewSet(p.Intermediates...)
 	}
 
 	if seen.Contains(*ref) {
 		// cycle detected
-		return set.NewSet[ObjectName]()
+		return set.NewSet[ObjectName](), set.NewSet[RelationRef]()
 	}
 	seen.Add(*ref)
 
 	for _, term := range p.Terms() {
-		term.SubjectTypes = m.resolvePermissionTerm(ref.Object, term, seen)
+		term.SubjectTypes, term.Intermediates = m.resolvePermissionTerm(ref.Object, term, seen)
 	}
 
 	// filter out terms that have no subject types. They represent cycles that are still being resolved.
@@ -250,12 +250,18 @@ func (m *Model) resolvePermission(ref *RelationRef, seen relSet) objSet {
 		return len(term.SubjectTypes) > 0
 	})
 
-	var subjTypes objSet
+	var (
+		subjTypes     objSet
+		intermediates relSet
+	)
 
 	switch {
 	case p.IsUnion():
 		subjTypes = set.NewSet(lo.FlatMap(resolvedTerms, func(term *PermissionTerm, _ int) []ObjectName {
 			return term.SubjectTypes
+		})...)
+		intermediates = set.NewSet(lo.FlatMap(resolvedTerms, func(term *PermissionTerm, _ int) []RelationRef {
+			return term.Intermediates
 		})...)
 
 	case p.IsIntersection():
@@ -269,27 +275,45 @@ func (m *Model) resolvePermission(ref *RelationRef, seen relSet) objSet {
 			return acc.Intersect(subjs)
 
 		}, nil)
+		intermediates = lo.Reduce(resolvedTerms, func(acc relSet, term *PermissionTerm, i int) relSet {
+			subjs := set.NewSet(term.Intermediates...)
+
+			if i == 0 {
+				return subjs
+			}
+
+			return acc.Intersect(subjs)
+
+		}, nil)
 
 	case p.IsExclusion():
 		subjTypes = set.NewSet(p.Exclusion.Include.SubjectTypes...)
+		intermediates = set.NewSet(p.Exclusion.Include.Intermediates...)
 	}
 
 	p.SubjectTypes = subjTypes.ToSlice()
+	p.Intermediates = intermediates.ToSlice()
 
-	return subjTypes
+	return subjTypes, intermediates
 }
 
-func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) []ObjectName {
+func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) ([]ObjectName, RelationRefs) {
 	var refs set.Set[RelationRef]
+	intermediates := set.NewSet[RelationRef]()
 
 	switch {
 	case term.IsArrow():
 		o := m.Objects[on]
-		var sts []ObjectName
+		var (
+			sts []ObjectName
+		)
 		if o.HasRelation(term.Base) {
 			sts = o.Relations[term.Base].SubjectTypes
+			intermediates.Append(o.Relations[term.Base].Intermediates...)
 		} else {
-			sts = m.resolvePermission(&RelationRef{Object: on, Relation: term.Base}, seen).ToSlice()
+			types, interims := m.resolvePermission(&RelationRef{Object: on, Relation: term.Base}, seen)
+			sts = types.ToSlice()
+			intermediates.Append(interims.ToSlice()...)
 		}
 		refs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
 			return RelationRef{Object: st, Relation: term.RelOrPerm}
@@ -306,11 +330,14 @@ func (m *Model) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen 
 		if o.HasRelation(ref.Relation) {
 			// Relations are already resolved to a set of subject types.
 			subjectTypes.Append(o.Relations[ref.Relation].SubjectTypes...)
+			intermediates.Append(o.Relations[ref.Relation].Intermediates...)
 			continue
 		}
 
-		subjectTypes = subjectTypes.Union(m.resolvePermission(&ref, seen))
+		sts, interims := m.resolvePermission(&ref, seen)
+		subjectTypes = subjectTypes.Union(sts)
+		intermediates.Append(interims.ToSlice()...)
 	}
 
-	return subjectTypes.ToSlice()
+	return subjectTypes.ToSlice(), intermediates.ToSlice()
 }
