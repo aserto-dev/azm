@@ -72,8 +72,13 @@ type Relation struct {
 	Intermediates RelationRefs   `json:"intermediates,omitempty"`
 }
 
-func (r *Relation) AllTypes() []ObjectName {
-	return append(r.SubjectTypes, r.Intermediates.Objects()...)
+func (r *Relation) Types() RelationRefs {
+	return append(
+		lo.Map(r.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+			return RelationRef{Object: on}
+		}),
+		r.Intermediates...,
+	)
 }
 
 func (r *Relation) AllRefs() []RelationRef {
@@ -89,12 +94,6 @@ func (r *Relation) AddRef(rr *RelationRef) {
 }
 
 type RelationRefs []RelationRef
-
-func (rrs RelationRefs) Objects() []ObjectName {
-	return lo.Map(rrs, func(rr RelationRef, _ int) ObjectName {
-		return rr.Object
-	})
-}
 
 type RelationRef struct {
 	Object   ObjectName   `json:"object,omitempty"`
@@ -205,6 +204,15 @@ func (p *Permission) AddTerm(pt *PermissionTerm) {
 			p.Exclusion.Exclude = pt
 		}
 	}
+}
+
+func (p *Permission) Types() RelationRefs {
+	return append(
+		lo.Map(p.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+			return RelationRef{Object: on}
+		}),
+		p.Intermediates...,
+	)
 }
 
 type PermissionTerm struct {
