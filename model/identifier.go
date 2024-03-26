@@ -22,6 +22,7 @@ type Identifier string
 var ErrInvalidIdentifier = errors.New("invalid identifier")
 
 var reIdentifier = regexp.MustCompile(`(?m)^[a-z][a-z0-9._-]{1,62}[a-z0-9]$`)
+var msgInvalidIdentifier = "must be all lowercase, start with a letter, can contain letters, digits, dots, underscores, and dashes, and must end with a letter or digit"
 
 func (i Identifier) Valid() bool {
 	return reIdentifier.MatchString(string(i))

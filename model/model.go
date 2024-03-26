@@ -81,6 +81,22 @@ func (m *Model) Write(w io.Writer) error {
 	return enc.Encode(m)
 }
 
+type validationOptions struct {
+	// don't validate that object/relation/permission names are valid identifiers.
+	skipNameValidation         bool
+	allowPermissionInArrowBase bool
+}
+
+type ValidationOption func(*validationOptions)
+
+func SkipNameValidation(opts *validationOptions) {
+	opts.skipNameValidation = true
+}
+
+func AllowPermissionInArrowBase(opts *validationOptions) {
+	opts.allowPermissionInArrowBase = true
+}
+
 // Validate enforces the model's internal consistency.
 //
 // It enforces the following rules:
@@ -89,28 +105,14 @@ func (m *Model) Write(w io.Writer) error {
 //   - Wildcard relations must reference existing objects.
 //   - Subject relations must reference existing object#relation pairs.
 //   - Arrow permissions (relation->rel_or_perm) must reference existing relations/permissions.
-func (m *Model) Validate() error {
-	// Pass 1 (syntax): ensure no name collisions and all relations reference existing objects/relations.
-	if err := m.validateReferences(); err != nil {
-		return derr.ErrInvalidArgument.Err(err)
+func (m *Model) Validate(opts ...ValidationOption) error {
+	vOpts := validationOptions{}
+	for _, opt := range opts {
+		opt(&vOpts)
 	}
 
-	// Pass 2: resolve all relations to a set of possible subject types.
-	if err := m.resolveRelations(); err != nil {
-		return derr.ErrInvalidArgument.Err(err)
-	}
-
-	// Pass 3: validate all arrow operators in permissions. This requires that all relations have already been resolved.
-	if err := m.validatePermissions(); err != nil {
-		return derr.ErrInvalidArgument.Err(err)
-	}
-
-	// Pass 4: resolve all permissions to a set of possible subject types.
-	if err := m.resolvePermissions(); err != nil {
-		return derr.ErrInvalidArgument.Err(err)
-	}
-
-	return nil
+	validator := newValidator(m, &vOpts)
+	return validator.validate()
 }
 
 func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, sn ObjectName, sid ObjectID, srn RelationName) error {

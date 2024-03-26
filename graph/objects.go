@@ -21,7 +21,9 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 	}
 
 	im := m.Invert()
-	if err := im.Validate(); err != nil {
+	// validate the model but skip name validation. To avoid name collisions, the inverted model
+	// uses mangled names that are not valid identifiers.
+	if err := im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase); err != nil {
 		// TODO: we should persist the inverted model instead of computing it on the fly.
 		panic(err)
 	}

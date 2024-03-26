@@ -10,8 +10,16 @@ import (
 type ObjectName Identifier
 type RelationName Identifier
 
+func (on ObjectName) Valid() bool {
+	return Identifier(on).Valid()
+}
+
 func (on ObjectName) String() string {
 	return string(on)
+}
+
+func (rn RelationName) Valid() bool {
+	return Identifier(rn).Valid()
 }
 
 func (rn RelationName) String() string {

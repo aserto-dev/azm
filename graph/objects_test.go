@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/aserto-dev/azm/graph"
@@ -211,4 +212,46 @@ func relations() RelationsReader {
 		"group:alpha#member@group:omega#member",
 		"group:omega#member@group:alpha#member",
 	)
+}
+
+func manifest(m *model.Model) *v3.Manifest {
+	mnfst := v3.Manifest{
+		ModelInfo: &v3.ModelInfo{Version: v3.SchemaVersion(v3.SupportedSchemaVersion)},
+		ObjectTypes: lo.MapEntries(m.Objects, func(on model.ObjectName, o *model.Object) (v3.ObjectTypeName, *v3.ObjectType) {
+			return v3.ObjectTypeName(on), &v3.ObjectType{
+				Relations: lo.MapEntries(o.Relations, func(rn model.RelationName, r *model.Relation) (v3.RelationName, string) {
+					return v3.RelationName(rn), strings.Join(
+						lo.Map(r.Union, func(rr *model.RelationRef, _ int) string {
+							return rr.String()
+						}),
+						" | ",
+					)
+				}),
+				Permissions: lo.MapEntries(o.Permissions, func(pn model.RelationName, p *model.Permission) (v3.PermissionName, string) {
+					name := v3.PermissionName(pn)
+					var (
+						terms    []*model.PermissionTerm
+						operator string
+					)
+					switch {
+					case p.IsUnion():
+						terms = p.Union
+						operator = " | "
+					case p.IsIntersection():
+						terms = p.Intersection
+						operator = " & "
+					case p.IsExclusion():
+						terms = []*model.PermissionTerm{p.Exclusion.Include, p.Exclusion.Exclude}
+						operator = " - "
+					}
+
+					return name, strings.Join(lo.Map(terms, func(pt *model.PermissionTerm, _ int) string {
+						return pt.String()
+					}), operator)
+				}),
+			}
+		}),
+	}
+
+	return &mnfst
 }
