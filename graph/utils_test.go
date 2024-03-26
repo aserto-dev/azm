@@ -1,7 +1,6 @@
 package graph_test
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -18,10 +17,6 @@ func checkReq(expr string) *dsr.CheckRequest {
 
 func graphReq(expr string) *dsr.GetGraphRequest {
 	return parseRelation(expr).graphReq()
-}
-
-func invertedGraphReq(expr string) *dsr.GetGraphRequest {
-	return parseRelation(expr).invert().graphReq()
 }
 
 type relation struct {
@@ -86,16 +81,6 @@ func (r *relation) graphReq() *dsr.GetGraphRequest {
 		SubjectRelation: r.SubjectRelation.String(),
 		Explain:         true,
 		Trace:           true,
-	}
-}
-
-func (r *relation) invert() *relation {
-	return &relation{
-		ObjectType:  r.SubjectType,
-		ObjectID:    r.SubjectID,
-		Relation:    model.RelationName(fmt.Sprintf("%s_%s", r.ObjectType, r.Relation)),
-		SubjectType: r.ObjectType,
-		SubjectID:   r.ObjectID,
 	}
 }
 
