@@ -21,7 +21,9 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 	}
 
 	im := m.Invert()
-	if err := im.Validate(); err != nil {
+	// validate the model but skip name validation. To avoid name collisions, the inverted model
+	// uses mangled names that are not valid identifiers.
+	if err := im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase); err != nil {
 		// TODO: we should persist the inverted model instead of computing it on the fly.
 		panic(err)
 	}
@@ -32,14 +34,14 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 		subjectSearch: &SubjectSearch{graphSearch{
 			m:       im,
 			params:  iParams,
-			getRels: invertedRelationReader(reader),
+			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
 		}},
 		wildcardSearch: &SubjectSearch{graphSearch{
 			m:       im,
 			params:  wildcardParams(iParams),
-			getRels: invertedRelationReader(reader),
+			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
 		}},
@@ -63,8 +65,18 @@ func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
 		res[obj] = append(res[obj], paths...)
 	}
 
+	res = invertResults(res)
+
+	m := s.subjectSearch.m
+
 	memo := s.subjectSearch.memo
 	memo.history = append(memo.history, s.wildcardSearch.memo.history...)
+	memo.history = lo.Map(memo.history, func(c *searchCall, _ int) *searchCall {
+		return &searchCall{
+			relation: uninvertRelation(m, c.relation),
+			status:   c.status,
+		}
+	})
 
 	resp.Results = res.Subjects()
 
@@ -78,14 +90,20 @@ func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
 }
 
 func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation {
+	rel := model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation))
+	relPerm := model.PermForRel(rel)
+	if im.Objects[model.ObjectName(req.SubjectType)].HasPermission(relPerm) {
+		rel = relPerm
+	} else if req.SubjectRelation != "" {
+		rel = model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation), model.RelationName(req.SubjectRelation))
+	}
+
 	iReq := &relation{
 		ot:  model.ObjectName(req.SubjectType),
 		oid: ObjectID(req.SubjectId),
-		rel: model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation)),
+		rel: rel,
 		st:  model.ObjectName(req.ObjectType),
 		sid: ObjectID(req.ObjectId),
-		// TODO: what do we do with subject relations
-		// srel: model.RelationName(req.SubjectRelation),
 	}
 
 	o := im.Objects[iReq.ot]
@@ -103,19 +121,10 @@ func wildcardParams(params *relation) *relation {
 	return &wildcard
 }
 
-func invertedRelationReader(reader RelationReader) RelationReader {
+func invertedRelationReader(m *model.Model, reader RelationReader) RelationReader {
 	return func(r *dsc.Relation) ([]*dsc.Relation, error) {
-		x := strings.SplitN(r.Relation, model.ObjectNameSeparator, 2)
-
-		rr := &dsc.Relation{
-			ObjectType:  r.SubjectType,
-			ObjectId:    r.SubjectId,
-			Relation:    x[1],
-			SubjectType: r.ObjectType,
-			SubjectId:   r.ObjectId,
-		}
-
-		res, err := reader(rr)
+		ir := uninvertRelation(m, relationFromProto(r))
+		res, err := reader(ir.asProto())
 		if err != nil {
 			return nil, err
 		}
@@ -130,4 +139,47 @@ func invertedRelationReader(reader RelationReader) RelationReader {
 			}
 		}), nil
 	}
+}
+
+func uninvertRelation(m *model.Model, r *relation) *relation {
+	objSplit := strings.SplitN(r.rel.String(), model.ObjectNameSeparator, 2)
+	obj := model.ObjectName(objSplit[0])
+
+	relSplit := strings.SplitN(objSplit[1], model.SubjectRelationSeparator, 2)
+	rel := relSplit[0]
+	srel := ""
+	if len(relSplit) > 1 {
+		srel = relSplit[1]
+	}
+
+	perm := model.PermForRel(model.RelationName(rel))
+	if m.Objects[obj].HasPermission(perm) {
+		rel = perm.String()
+	}
+
+	return &relation{
+		ot:   r.st,
+		oid:  r.sid,
+		rel:  model.RelationName(rel),
+		st:   r.ot,
+		sid:  r.oid,
+		srel: model.RelationName(srel),
+	}
+}
+
+func invertResults(res searchResults) searchResults {
+	return lo.MapValues(res, func(paths []searchPath, obj object) []searchPath {
+		return lo.Map(paths, func(p searchPath, _ int) searchPath {
+			return lo.Map(p, func(r *relation, _ int) *relation {
+				return &relation{
+					ot:   r.st,
+					oid:  r.sid,
+					rel:  r.rel,
+					st:   r.ot,
+					sid:  r.oid,
+					srel: r.srel,
+				}
+			})
+		})
+	})
 }

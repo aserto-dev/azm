@@ -4,13 +4,22 @@ import (
 	"fmt"
 
 	"github.com/aserto-dev/azm/internal/lox"
+	"github.com/samber/lo"
 )
 
 type ObjectName Identifier
 type RelationName Identifier
 
+func (on ObjectName) Valid() bool {
+	return Identifier(on).Valid()
+}
+
 func (on ObjectName) String() string {
 	return string(on)
+}
+
+func (rn RelationName) Valid() bool {
+	return Identifier(rn).Valid()
 }
 
 func (rn RelationName) String() string {
@@ -66,13 +75,24 @@ func (o *Object) SubjectTypes(name RelationName) []ObjectName {
 }
 
 type Relation struct {
-	Union             []*RelationRef `json:"union,omitempty"`
-	SubjectTypes      []ObjectName   `json:"subject_types,omitempty"`
-	IntermediateTypes []ObjectName   `json:"intermediate_types,omitempty"`
+	Union         []*RelationRef `json:"union,omitempty"`
+	SubjectTypes  []ObjectName   `json:"subject_types,omitempty"`
+	Intermediates RelationRefs   `json:"intermediates,omitempty"`
 }
 
-func (r *Relation) AllTypes() []ObjectName {
-	return append(r.SubjectTypes, r.IntermediateTypes...)
+func (r *Relation) Types() RelationRefs {
+	return append(
+		lo.Map(r.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+			return RelationRef{Object: on}
+		}),
+		r.Intermediates...,
+	)
+}
+
+func (r *Relation) AllRefs() []RelationRef {
+	return append(lo.Map(r.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+		return RelationRef{Object: on}
+	}), r.Intermediates...)
 }
 
 func (r *Relation) AddRef(rr *RelationRef) {
@@ -80,6 +100,8 @@ func (r *Relation) AddRef(rr *RelationRef) {
 		r.Union = append(r.Union, rr)
 	}
 }
+
+type RelationRefs []RelationRef
 
 type RelationRef struct {
 	Object   ObjectName   `json:"object,omitempty"`
@@ -146,7 +168,8 @@ type Permission struct {
 	Intersection PermissionTerms      `json:"intersection,omitempty"`
 	Exclusion    *ExclusionPermission `json:"exclusion,omitempty"`
 
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+	SubjectTypes  []ObjectName `json:"subject_types,omitempty"`
+	Intermediates RelationRefs `json:"intermediates,omitempty"`
 }
 
 func (p *Permission) IsUnion() bool {
@@ -191,11 +214,21 @@ func (p *Permission) AddTerm(pt *PermissionTerm) {
 	}
 }
 
+func (p *Permission) Types() RelationRefs {
+	return append(
+		lo.Map(p.SubjectTypes, func(on ObjectName, _ int) RelationRef {
+			return RelationRef{Object: on}
+		}),
+		p.Intermediates...,
+	)
+}
+
 type PermissionTerm struct {
 	Base      RelationName `json:"base,omitempty"`
 	RelOrPerm RelationName `json:"rel_or_perm"`
 
-	SubjectTypes []ObjectName `json:"subject_types,omitempty"`
+	SubjectTypes  []ObjectName `json:"subject_types,omitempty"`
+	Intermediates RelationRefs `json:"intermediates,omitempty"`
 }
 
 func (pr *PermissionTerm) String() string {

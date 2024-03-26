@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/aserto-dev/azm/graph"
@@ -69,7 +70,6 @@ type searchTest struct {
 
 var searchObjectsTests = []searchTest{
 	// Relations
-	// {"doc:?#viewer@user:f1_viewer", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"folder:?#owner@user:f1_owner", []object{{"folder", "folder1"}}},
 	{"folder:?#viewer@group:f1_viewers#member", []object{{"folder", "folder1"}}},
 	{"group:?#member@user:user2", []object{{"group", "d1_viewers"}}},
@@ -77,15 +77,16 @@ var searchObjectsTests = []searchTest{
 	{"group:?#member@user:f1_viewer", []object{{"group", "f1_viewers"}}},
 	{"folder:?#parent@folder:folder1", []object{{"folder", "folder2"}}},
 	{"doc:?#owner@user:d1_owner", []object{{"doc", "doc1"}}},
+	{"doc:?#viewer@user:f1_viewer", []object{{"doc", "doc2"}}},
 	{"doc:?#viewer@group:d1_viewers#member", []object{{"doc", "doc1"}}},
 	{"doc:?#parent@folder:folder1", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 
 	{"group:?#member@group:leaf#member", []object{{"group", "branch"}, {"group", "trunk"}, {"group", "root"}}},
-	// {"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
+	{"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
 	{"group:?#member@group:yang#member", []object{{"group", "yin"}, {"group", "yang"}}},
 	{"group:?#member@user:user3", []object{{"group", "d1_subviewers"}, {"group", "d1_viewers"}}},
 	{"group:?#member@user:yin_user", []object{{"group", "yin"}, {"group", "yang"}}},
-	// {"doc:?#viewer@group:d1_subviewers#member", []object{{"doc", "doc1"}}},
+	{"doc:?#viewer@group:d1_subviewers#member", []object{{"doc", "doc1"}}},
 
 	// wildcard
 	{"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
@@ -104,16 +105,17 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#can_read@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_share@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_invite@user:f1_owner", []object{{"doc", "doc2"}, {"doc", "doc3"}}},
-	// {"folder:?#is_owner@group:f1_viewers", []object{}},
-	// {"folder:?#can_create_file@group:f1_viewers", []object{}},
-	// {"folder:?#can_read@group:f1_viewers", []object{{"folder", "folder1"}}},
-	// {"folder:?#can_read@group:f1_viewers", []object{}},
-	// {"folder:?#can_share@group:f1_viewers", []object{}},
-	// {"doc:?#can_change_owner@group:f1_viewers", []object{}},
-	// {"doc:?#can_write@group:f1_viewers", []object{}},
-	// {"doc:?#can_read@group:f1_viewers", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#can_share@group:f1_viewers", []object{}},
-	// {"doc:?#can_invite@group:f1_viewers", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"folder:?#is_owner@group:f1_viewers", []object{}},
+	{"folder:?#can_create_file@group:f1_viewers", []object{}},
+	{"folder:?#can_read@group:f1_viewers#member", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
+	{"folder:?#can_read@group:f1_viewers", []object{}},
+	{"folder:?#can_share@group:f1_viewers", []object{}},
+	{"doc:?#can_change_owner@group:f1_viewers", []object{}},
+	{"doc:?#can_write@group:f1_viewers", []object{}},
+	{"doc:?#can_read@group:f1_viewers", []object{}},
+	{"doc:?#can_read@group:f1_viewers#member", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
+	{"doc:?#can_share@group:f1_viewers#member", []object{}},
+	{"doc:?#can_invite@group:f1_viewers#member", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"folder:?#is_owner@user:f1_viewer", []object{}},
 	{"folder:?#can_create_file@user:f1_viewer", []object{}},
 	{"folder:?#can_read@user:f1_viewer", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
@@ -122,53 +124,53 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#can_write@user:f1_viewer", []object{}},
 	{"doc:?#can_read@user:f1_viewer", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_share@user:f1_viewer", []object{}},
-	// {"doc:?#can_invite@user:f1_viewer", []object{{"doc", "doc1"}}},
+	{"doc:?#can_invite@user:f1_viewer", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"folder:?#is_owner@user:d1_owner", []object{}},
 	{"folder:?#can_create_file@user:d1_owner", []object{}},
 	{"folder:?#can_read@user:d1_owner", []object{}},
 	{"folder:?#can_share@user:d1_owner", []object{}},
 	{"doc:?#can_change_owner@user:d1_owner", []object{{"doc", "doc1"}}},
 	{"doc:?#can_write@user:d1_owner", []object{{"doc", "doc1"}}},
-	// {"doc:?#can_read@user:d1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#can_read@user:d1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#can_share@user:d1_owner", []object{}},
-	// {"doc:?#can_invite@user:d1_owner", []object{}},
-	// {"folder:?#is_owner@group:d1_viewers", []object{}},
-	// {"folder:?#can_create_file@group:d1_viewers", []object{}},
-	// {"folder:?#can_read@group:d1_viewers", []object{}},
-	// {"folder:?#can_read@group:d1_viewers", []object{}},
-	// {"folder:?#can_share@group:d1_viewers", []object{}},
-	// {"doc:?#can_change_owner@group:d1_viewers", []object{}},
-	// {"doc:?#can_write@group:d1_viewers", []object{}},
-	// {"doc:?#can_read@group:d1_viewers", []object{{"doc", "doc1"}}},
-	// {"doc:?#can_share@group:d1_viewers", []object{}},
-	// {"doc:?#can_invite@group:d1_viewers", []object{}},
+	{"doc:?#can_invite@user:d1_owner", []object{}},
+	{"folder:?#is_owner@group:d1_viewers", []object{}},
+	{"folder:?#can_create_file@group:d1_viewers", []object{}},
+	{"folder:?#can_read@group:d1_viewers#member", []object{}},
+	{"folder:?#can_read@group:d1_viewers#member", []object{}},
+	{"folder:?#can_share@group:d1_viewers#member", []object{}},
+	{"doc:?#can_change_owner@group:d1_viewers#member", []object{}},
+	{"doc:?#can_write@group:d1_viewers#member", []object{}},
+	{"doc:?#can_read@group:d1_viewers#member", []object{{"doc", "doc1"}}},
+	{"doc:?#can_share@group:d1_viewers#member", []object{}},
+	{"doc:?#can_invite@group:d1_viewers#member", []object{}},
 	{"folder:?#is_owner@user:user1", []object{}},
 	{"folder:?#can_create_file@user:user1", []object{}},
 	{"folder:?#can_read@user:user1", []object{}},
-	// {"folder:?#can_share@user:user1", []object{}},
+	{"folder:?#can_share@user:user1", []object{}},
 	{"doc:?#can_change_owner@user:user1", []object{}},
 	{"doc:?#can_write@user:user1", []object{}},
 	{"doc:?#can_read@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#can_share@user:user1", []object{}},
-	// {"doc:?#can_invite@user:user1", []object{}},
+	{"doc:?#can_share@user:user1", []object{}},
+	{"doc:?#can_invite@user:user1", []object{}},
 	{"folder:?#is_owner@user:user2", []object{}},
 	{"folder:?#can_create_file@user:user2", []object{}},
 	{"folder:?#can_read@user:user2", []object{}},
-	// {"folder:?#can_share@user:user2", []object{}},
+	{"folder:?#can_share@user:user2", []object{}},
 	{"doc:?#can_change_owner@user:user2", []object{}},
 	{"doc:?#can_write@user:user2", []object{}},
 	{"doc:?#can_read@user:user2", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#can_share@user:user2", []object{}},
-	// {"doc:?#can_invite@user:user2", []object{}},
+	{"doc:?#can_share@user:user2", []object{}},
+	{"doc:?#can_invite@user:user2", []object{}},
 	{"folder:?#is_owner@user:user3", []object{}},
 	{"folder:?#can_create_file@user:user3", []object{}},
 	{"folder:?#can_read@user:user3", []object{}},
-	// {"folder:?#can_share@user:user3", []object{}},
+	{"folder:?#can_share@user:user3", []object{}},
 	{"doc:?#can_change_owner@user:user3", []object{}},
 	{"doc:?#can_write@user:user3", []object{}},
-	// {"doc:?#can_read@user:user3", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
-	// {"doc:?#can_share@user:user3", []object{}},
-	// {"doc:?#can_invite@user:user3", []object{}},
+	{"doc:?#can_read@user:user3", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
+	{"doc:?#can_share@user:user3", []object{}},
+	{"doc:?#can_invite@user:user3", []object{}},
 }
 
 func relations() RelationsReader {
@@ -210,4 +212,46 @@ func relations() RelationsReader {
 		"group:alpha#member@group:omega#member",
 		"group:omega#member@group:alpha#member",
 	)
+}
+
+func manifest(m *model.Model) *v3.Manifest {
+	mnfst := v3.Manifest{
+		ModelInfo: &v3.ModelInfo{Version: v3.SchemaVersion(v3.SupportedSchemaVersion)},
+		ObjectTypes: lo.MapEntries(m.Objects, func(on model.ObjectName, o *model.Object) (v3.ObjectTypeName, *v3.ObjectType) {
+			return v3.ObjectTypeName(on), &v3.ObjectType{
+				Relations: lo.MapEntries(o.Relations, func(rn model.RelationName, r *model.Relation) (v3.RelationName, string) {
+					return v3.RelationName(rn), strings.Join(
+						lo.Map(r.Union, func(rr *model.RelationRef, _ int) string {
+							return rr.String()
+						}),
+						" | ",
+					)
+				}),
+				Permissions: lo.MapEntries(o.Permissions, func(pn model.RelationName, p *model.Permission) (v3.PermissionName, string) {
+					name := v3.PermissionName(pn)
+					var (
+						terms    []*model.PermissionTerm
+						operator string
+					)
+					switch {
+					case p.IsUnion():
+						terms = p.Union
+						operator = " | "
+					case p.IsIntersection():
+						terms = p.Intersection
+						operator = " & "
+					case p.IsExclusion():
+						terms = []*model.PermissionTerm{p.Exclusion.Include, p.Exclusion.Exclude}
+						operator = " - "
+					}
+
+					return name, strings.Join(lo.Map(terms, func(pt *model.PermissionTerm, _ int) string {
+						return pt.String()
+					}), operator)
+				}),
+			}
+		}),
+	}
+
+	return &mnfst
 }

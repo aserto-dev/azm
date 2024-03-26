@@ -31,18 +31,29 @@ func relationFromProto(rel *dsc.Relation) *relation {
 	}
 }
 
-func (p *relation) String() string {
-	str := fmt.Sprintf("%s:%s#%s@%s:%s", p.ot, displayID(p.oid), p.rel, p.st, displayID(p.sid))
-	if p.srel != "" {
-		str += fmt.Sprintf("#%s", p.srel)
+func (r *relation) asProto() *dsc.Relation {
+	return &dsc.Relation{
+		ObjectType:      string(r.ot),
+		ObjectId:        string(r.oid),
+		Relation:        string(r.rel),
+		SubjectType:     string(r.st),
+		SubjectId:       string(r.sid),
+		SubjectRelation: string(r.srel),
+	}
+}
+
+func (r *relation) String() string {
+	str := fmt.Sprintf("%s:%s#%s@%s:%s", r.ot, displayID(r.oid), r.rel, r.st, displayID(r.sid))
+	if r.srel != "" {
+		str += fmt.Sprintf("#%s", r.srel)
 	}
 	return str
 }
 
-func (p *relation) subject() *object {
+func (r *relation) subject() *object {
 	return &object{
-		Type: p.st,
-		ID:   p.sid,
+		Type: r.st,
+		ID:   r.sid,
 	}
 }
 

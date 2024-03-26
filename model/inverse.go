@@ -44,42 +44,13 @@ func (i *inverter) invert() *Model {
 		}
 	}
 
+	for _, o := range i.im.Objects {
+		i.applySubstitutions(o)
+	}
+
 	for on, o := range i.m.Objects {
 		for pn, p := range o.Permissions {
-			kind := kindOf(p)
-			ipn := InverseRelation(on, pn)
-
-			for _, pt := range p.Terms() {
-				switch {
-				case pt.IsArrow():
-					baseRel := o.Relations[pt.Base]
-					itip := i.irelSub(on, pt.Base)
-
-					for _, subj := range p.SubjectTypes {
-						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
-						for _, baseSubj := range baseRel.AllTypes() {
-							ip.AddTerm(&PermissionTerm{Base: i.irelSub(baseSubj, pt.RelOrPerm), RelOrPerm: itip})
-
-							// create a subject relation to expand the recursive permission
-							r := relationOrNew(i.im.Objects[baseSubj], itip)
-							r.AddRef(&RelationRef{Object: baseSubj, Relation: itip})
-						}
-					}
-
-				case o.HasRelation(pt.RelOrPerm):
-					r := o.Relations[pt.RelOrPerm]
-					for _, subj := range r.SubjectTypes {
-						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
-						ip.AddTerm(&PermissionTerm{RelOrPerm: i.irelSub(on, pt.RelOrPerm)})
-					}
-
-				case o.HasPermission(pt.RelOrPerm):
-					for _, subj := range subjs(o, pt.RelOrPerm) {
-						ip := permissionOrNew(i.im.Objects[subj], ipn, kind)
-						ip.AddTerm(&PermissionTerm{RelOrPerm: i.irelSub(on, pt.RelOrPerm)})
-					}
-				}
-			}
+			i.invertPermission(on, pn, o, p)
 		}
 	}
 
@@ -91,23 +62,41 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 
 	for _, rr := range r.Union {
 		irn := InverseRelation(on, rn)
-		i.im.Objects[rr.Object].Relations[irn] = &Relation{Union: []*RelationRef{{Object: on}}}
+		isrn := InverseRelation(on, rn, rr.Relation)
+		i.im.Objects[rr.Object].Relations[isrn] = &Relation{Union: []*RelationRef{{Object: on}}}
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
-			ipn := rsrel(on, rn)
+			ipn := PermForRel(irn)
 			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
 
-			for _, subj := range srel.AllTypes() {
-				p := permissionOrNew(i.im.Objects[subj], ipn, permissionKindUnion)
-				if _, ok := unionObjs[subj]; ok {
-					p.AddTerm(&PermissionTerm{RelOrPerm: irn})
+			for _, subj := range srel.AllRefs() {
+				p := permissionOrNew(i.im.Objects[subj.Object], ipn, permissionKindUnion)
+				i.addSubstitution(irn, ipn)
+				if _, ok := unionObjs[subj.Object]; ok {
+					p.AddTerm(&PermissionTerm{RelOrPerm: InverseRelation(on, rn, subj.Relation)})
 				}
 				rel := InverseRelation(rr.Object, rr.Relation)
-				base := lo.Ternary(rr.Object == on, rel, i.sub(rel))
-				p.AddTerm(&PermissionTerm{Base: base, RelOrPerm: ipn})
-				i.addSubstitution(irn, ipn)
+				p.AddTerm(&PermissionTerm{Base: rel, RelOrPerm: ipn})
 			}
 		}
+	}
+}
+
+func (i *inverter) applySubstitutions(o *Object) {
+	for pn, p := range o.Permissions {
+		for _, pt := range p.Terms() {
+			if !pt.IsArrow() && PermForRel(pt.RelOrPerm) == pn {
+				continue
+			}
+			pt.Base = i.sub(pt.Base)
+			pt.RelOrPerm = i.sub(pt.RelOrPerm)
+		}
+	}
+}
+
+func (i *inverter) invertPermission(on ObjectName, pn RelationName, o *Object, p *Permission) {
+	for _, pt := range p.Terms() {
+		newTermInverter(i, on, pn, o, p, pt).invert()
 	}
 }
 
@@ -125,6 +114,75 @@ func (i *inverter) sub(rn RelationName) RelationName {
 
 func (i *inverter) addSubstitution(rn, pn RelationName) {
 	i.subst[rn] = pn
+}
+
+type termInverter struct {
+	inv      *inverter
+	objName  ObjectName
+	permName RelationName
+	obj      *Object
+	perm     *Permission
+	term     *PermissionTerm
+	kind     permissionKind
+}
+
+func newTermInverter(i *inverter, on ObjectName, pn RelationName, o *Object, p *Permission, pt *PermissionTerm) *termInverter {
+	return &termInverter{
+		inv:      i,
+		objName:  on,
+		permName: pn,
+		obj:      o,
+		perm:     p,
+		term:     pt,
+		kind:     kindOf(p),
+	}
+}
+
+func (ti *termInverter) invert() {
+	switch {
+	case ti.term.IsArrow():
+		// create a subject relation to expand the recursive permission
+		ti.invertArrow()
+
+	case ti.obj.HasRelation(ti.term.RelOrPerm):
+		ti.invertRelation()
+
+	case ti.obj.HasPermission(ti.term.RelOrPerm):
+		ti.invertPermission()
+	}
+}
+
+func (ti *termInverter) invertArrow() {
+	itip := ti.inv.irelSub(ti.objName, ti.term.Base)
+	baseRel := ti.obj.Relations[ti.term.Base]
+
+	for _, rr := range ti.perm.Types() {
+		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
+		iPerm := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
+		for _, baseRR := range baseRel.Types() {
+			term := &PermissionTerm{Base: ti.inv.sub(InverseRelation(baseRR.Object, ti.term.RelOrPerm, rr.Relation)), RelOrPerm: itip}
+			iPerm.AddTerm(term)
+
+			rel := relationOrNew(ti.inv.im.Objects[baseRR.Object], itip)
+			rel.AddRef(&RelationRef{Object: baseRR.Object, Relation: itip})
+		}
+	}
+}
+
+func (ti *termInverter) invertRelation() {
+	for _, rr := range ti.obj.Relations[ti.term.RelOrPerm].Types() {
+		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
+		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
+		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm)})
+	}
+}
+
+func (ti *termInverter) invertPermission() {
+	for _, rr := range types(ti.obj, ti.term.RelOrPerm) {
+		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
+		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
+		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm)})
+	}
 }
 
 type permissionKind int
@@ -195,14 +253,14 @@ func InverseRelation(on ObjectName, rn RelationName, srn ...RelationName) Relati
 	}
 }
 
-func rsrel(on ObjectName, rn RelationName) RelationName {
-	return RelationName(fmt.Sprintf("%s%s", GeneratedPermissionPrefix, InverseRelation(on, rn)))
+func PermForRel(rn RelationName) RelationName {
+	return RelationName(fmt.Sprintf("%s%s", GeneratedPermissionPrefix, rn))
 }
 
-func subjs(o *Object, rn RelationName) []ObjectName {
+func types(o *Object, rn RelationName) RelationRefs {
 	if o.HasRelation(rn) {
-		return o.Relations[rn].AllTypes()
+		return o.Relations[rn].Types()
 	}
 
-	return o.Permissions[rn].SubjectTypes
+	return o.Permissions[rn].Types()
 }
