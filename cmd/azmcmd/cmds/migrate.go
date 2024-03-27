@@ -25,14 +25,14 @@ func (cmd *MigrateCmd) Run(c *Common) error {
 		client.WithInsecure(c.Insecure),
 	}
 
-	clnt, err := client.NewConnection(ctx, opts...)
+	conn, err := client.NewConnection(ctx, opts...)
 	if err != nil {
 		return err
 	}
 
 	m := migrate.NewMigrator()
 
-	if err := m.Load(clnt); err != nil {
+	if err := m.Load(conn); err != nil {
 		return err
 	}
 

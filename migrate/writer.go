@@ -86,6 +86,7 @@ func writeManifestTypes(w io.Writer) {
 	fmt.Fprint(w, "types:\n")
 }
 
+// nolint: goconst
 func writeTypeInstance(w io.Writer, indent int, instance *dsc2.ObjectType, this bool) {
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 
@@ -98,7 +99,7 @@ func writeTypeInstance(w io.Writer, indent int, instance *dsc2.ObjectType, this 
 		return
 	}
 
-	fmt.Fprintf(w, "%s%s:%s\n", space(indent), name, iff(this, " {}", ""))
+	fmt.Fprintf(w, "%s%s:%s\n", space(indent), name, lo.Ternary(this, " {}", ""))
 }
 
 func writeRelations(w io.Writer, indent int) {
@@ -142,11 +143,4 @@ func writePermissionInstance(w io.Writer, indent int, instances map[string]map[s
 
 func space(count int) string {
 	return strings.Repeat(" ", count)
-}
-
-func iff[T any](condition bool, trueVal, falseVal T) T {
-	if condition {
-		return trueVal
-	}
-	return falseVal
 }
