@@ -86,6 +86,7 @@ func writeManifestTypes(w io.Writer) {
 	fmt.Fprint(w, "types:\n")
 }
 
+// nolint: goconst
 func writeTypeInstance(w io.Writer, indent int, instance *dsc2.ObjectType, this bool) {
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 
