@@ -1,6 +1,6 @@
 module github.com/aserto-dev/azm
 
-go 1.20
+go 1.19
 
 // replace github.com/aserto-dev/go-directory => ../go-directory
 
