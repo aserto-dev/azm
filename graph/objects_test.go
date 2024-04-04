@@ -39,8 +39,8 @@ func TestSearchObjects(t *testing.T) {
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
-			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
-			tt.Logf("trace: +%v\n", res.Trace)
+			// tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
+			// tt.Logf("trace: +%v\n", res.Trace)
 
 			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
@@ -56,6 +56,8 @@ func TestSearchObjects(t *testing.T) {
 			assert.Equal(len(test.expected), len(subjects), subjects)
 		})
 	}
+
+	// t.Fail()
 }
 
 type object struct {
@@ -192,8 +194,8 @@ func relations() RelationsReader {
 
 		"group:d1_viewers#member@group:d1_subviewers#member",
 		"group:d1_subviewers#member@user:user3",
-		// "group:f1_viewers#member@group:f1_subviewers#member",
-		// "group:d1_subviewers#member@user:user4",
+		"group:f1_viewers#member@group:f1_subviewers#member",
+		"group:d1_subviewers#member@user:user4",
 
 		// nested groups
 		"group:leaf#member@user:leaf_user",
