@@ -38,7 +38,7 @@ func (s *SubjectSearch) Search() (*dsr.GetGraphResponse, error) {
 	resp.Results = res.Subjects()
 
 	if s.explain {
-		resp.Explanation = res.Explain()
+		resp.Explanation, _ = res.Explain()
 	}
 
 	resp.Trace = s.memo.Trace()
