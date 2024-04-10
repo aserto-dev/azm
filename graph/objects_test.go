@@ -80,7 +80,6 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#viewer@user:f1_viewer", []object{{"doc", "doc2"}}},
 	{"doc:?#viewer@group:d1_viewers#member", []object{{"doc", "doc1"}}},
 	{"doc:?#parent@folder:folder1", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
-
 	{"group:?#member@group:leaf#member", []object{{"group", "branch"}, {"group", "trunk"}, {"group", "root"}}},
 	{"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
 	{"group:?#member@group:yang#member", []object{{"group", "yin"}, {"group", "yang"}}},
@@ -98,7 +97,6 @@ var searchObjectsTests = []searchTest{
 	{"folder:?#is_owner@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_create_file@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_read@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
-
 	{"folder:?#can_share@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"doc:?#can_change_owner@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_write@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
@@ -192,8 +190,8 @@ func relations() RelationsReader {
 
 		"group:d1_viewers#member@group:d1_subviewers#member",
 		"group:d1_subviewers#member@user:user3",
-		// "group:f1_viewers#member@group:f1_subviewers#member",
-		// "group:d1_subviewers#member@user:user4",
+		"group:f1_viewers#member@group:f1_subviewers#member",
+		"group:d1_subviewers#member@user:user4",
 
 		// nested groups
 		"group:leaf#member@user:leaf_user",
