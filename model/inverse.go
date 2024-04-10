@@ -61,22 +61,21 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 	unionObjs := lo.Associate(r.Union, func(rr *RelationRef) (ObjectName, bool) { return rr.Object, true })
 
 	for _, rr := range r.Union {
-		irn := InverseRelation(on, rn)
 		isrn := InverseRelation(on, rn, rr.Relation)
 		i.im.Objects[rr.Object].Relations[isrn] = &Relation{Union: []*RelationRef{{Object: on}}}
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
-			ipn := PermForRel(irn)
 			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
 
 			for _, subj := range srel.AllRefs() {
+				ipr := InverseRelation(on, rn, subj.Relation)
+				ipn := PermForRel(ipr)
 				p := permissionOrNew(i.im.Objects[subj.Object], ipn, permissionKindUnion)
-				i.addSubstitution(irn, ipn)
+				i.addSubstitution(ipr, ipn)
 				if _, ok := unionObjs[subj.Object]; ok {
 					p.AddTerm(&PermissionTerm{RelOrPerm: InverseRelation(on, rn, subj.Relation)})
 				}
-				rel := InverseRelation(rr.Object, rr.Relation)
-				p.AddTerm(&PermissionTerm{Base: rel, RelOrPerm: ipn})
+				p.AddTerm(&PermissionTerm{Base: InverseRelation(rr.Object, rr.Relation, subj.Relation), RelOrPerm: isrn})
 			}
 		}
 	}
@@ -100,8 +99,8 @@ func (i *inverter) invertPermission(on ObjectName, pn RelationName, o *Object, p
 	}
 }
 
-func (i *inverter) irelSub(on ObjectName, rn RelationName) RelationName {
-	return i.sub(InverseRelation(on, rn))
+func (i *inverter) irelSub(on ObjectName, rn RelationName, srn ...RelationName) RelationName {
+	return i.sub(InverseRelation(on, rn, srn...))
 }
 
 func (i *inverter) sub(rn RelationName) RelationName {
@@ -173,7 +172,7 @@ func (ti *termInverter) invertRelation() {
 	for _, rr := range ti.obj.Relations[ti.term.RelOrPerm].Types() {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
-		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm)})
+		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
 	}
 }
 
@@ -181,7 +180,8 @@ func (ti *termInverter) invertPermission() {
 	for _, rr := range types(ti.obj, ti.term.RelOrPerm) {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
-		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm)})
+		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
+
 	}
 }
 
