@@ -48,7 +48,7 @@ func (r searchResults) Subjects() []*dsc.ObjectIdentifier {
 	})
 }
 
-func (r searchResults) Explain() *structpb.Struct {
+func (r searchResults) Explain() (*structpb.Struct, error) {
 	explanation := lo.MapEntries(r, func(obj object, paths []searchPath) (string, any) {
 		key := fmt.Sprintf("%s:%s", obj.Type, obj.ID)
 
@@ -61,12 +61,7 @@ func (r searchResults) Explain() *structpb.Struct {
 		return key, val
 	})
 
-	res, err := structpb.NewStruct(explanation)
-	if err != nil {
-		panic(err)
-	}
-
-	return res
+	return structpb.NewStruct(explanation)
 }
 
 type searchStatus int

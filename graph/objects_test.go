@@ -39,8 +39,8 @@ func TestSearchObjects(t *testing.T) {
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
-			// tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
-			// tt.Logf("trace: +%v\n", res.Trace)
+			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
+			tt.Logf("trace: +%v\n", res.Trace)
 
 			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
@@ -56,8 +56,6 @@ func TestSearchObjects(t *testing.T) {
 			assert.Equal(len(test.expected), len(subjects), subjects)
 		})
 	}
-
-	// t.Fail()
 }
 
 type object struct {
@@ -82,7 +80,6 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#viewer@user:f1_viewer", []object{{"doc", "doc2"}}},
 	{"doc:?#viewer@group:d1_viewers#member", []object{{"doc", "doc1"}}},
 	{"doc:?#parent@folder:folder1", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
-
 	{"group:?#member@group:leaf#member", []object{{"group", "branch"}, {"group", "trunk"}, {"group", "root"}}},
 	{"doc:?#viewer@group:leaf#member", []object{{"doc", "doc_tree"}}},
 	{"group:?#member@group:yang#member", []object{{"group", "yin"}, {"group", "yang"}}},
@@ -100,7 +97,6 @@ var searchObjectsTests = []searchTest{
 	{"folder:?#is_owner@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_create_file@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_read@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
-
 	{"folder:?#can_share@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"doc:?#can_change_owner@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
 	{"doc:?#can_write@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}, {"doc", "doc3"}}},
