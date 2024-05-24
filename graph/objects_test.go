@@ -23,12 +23,17 @@ func TestSearchObjects(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(m)
 
-	mnfst := manifest(m.Invert())
+	im := m.Invert()
+	mnfst := manifest(im)
 
 	b, err := yaml.Marshal(mnfst)
 	require.NoError(err)
 
 	t.Logf("inverted model:\n%s\n", b)
+
+	require.NoError(
+		im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase),
+	)
 
 	for _, test := range searchObjectsTests {
 		t.Run(test.search, func(tt *testing.T) {

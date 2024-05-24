@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 
+	set "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 )
 
@@ -94,8 +95,28 @@ func (i *inverter) applySubstitutions(o *Object) {
 }
 
 func (i *inverter) invertPermission(on ObjectName, pn RelationName, o *Object, p *Permission) {
+	var typeSet relSet
+
+	switch {
+	case p.IsUnion():
+		typeSet = set.NewSet(p.Types()...)
+	case p.IsIntersection():
+		typeSet = lo.Reduce(p.Terms(), func(acc relSet, pt *PermissionTerm, i int) relSet {
+			s := set.NewSet(pt.Types()...)
+			if i == 0 {
+				return s
+			}
+			if s.IsEmpty() {
+				return acc
+			}
+			return acc.Intersect(s)
+		}, nil)
+	case p.IsExclusion():
+		typeSet = set.NewSet(p.Exclusion.Include.Types()...)
+	}
+
 	for _, pt := range p.Terms() {
-		newTermInverter(i, on, pn, o, p, pt).invert()
+		newTermInverter(i, on, pn, o, p, pt, typeSet).invert()
 	}
 }
 
@@ -122,10 +143,11 @@ type termInverter struct {
 	obj      *Object
 	perm     *Permission
 	term     *PermissionTerm
+	typeSet  relSet
 	kind     permissionKind
 }
 
-func newTermInverter(i *inverter, on ObjectName, pn RelationName, o *Object, p *Permission, pt *PermissionTerm) *termInverter {
+func newTermInverter(i *inverter, on ObjectName, pn RelationName, o *Object, p *Permission, pt *PermissionTerm, typeSet relSet) *termInverter {
 	return &termInverter{
 		inv:      i,
 		objName:  on,
@@ -133,6 +155,7 @@ func newTermInverter(i *inverter, on ObjectName, pn RelationName, o *Object, p *
 		obj:      o,
 		perm:     p,
 		term:     pt,
+		typeSet:  typeSet,
 		kind:     kindOf(p),
 	}
 }
@@ -155,7 +178,8 @@ func (ti *termInverter) invertArrow() {
 	itip := ti.inv.irelSub(ti.objName, ti.term.Base)
 	baseRel := ti.obj.Relations[ti.term.Base]
 
-	for _, rr := range ti.perm.Types() {
+	typeRefs := set.NewSet(ti.perm.Types()...)
+	typeRefs.Intersect(ti.typeSet).Each(func(rr RelationRef) bool {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		iPerm := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		for _, baseRR := range baseRel.Types() {
@@ -165,24 +189,28 @@ func (ti *termInverter) invertArrow() {
 			rel := relationOrNew(ti.inv.im.Objects[baseRR.Object], itip)
 			rel.AddRef(&RelationRef{Object: baseRR.Object, Relation: itip})
 		}
-	}
+		return false // resume iteration
+	})
 }
 
 func (ti *termInverter) invertRelation() {
-	for _, rr := range ti.obj.Relations[ti.term.RelOrPerm].Types() {
+	typeRefs := set.NewSet(ti.obj.Relations[ti.term.RelOrPerm].Types()...)
+	typeRefs.Intersect(ti.typeSet).Each(func(rr RelationRef) bool {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
-	}
+		return false // resume iteration
+	})
 }
 
 func (ti *termInverter) invertPermission() {
-	for _, rr := range types(ti.obj, ti.term.RelOrPerm) {
+	typeRefs := set.NewSet(types(ti.obj, ti.term.RelOrPerm)...)
+	typeRefs.Intersect(ti.typeSet).Each(func(rr RelationRef) bool {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
-
-	}
+		return false // resume iteration
+	})
 }
 
 type permissionKind int

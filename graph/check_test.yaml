@@ -15,6 +15,10 @@ types:
   user:
     relations:
       manager: user
+      friend: group#member
+    permissions:
+      in_management_chain: manager | manager->in_management_chain
+      unfriendly_manager: in_management_chain - friend
 
   ### display_name: Identity ###
   identity:
