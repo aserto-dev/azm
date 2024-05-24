@@ -189,7 +189,7 @@ func (ti *termInverter) invertArrow() {
 			rel := relationOrNew(ti.inv.im.Objects[baseRR.Object], itip)
 			rel.AddRef(&RelationRef{Object: baseRR.Object, Relation: itip})
 		}
-		return false // continue iteration
+		return false // resume iteration
 	})
 }
 
@@ -199,7 +199,7 @@ func (ti *termInverter) invertRelation() {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
-		return false // continue iteration
+		return false // resume iteration
 	})
 }
 
@@ -209,7 +209,7 @@ func (ti *termInverter) invertPermission() {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
-		return false // continue iteration
+		return false // resume iteration
 	})
 }
 
