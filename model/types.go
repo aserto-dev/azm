@@ -215,12 +215,7 @@ func (p *Permission) AddTerm(pt *PermissionTerm) {
 }
 
 func (p *Permission) Types() RelationRefs {
-	return append(
-		lo.Map(p.SubjectTypes, func(on ObjectName, _ int) RelationRef {
-			return RelationRef{Object: on}
-		}),
-		p.Intermediates...,
-	)
+	return append(objectNamesToRelationRefs(p.SubjectTypes), p.Intermediates...)
 }
 
 type PermissionTerm struct {
@@ -243,6 +238,13 @@ func (pr *PermissionTerm) IsArrow() bool {
 	return pr.Base != ""
 }
 
+func (pr *PermissionTerm) Types() RelationRefs {
+	return append(
+		objectNamesToRelationRefs(pr.SubjectTypes),
+		pr.Intermediates...,
+	)
+}
+
 type PermissionTerms []*PermissionTerm
 
 func (pts PermissionTerms) Contains(pt *PermissionTerm) bool {
@@ -252,6 +254,12 @@ func (pts PermissionTerms) Contains(pt *PermissionTerm) bool {
 		}
 	}
 	return false
+}
+
+func objectNamesToRelationRefs(names []ObjectName) RelationRefs {
+	return lo.Map(names, func(on ObjectName, _ int) RelationRef {
+		return RelationRef{Object: on}
+	})
 }
 
 type ExclusionPermission struct {
