@@ -13,7 +13,7 @@ func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*d
 		return nil, err
 	}
 
-	return &dsr.CheckResponse{Check: ok}, nil
+	return &dsr.CheckResponse{Check: ok, Trace: checker.Trace()}, nil
 }
 
 type graphSearch interface {
