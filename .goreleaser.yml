@@ -77,15 +77,3 @@ release:
 
 blobs:
   # https://goreleaser.com/customization/blob/
-  -
-    provider: gs
-    bucket: azm-cli
-    folder: "azmcmd/{{ .Version }}"
-    extra_files:
-      - glob: VERSION.txt
-  -
-    provider: gs
-    bucket: azm0-cli
-    folder: "azmcmd/latest"
-    extra_files:
-      - glob: VERSION.txt
