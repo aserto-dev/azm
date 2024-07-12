@@ -12,7 +12,6 @@ require (
 	github.com/aserto-dev/go-directory v0.31.5
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/magefile/mage v1.15.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/pkg/errors v0.9.1
