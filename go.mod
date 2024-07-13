@@ -2,8 +2,6 @@ module github.com/aserto-dev/azm
 
 go 1.22
 
-toolchain go1.22.5
-
 // replace github.com/aserto-dev/go-directory => ../go-directory
 
 require (

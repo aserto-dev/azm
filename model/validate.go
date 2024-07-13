@@ -161,6 +161,12 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 		}
 
 		for _, term := range terms {
+			if term == nil {
+				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+					"permission '%s:%s' has an empty term", on, pn),
+				)
+				continue
+			}
 			switch {
 			case term.IsArrow():
 				// this is an arrow operator.

@@ -62,6 +62,12 @@ types:
       can_share: can_write & parent->can_share
       can_invite: parent->can_read - viewer
 
+      # viewer can be user or group but owner can only be user
+      negation_type_subset: viewer - owner
+
+      # viewer can be user or group but owner can only be user
+      intersection_type_subset: viewer & owner
+
   cycle:
     relations:
       parent: cycle

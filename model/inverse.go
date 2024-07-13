@@ -55,6 +55,22 @@ func (i *inverter) invert() *Model {
 		}
 	}
 
+	for _, o := range i.im.Objects {
+		for _, p := range o.Permissions {
+			if !p.IsExclusion() {
+				continue
+			}
+
+			if p.Exclusion.Exclude == nil {
+				// It is possible for the 'Exclude' term to be empty in in inverted model if the object type
+				// cannot have the relation/permission being excluded.
+				// In this case, the exclusion permission becomes a single-term union.
+				p.Union = PermissionTerms{p.Exclusion.Include}
+				p.Exclusion = nil
+			}
+		}
+	}
+
 	return i.im
 }
 
