@@ -227,6 +227,9 @@ type PermissionTerm struct {
 }
 
 func (pr *PermissionTerm) String() string {
+	if pr == nil {
+		return "<nil>"
+	}
 	s := string(pr.RelOrPerm)
 	if pr.Base != "" {
 		s = string(pr.Base) + "->" + s
