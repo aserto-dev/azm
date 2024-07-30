@@ -99,6 +99,16 @@ func (i *SafeRelation) Validate(mc *cache.Cache) error {
 		return nil
 	}
 
+	if !mc.RelationExists(model.ObjectName(i.GetObjectType()), model.RelationName(i.GetRelation())) {
+		return derr.ErrRelationNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
+	}
+
+	if IsSet(i.GetSubjectRelation()) {
+		if !mc.RelationExists(model.ObjectName(i.GetSubjectType()), model.RelationName(i.GetSubjectRelation())) {
+			return derr.ErrRelationNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
+		}
+	}
+
 	return mc.ValidateRelation(i.Relation)
 }
 
