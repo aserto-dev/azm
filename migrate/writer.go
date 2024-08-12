@@ -1,3 +1,4 @@
+// nolint: staticcheck
 package migrate
 
 import (
@@ -91,7 +92,6 @@ func writeTypeInstance(w io.Writer, indent int, instance *dsc2.ObjectType, this 
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 
 	name, err := model.NormalizeIdentifier(instance.Name)
-
 	if err != nil {
 		fmt.Fprintf(w, "%s%s:\n", space(indent), "### INVALID IDENTIFIER >>>")
 		fmt.Fprintf(w, "%s%s:\n", space(indent), "### "+name)

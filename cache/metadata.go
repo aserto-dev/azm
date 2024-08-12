@@ -1,3 +1,4 @@
+// nolint: staticcheck
 package cache
 
 import (
@@ -142,7 +143,6 @@ func (c *Cache) GetRelationTypes(objectType string) (RelationTypeSlice, error) {
 
 	for on, o := range objectTypes {
 		for rn := range o.Relations {
-
 			results = append(results, &dsc2.RelationType{
 				ObjectType:  string(on),
 				Name:        string(rn),

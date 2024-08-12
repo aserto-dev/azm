@@ -1,3 +1,4 @@
+// nolint: staticcheck
 package cache
 
 import (
@@ -5,9 +6,11 @@ import (
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 )
 
-type ObjectTypeSlice []*dsc2.ObjectType
-type RelationTypeSlice []*dsc2.RelationType
-type PermissionSlice []*dsc2.Permission
+type (
+	ObjectTypeSlice   []*dsc2.ObjectType
+	RelationTypeSlice []*dsc2.RelationType
+	PermissionSlice   []*dsc2.Permission
+)
 
 func (s ObjectTypeSlice) Paginate(page *dsc2.PaginationRequest) (*paging.Result[*dsc2.ObjectType], error) {
 	return paging.PaginateSlice(

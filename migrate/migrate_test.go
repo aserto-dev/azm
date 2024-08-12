@@ -1,3 +1,4 @@
+// nolint: staticcheck
 package migrate_test
 
 import (
@@ -36,7 +37,6 @@ var (
 )
 
 func TestMigrateBaseToAnnotatedModelV3(t *testing.T) {
-
 	sort.Slice(ObjectTypes, func(i, j int) bool {
 		return ObjectTypes[i].Ordinal < ObjectTypes[j].Ordinal
 	})
@@ -107,7 +107,7 @@ func WriteRelations(w io.Writer, indent int) {
 }
 
 func WriteRelationInstance(w io.Writer, indent int, instance *dsc2.RelationType) {
-	var target = "user"
+	target := "user"
 
 	fmt.Fprintf(w, "%s### %s: %s ###\n", space(indent), "display_name", instance.DisplayName)
 	fmt.Fprintf(w, "%s### %s: %d ###\n", space(indent), "ordinal", instance.Ordinal)
