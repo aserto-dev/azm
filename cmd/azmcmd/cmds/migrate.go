@@ -1,11 +1,10 @@
 package cmds
 
 import (
-	"context"
 	"os"
 
 	"github.com/aserto-dev/azm/migrate"
-	client "github.com/aserto-dev/go-aserto/client"
+	client "github.com/aserto-dev/go-aserto"
 )
 
 type MigrateCmd struct {
@@ -16,8 +15,6 @@ type MigrateCmd struct {
 }
 
 func (cmd *MigrateCmd) Run(c *Common) error {
-	ctx := context.Background()
-
 	opts := []client.ConnectionOption{
 		client.WithAddr(c.Host),
 		client.WithAPIKeyAuth(c.APIKey),
@@ -25,7 +22,7 @@ func (cmd *MigrateCmd) Run(c *Common) error {
 		client.WithInsecure(c.Insecure),
 	}
 
-	conn, err := client.NewConnection(ctx, opts...)
+	conn, err := client.NewConnection(opts...)
 	if err != nil {
 		return err
 	}
