@@ -63,10 +63,12 @@ types:
       can_invite: parent->can_read - viewer
 
       # viewer can be user or group but owner can only be user
+      union_type_subset: viewer | owner
+      union_type_subset_arrow: viewer | parent->owner
       negation_type_subset: viewer - owner
-
-      # viewer can be user or group but owner can only be user
+      negation_type_subset_arrow: viewer - parent->owner
       intersection_type_subset: viewer & owner
+      intersection_type_subset_arrow: viewer & parent->owner
 
   cycle:
     relations:

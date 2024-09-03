@@ -7,6 +7,7 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
 
@@ -25,8 +26,9 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 	// validate the model but skip name validation. To avoid name collisions, the inverted model
 	// uses mangled names that are not valid identifiers.
 	if err := im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase); err != nil {
+		log.Err(err).Interface("req", req).Msg("inverted model is invalid")
 		// TODO: we should persist the inverted model instead of computing it on the fly.
-		return nil, derr.ErrUnknown.Msg("internal error: unable to search for objects.")
+		return nil, derr.ErrUnknown.Msg("internal error: unable to search objects.")
 	}
 
 	iParams := invertGetGraphRequest(im, req)

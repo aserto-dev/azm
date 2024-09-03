@@ -194,7 +194,10 @@ func (ti *termInverter) invertArrow() {
 	itip := ti.inv.irelSub(ti.objName, ti.term.Base)
 	baseRel := ti.obj.Relations[ti.term.Base]
 
-	typeRefs := set.NewSet(ti.perm.Types()...)
+	typeRefs := set.NewSet(ti.term.Types()...)
+	if typeRefs.IsEmpty() {
+		typeRefs.Append(ti.perm.Types()...)
+	}
 	typeRefs.Intersect(ti.typeSet).Each(func(rr RelationRef) bool {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		iPerm := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
