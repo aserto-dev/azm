@@ -3,17 +3,22 @@ package cache
 import (
 	"github.com/aserto-dev/azm/graph"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
+	"github.com/aserto-dev/go-directory/pkg/pb"
+	"github.com/aserto-dev/go-directory/pkg/prop"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
 	checker := graph.NewCheck(c.model, req, relReader)
 
+	ctx := pb.NewStruct()
+
 	ok, err := checker.Check()
 	if err != nil {
-		return nil, err
+		ctx.Fields[prop.Reason] = structpb.NewStringValue(err.Error())
 	}
 
-	return &dsr.CheckResponse{Check: ok, Trace: checker.Trace()}, nil
+	return &dsr.CheckResponse{Check: ok, Trace: checker.Trace(), Context: ctx}, nil
 }
 
 type graphSearch interface {

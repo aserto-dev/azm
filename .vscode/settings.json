@@ -9,6 +9,7 @@
         "protobuf",
         "samber",
         "stretchr",
+        "structpb",
         "testsum",
         "timestamppb"
     ]
