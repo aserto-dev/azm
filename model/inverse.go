@@ -78,8 +78,8 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 	unionObjs := lo.Associate(r.Union, func(rr *RelationRef) (ObjectName, bool) { return rr.Object, true })
 
 	for _, rr := range r.Union {
-		isrn := InverseRelation(on, rn, rr.Relation)
-		i.im.Objects[rr.Object].Relations[isrn] = &Relation{Union: []*RelationRef{{Object: on}}}
+		irn := InverseRelation(on, rn, rr.Relation)
+		i.addInvertedRelation(i.im.Objects[rr.Object], on, irn)
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
 			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
@@ -92,10 +92,20 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 				if _, ok := unionObjs[subj.Object]; ok {
 					p.AddTerm(&PermissionTerm{RelOrPerm: InverseRelation(on, rn, subj.Relation)})
 				}
-				p.AddTerm(&PermissionTerm{Base: InverseRelation(rr.Object, rr.Relation, subj.Relation), RelOrPerm: isrn})
+				p.AddTerm(&PermissionTerm{Base: InverseRelation(rr.Object, rr.Relation, subj.Relation), RelOrPerm: irn})
 			}
 		}
 	}
+}
+
+func (i *inverter) addInvertedRelation(o *Object, on ObjectName, rn RelationName) {
+	o.Relations[rn] = &Relation{Union: []*RelationRef{{Object: on}}}
+	// Add a sythetic permission that resolves to the inverted relation.
+	// Having these permissions makes it easier to invert permissions that reference
+	// subject relations.
+	ipn := PermForRel(rn)
+	p := permissionOrNew(o, ipn, permissionKindUnion)
+	p.AddTerm(&PermissionTerm{RelOrPerm: rn})
 }
 
 func (i *inverter) applySubstitutions(o *Object) {

@@ -76,3 +76,14 @@ types:
       owner: user
     permissions:
       can_delete: owner & parent->can_delete
+
+  # A group#member can be a resource#editor in two ways:
+  # 1. Excplicit assignement (resource#editor@group#member)
+  # 2. Indirectly via editors#member@group#member
+  resource:
+    relations:
+      editor: user | group#member | editors#member
+  editors:
+    relations:
+      member: user | group#member
+
