@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.11
-	github.com/aserto-dev/go-directory v0.31.12-0.20240911105251-5f39873b6d53
+	github.com/aserto-dev/go-directory v0.31.12-0.20240912101324-b22fec59953f
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
