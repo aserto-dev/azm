@@ -302,7 +302,12 @@ func (v *validator) resolvePermissions() error {
 }
 
 func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, relSet) {
-	p := v.Objects[ref.Object].Permissions[ref.Relation]
+	p, ok := v.Objects[ref.Object].Permissions[ref.Relation]
+	if !ok {
+		// No such permission. Most likely a bug in the model inversion logic.
+		// Return empty sets which result in a validation error.
+		return set.NewSet[ObjectName](), set.NewSet[RelationRef]()
+	}
 
 	if len(p.SubjectTypes) > 0 {
 		// already resolved
