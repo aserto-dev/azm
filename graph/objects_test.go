@@ -91,6 +91,8 @@ var searchObjectsTests = []searchTest{
 	{"group:?#member@user:user3", []object{{"group", "d1_subviewers"}, {"group", "d1_viewers"}}},
 	{"group:?#member@user:yin_user", []object{{"group", "yin"}, {"group", "yang"}}},
 	{"doc:?#viewer@group:d1_subviewers#member", []object{{"doc", "doc1"}}},
+	{"doc:?#auditor@user:boss", []object{{"doc", "doc1"}}},
+	{"doc:?#auditor@user:employee#manager", []object{{"doc", "doc1"}}},
 
 	// wildcard
 	{"doc:?#viewer@user:user1", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
@@ -192,6 +194,8 @@ func relations() RelationsReader {
 		"doc:doc2#viewer@user:*",
 		"doc:doc2#viewer@user:user2",
 		"doc:doc3#parent@folder:folder2",
+		"user:employee#manager@user:boss",
+		"doc:doc1#auditor@user:employee#manager",
 
 		"group:d1_viewers#member@group:d1_subviewers#member",
 		"group:d1_subviewers#member@user:user3",

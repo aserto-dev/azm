@@ -54,6 +54,7 @@ types:
       owner: user
       parent: folder
       viewer: user | user:* | group#member
+      auditor: user#manager
     permissions:
       can_view: viewer
       can_change_owner: owner | parent->is_owner
@@ -86,4 +87,3 @@ types:
   editors:
     relations:
       member: user | group#member
-
