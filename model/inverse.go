@@ -90,7 +90,9 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 				p := permissionOrNew(i.im.Objects[subj.Object], ipn, permissionKindUnion)
 				i.addSubstitution(ipr, ipn)
 				if _, ok := unionObjs[subj.Object]; ok {
-					p.AddTerm(&PermissionTerm{RelOrPerm: InverseRelation(on, rn, subj.Relation)})
+					if i.im.Objects[subj.Object].HasRelOrPerm(ipr) {
+						p.AddTerm(&PermissionTerm{RelOrPerm: ipr})
+					}
 				}
 				p.AddTerm(&PermissionTerm{Base: InverseRelation(rr.Object, rr.Relation, subj.Relation), RelOrPerm: irn})
 			}

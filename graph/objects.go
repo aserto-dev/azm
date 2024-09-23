@@ -93,7 +93,7 @@ func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
 }
 
 func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation {
-	rel := model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation))
+	rel := model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation), model.RelationName(req.SubjectRelation))
 	relPerm := model.PermForRel(rel)
 	if im.Objects[model.ObjectName(req.SubjectType)].HasPermission(relPerm) {
 		rel = relPerm
