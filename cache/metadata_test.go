@@ -2,13 +2,33 @@
 package cache_test
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
+	"github.com/aserto-dev/azm/cache"
+	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/paging"
 	dsc2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	asserts "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// load model cache from serialized model file.
+func loadModelCache(t *testing.T, path string) *cache.Cache { // nolint: unparam
+	r, err := os.Open(path)
+	require.NoError(t, err)
+	defer r.Close()
+
+	var mc model.Model
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(&mc); err != nil {
+		require.NoError(t, err)
+	}
+
+	return cache.New(&mc)
+}
 
 func TestGetObjectTypeV2(t *testing.T) {
 	assert := asserts.New(t)
