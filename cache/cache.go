@@ -7,6 +7,13 @@ import (
 	"github.com/aserto-dev/azm/model/diff"
 	stts "github.com/aserto-dev/azm/stats"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/samber/lo"
+)
+
+type (
+	ObjectName   = model.ObjectName
+	RelationName = model.RelationName
 )
 
 type Cache struct {
@@ -37,7 +44,7 @@ func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
-func (c *Cache) ObjectExists(on model.ObjectName) bool {
+func (c *Cache) ObjectExists(on ObjectName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -46,7 +53,7 @@ func (c *Cache) ObjectExists(on model.ObjectName) bool {
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
-func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool {
+func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -58,7 +65,7 @@ func (c *Cache) RelationExists(on model.ObjectName, rn model.RelationName) bool 
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-func (c *Cache) PermissionExists(on model.ObjectName, pn model.RelationName) bool {
+func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -80,11 +87,46 @@ func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
 	defer c.mtx.RUnlock()
 
 	return c.model.ValidateRelation(
-		model.ObjectName(relation.ObjectType),
+		ObjectName(relation.ObjectType),
 		model.ObjectID(relation.ObjectId),
-		model.RelationName(relation.Relation),
-		model.ObjectName(relation.SubjectType),
+		RelationName(relation.Relation),
+		ObjectName(relation.SubjectType),
 		model.ObjectID(relation.SubjectId),
-		model.RelationName(relation.SubjectRelation),
+		RelationName(relation.SubjectRelation),
 	)
+}
+
+func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]RelationName, error) {
+	if !c.ObjectExists(on) {
+		return nil, derr.ErrObjectNotFound.Msg(on.String())
+	}
+	if !c.ObjectExists(sn) {
+		return nil, derr.ErrObjectNotFound.Msg(sn.String())
+	}
+	for _, srel := range sr {
+		if !c.RelationExists(sn, srel) {
+			return nil, derr.ErrRelationNotFound.Msgf("%s#%s", sn, sr)
+		}
+	}
+
+	matches := lo.PickBy(c.model.Objects[on].Relations, func(rn RelationName, r *model.Relation) bool {
+		for _, ref := range r.Union {
+			if ref.Object != sn {
+				// type mismatch
+				continue
+			}
+
+			switch {
+			case ref.IsDirect(), ref.IsWildcard():
+				if len(sr) == 0 {
+					return true
+				}
+			case ref.IsSubject() && lo.Contains(sr, ref.Relation):
+				return true
+			}
+		}
+		return false
+	})
+
+	return lo.Keys(matches), nil
 }
