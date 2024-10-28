@@ -3,13 +3,10 @@ package cache_test
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/aserto-dev/azm/cache"
 	"github.com/aserto-dev/azm/model"
-	v2 "github.com/aserto-dev/azm/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,23 +27,23 @@ func loadModelCache(t *testing.T, path string) *cache.Cache {
 }
 
 // helper to regenerate the serialized cache from a manifest.
-func loadFromManifest(t *testing.T, path string) *cache.Cache { // nolint:unused
-	r, err := os.Open(path)
-	require.NoError(t, err)
-	defer r.Close()
+// func loadFromManifest(t *testing.T, path string) *cache.Cache { // nolint:unused
+// 	r, err := os.Open(path)
+// 	require.NoError(t, err)
+// 	defer r.Close()
 
-	m, err := v2.Load(r)
-	require.NoError(t, err)
+// 	m, err := v2.Load(r)
+// 	require.NoError(t, err)
 
-	cachefile := strings.TrimSuffix(path, filepath.Ext(path)) + ".json"
-	w, err := os.Create(cachefile)
-	require.NoError(t, err)
-	defer w.Close()
+// 	cachefile := strings.TrimSuffix(path, filepath.Ext(path)) + ".json"
+// 	w, err := os.Create(cachefile)
+// 	require.NoError(t, err)
+// 	defer w.Close()
 
-	require.NoError(t, m.Write(w))
+// 	require.NoError(t, m.Write(w))
 
-	return cache.New(m)
-}
+// 	return cache.New(m)
+// }
 
 func TestExpandRelation(t *testing.T) {
 	mc := loadModelCache(t, "./expand_test.json")

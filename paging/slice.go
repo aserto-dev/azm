@@ -6,8 +6,10 @@ import (
 	"github.com/samber/lo"
 )
 
-type KeyComparer[T any] func([]string, T) bool
-type KeyMapper[T any] func(T) []string
+type (
+	KeyComparer[T any] func([]string, T) bool
+	KeyMapper[T any]   func(T) []string
+)
 
 type Result[T any] struct {
 	Items     []T
