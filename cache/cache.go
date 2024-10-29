@@ -96,6 +96,20 @@ func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
 	)
 }
 
+// AssignableRelations returns the set of relations that can occur between a given object type
+// and a subject type, optionally with a subject relation.
+//
+// If more than one subject relation is provided, AssignableRelations returns relations that match any
+// of the given relations. For example, if the manifest has:
+//
+// types:
+//
+//	tenant:
+//	  relations:
+//	    admin: group#member
+//	    guest: group#guest
+//
+// Then AssignableRelations("tenant", "group", "member", "guest") returns ["admin", "guest"].
 func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]RelationName, error) {
 	if !c.ObjectExists(on) {
 		return nil, derr.ErrObjectNotFound.Msg(on.String())

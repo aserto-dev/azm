@@ -2,6 +2,8 @@ module github.com/aserto-dev/azm
 
 go 1.22.0
 
+toolchain go1.23.2
+
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.11
