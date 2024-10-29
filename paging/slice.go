@@ -44,8 +44,8 @@ func PaginateSlice[T any](
 		}
 	}
 
-	pageSize := lo.Min([]int32{size, int32(len(s) - start)})
-	end := start + int(pageSize)
+	pageSize := lo.Min([]int{int(size), len(s) - start})
+	end := start + pageSize
 
 	var next *string
 	if end < len(s) {
