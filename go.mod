@@ -1,13 +1,13 @@
 module github.com/aserto-dev/azm
 
-go 1.22.7
+go 1.22.9
 
 toolchain go1.23.3
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.11
-	github.com/aserto-dev/go-directory v0.33.1-0.20241125175915-5cffa131b985
+	github.com/aserto-dev/go-directory v0.33.1
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2

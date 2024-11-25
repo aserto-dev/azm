@@ -6,6 +6,8 @@ github.com/aserto-dev/errors v0.0.11 h1:CXo+Uwmh09doG2HvL1SC8Fnne8f9VPrGyEQPtogA
 github.com/aserto-dev/errors v0.0.11/go.mod h1:T1YQOtcxpgBriPTn5HXJkD/QukYz5YojYOIzGMo0ybM=
 github.com/aserto-dev/go-directory v0.33.1-0.20241125175915-5cffa131b985 h1:Pjpoa4n8Kx1KBaQ8GyW9Y9bVnbzTwWkx7gDhL5huhmI=
 github.com/aserto-dev/go-directory v0.33.1-0.20241125175915-5cffa131b985/go.mod h1:eEvIFY+t6WclhJPHbu+Y17ghF4qRYc36UkJL5UNPVPY=
+github.com/aserto-dev/go-directory v0.33.1 h1:jLyzMRu5Omw5KJ2cmqnGZZbrF091HFHnt9awhqZhSq8=
+github.com/aserto-dev/go-directory v0.33.1/go.mod h1:0Ng9lPTahslSN/ONoWCceG6Q1ukpSfxYEu589eCReRM=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
