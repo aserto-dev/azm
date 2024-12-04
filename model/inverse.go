@@ -14,7 +14,10 @@ const (
 )
 
 func (m *Model) Invert() *Model {
-	return newInverter(m).invert()
+	if m.inverted == nil {
+		m.inverted = newInverter(m).invert()
+	}
+	return m.inverted
 }
 
 type inverter struct {

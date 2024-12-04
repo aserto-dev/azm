@@ -19,6 +19,7 @@ type Model struct {
 	Version  int                    `json:"version"`
 	Objects  map[ObjectName]*Object `json:"types"`
 	Metadata *Metadata              `json:"metadata"`
+	inverted *Model                 `json:"-"`
 }
 
 type Metadata struct {
@@ -33,6 +34,7 @@ func New(r io.Reader) (*Model, error) {
 	if err := dec.Decode(&m); err != nil {
 		return nil, err
 	}
+	m.inverted = newInverter(&m).invert()
 	return &m, nil
 }
 
@@ -64,8 +66,10 @@ func (r *relation) String() string {
 	return fmt.Sprintf("%s:%s#%s@%s:%s%s", r.on, r.oid, r.rn, r.sn, r.sid, srn)
 }
 
-type objSet set.Set[ObjectName]
-type relSet set.Set[RelationRef]
+type (
+	objSet set.Set[ObjectName]
+	relSet set.Set[RelationRef]
+)
 
 func (m *Model) Reader() (io.Reader, error) {
 	b := bytes.Buffer{}
