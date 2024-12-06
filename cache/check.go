@@ -9,7 +9,10 @@ import (
 )
 
 func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
-	checker := graph.NewCheck(c.model, req, relReader)
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	checker := graph.NewCheck(c.model, req, relReader, c.relsPool)
 
 	ctx := pb.NewStruct()
 
@@ -26,15 +29,18 @@ type graphSearch interface {
 }
 
 func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReader) (*dsr.GetGraphResponse, error) {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
 	var (
 		search graphSearch
 		err    error
 	)
 
 	if req.ObjectId == "" {
-		search, err = graph.NewObjectSearch(c.model, req, relReader)
+		search, err = graph.NewObjectSearch(c.model, req, relReader, c.relsPool)
 	} else {
-		search, err = graph.NewSubjectSearch(c.model, req, relReader)
+		search, err = graph.NewSubjectSearch(c.model, req, relReader, c.relsPool)
 	}
 
 	if err != nil {

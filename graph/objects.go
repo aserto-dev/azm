@@ -16,7 +16,7 @@ type ObjectSearch struct {
 	wildcardSearch *SubjectSearch
 }
 
-func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) (*ObjectSearch, error) {
+func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, pool *RelationsPool) (*ObjectSearch, error) {
 	params := searchParams(req)
 	if err := validate(m, params); err != nil {
 		return nil, err
@@ -40,6 +40,7 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
+			pool:    pool,
 		}},
 		wildcardSearch: &SubjectSearch{graphSearch{
 			m:       im,
@@ -47,6 +48,7 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 			getRels: invertedRelationReader(im, reader),
 			memo:    newSearchMemo(req.Trace),
 			explain: req.Explain,
+			pool:    pool,
 		}},
 	}, nil
 }
@@ -125,22 +127,24 @@ func wildcardParams(params *relation) *relation {
 }
 
 func invertedRelationReader(m *model.Model, reader RelationReader) RelationReader {
-	return func(r *dsc.Relation) ([]*dsc.Relation, error) {
+	return func(r *dsc.Relation, out *Relations) error {
 		ir := uninvertRelation(m, relationFromProto(r))
-		res, err := reader(ir.asProto())
-		if err != nil {
-			return nil, err
+		if err := reader(ir.asProto(), out); err != nil {
+			return err
 		}
 
-		return lo.Map(res, func(r *dsc.Relation, _ int) *dsc.Relation {
-			return &dsc.Relation{
+		res := *out
+		for i, r := range res {
+			res[i] = &dsc.Relation{
 				ObjectType:  r.SubjectType,
 				ObjectId:    r.SubjectId,
 				Relation:    r.Relation,
 				SubjectType: r.ObjectType,
 				SubjectId:   r.ObjectId,
 			}
-		}), nil
+		}
+
+		return nil
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aserto-dev/azm/internal/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -12,21 +13,27 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type ObjectID = model.ObjectID
+type (
+	ObjectID = model.ObjectID
 
-// RelationReader retrieves relations that match the given filter.
-type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
+	Relations = []*dsc.Relation
 
-type searchPath relations
+	// RelationReader retrieves relations that match the given filter.
+	RelationReader func(*dsc.Relation, *Relations) error
 
-type object struct {
-	Type model.ObjectName
-	ID   ObjectID
-}
+	RelationsPool = mempool.Pool[*Relations]
 
-// The results of a search is a map where the key is a matching relations
-// and the value is a list of paths that connect the search object and subject.
-type searchResults map[object][]searchPath
+	searchPath relations
+
+	object struct {
+		Type model.ObjectName
+		ID   ObjectID
+	}
+
+	// The results of a search is a map where the key is a matching relations
+	// and the value is a list of paths that connect the search object and subject.
+	searchResults map[object][]searchPath
+)
 
 // Objects returns the objects from the search results.
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {
@@ -92,6 +99,7 @@ type graphSearch struct {
 
 	memo    *searchMemo
 	explain bool
+	pool    *RelationsPool
 }
 
 func validate(m *model.Model, params *relation) error {

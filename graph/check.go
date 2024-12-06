@@ -15,9 +15,10 @@ type Checker struct {
 	getRels RelationReader
 
 	memo *checkMemo
+	pool *RelationsPool
 }
 
-func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Checker {
+func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool *RelationsPool) *Checker {
 	return &Checker{
 		m: m,
 		params: &relation{
@@ -29,6 +30,7 @@ func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader) *Che
 		},
 		getRels: reader,
 		memo:    newCheckMemo(req.Trace),
+		pool:    pool,
 	}
 }
 
@@ -88,7 +90,16 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
 	steps := c.m.StepRelation(r, params.st)
 
+	// Reuse the same slice in all steps.
+	relsPtr := c.pool.Get()
+	defer func() {
+		*relsPtr = (*relsPtr)[:0]
+		c.pool.Put(relsPtr)
+	}()
+
 	for _, step := range steps {
+		*relsPtr = (*relsPtr)[:0]
+
 		req := &dsc.Relation{
 			ObjectType:  params.ot.String(),
 			ObjectId:    params.oid.String(),
@@ -103,27 +114,26 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 			req.SubjectRelation = step.Relation.String()
 		}
 
-		rels, err := c.getRels(req)
-		if err != nil {
+		if err := c.getRels(req, relsPtr); err != nil {
 			return checkStatusFalse, err
 		}
 
 		switch {
 		case step.IsDirect():
-			for _, rel := range rels {
+			for _, rel := range *relsPtr {
 				if rel.SubjectId == params.sid.String() {
 					return checkStatusTrue, nil
 				}
 			}
 
 		case step.IsWildcard():
-			if len(rels) > 0 {
+			if len(*relsPtr) > 0 {
 				// We have a wildcard match.
 				return checkStatusTrue, nil
 			}
 
 		case step.IsSubject():
-			for _, rel := range rels {
+			for _, rel := range *relsPtr {
 				if status, err := c.check(&relation{
 					ot:  step.Object,
 					oid: ObjectID(rel.SubjectId),
@@ -190,17 +200,21 @@ func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 
 func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relations, error) {
 	if pt.IsArrow() {
-		// Resolve the base of the arrow.
-		rels, err := c.getRels(&dsc.Relation{
+		query := &dsc.Relation{
 			ObjectType: params.ot.String(),
 			ObjectId:   params.oid.String(),
 			Relation:   pt.Base.String(),
-		})
+		}
+
+		relsPtr := c.pool.Get()
+
+		// Resolve the base of the arrow.
+		err := c.getRels(query, relsPtr)
 		if err != nil {
 			return relations{}, err
 		}
 
-		expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
+		expanded := lo.Map(*relsPtr, func(rel *dsc.Relation, _ int) *relation {
 			return &relation{
 				ot:  model.ObjectName(rel.SubjectType),
 				oid: ObjectID(rel.SubjectId),
@@ -209,6 +223,9 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 				sid: params.sid,
 			}
 		})
+
+		*relsPtr = (*relsPtr)[:0]
+		c.pool.Put(relsPtr)
 
 		return expanded, nil
 	}

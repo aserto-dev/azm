@@ -12,7 +12,7 @@ type SubjectSearch struct {
 	graphSearch
 }
 
-func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader) (*SubjectSearch, error) {
+func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, pool *RelationsPool) (*SubjectSearch, error) {
 	params := searchParams(req)
 	if err := validate(m, params); err != nil {
 		return nil, err
@@ -24,6 +24,7 @@ func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationR
 		getRels: reader,
 		memo:    newSearchMemo(req.Trace),
 		explain: req.Explain,
+		pool:    pool,
 	}}, nil
 }
 
@@ -118,12 +119,12 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 
 	results := searchResults{}
 
-	rels, err := s.getRels(req)
-	if err != nil {
+	relsPtr := s.pool.Get()
+	if err := s.getRels(req, relsPtr); err != nil {
 		return results, err
 	}
 
-	for _, rel := range rels {
+	for _, rel := range *relsPtr {
 		if rel.SubjectId != "*" && params.oid != ObjectID(rel.ObjectId) {
 			continue
 		}
@@ -146,6 +147,9 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 		results[*subj] = path
 	}
 
+	*relsPtr = (*relsPtr)[:0]
+	s.pool.Put(relsPtr)
+
 	return results, nil
 }
 
@@ -159,12 +163,17 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		SubjectType:     step.Object.String(),
 		SubjectRelation: step.Relation.String(),
 	}
-	rels, err := s.getRels(req)
-	if err != nil {
+
+	relsPtr := s.pool.Get()
+	if err := s.getRels(req, relsPtr); err != nil {
 		return results, err
 	}
+	defer func() {
+		*relsPtr = (*relsPtr)[:0]
+		s.pool.Put(relsPtr)
+	}()
 
-	for _, rel := range rels {
+	for _, rel := range *relsPtr {
 		current := relationFromProto(rel)
 
 		if params.srel == model.RelationName(rel.SubjectRelation) && params.st == model.ObjectName(rel.SubjectType) {
@@ -281,17 +290,20 @@ func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, pa
 }
 
 func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
-	// Resolve the base of the arrow.
-	rels, err := s.getRels(&dsc.Relation{
+	relsPtr := s.pool.Get()
+
+	req := &dsc.Relation{
 		ObjectType: params.ot.String(),
 		ObjectId:   params.oid.String(),
 		Relation:   pt.Base.String(),
-	})
-	if err != nil {
+	}
+
+	// Resolve the base of the arrow.
+	if err := s.getRels(req, relsPtr); err != nil {
 		return []*relation{}, err
 	}
 
-	expanded := lo.Map(rels, func(rel *dsc.Relation, _ int) *relation {
+	expanded := lo.Map(*relsPtr, func(rel *dsc.Relation, _ int) *relation {
 		return &relation{
 			ot:   model.ObjectName(rel.SubjectType),
 			oid:  ObjectID(rel.SubjectId),
@@ -301,6 +313,9 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 			srel: params.srel,
 		}
 	})
+
+	*relsPtr = (*relsPtr)[:0]
+	s.pool.Put(relsPtr)
 
 	return expanded, nil
 }
