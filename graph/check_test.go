@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	azmgraph "github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/internal/mempool"
 	v3 "github.com/aserto-dev/azm/v3"
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,11 +69,13 @@ func TestCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
+	pool := mempool.NewSlicePool[*dsc.Relation]()
+
 	for _, test := range tests {
 		t.Run(test.check, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmgraph.NewCheck(m, checkReq(test.check), rels.GetRelations)
+			checker := azmgraph.NewCheck(m, checkReq(test.check), rels.GetRelations, pool)
 
 			res, err := checker.Check()
 			assert.NoError(err)

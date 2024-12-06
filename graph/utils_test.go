@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -96,7 +97,7 @@ func NewRelationsReader(rels ...string) RelationsReader {
 	})
 }
 
-func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error) {
+func (r RelationsReader) GetRelations(req *dsc.Relation, out *graph.Relations) error {
 	ot := model.ObjectName(req.ObjectType)
 	oid := model.ObjectID(req.ObjectId)
 	rn := model.RelationName(req.Relation)
@@ -113,9 +114,11 @@ func (r RelationsReader) GetRelations(req *dsc.Relation) ([]*dsc.Relation, error
 			(sr == "" || rel.SubjectRelation == sr)
 	})
 
-	return lo.Map(matches, func(r *relation, _ int) *dsc.Relation {
-		return r.proto()
-	}), nil
+	for _, rel := range matches {
+		*out = append(*out, rel.proto())
+	}
+
+	return nil
 }
 
 type parseTest struct {

@@ -3,6 +3,8 @@ package cache
 import (
 	"sync"
 
+	"github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/internal/mempool"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
 	stts "github.com/aserto-dev/azm/stats"
@@ -17,15 +19,17 @@ type (
 )
 
 type Cache struct {
-	model *model.Model
-	mtx   sync.RWMutex
+	model    *model.Model
+	mtx      sync.RWMutex
+	relsPool *graph.RelationsPool
 }
 
 // New, create new model cache instance.
 func New(m *model.Model) *Cache {
 	return &Cache{
-		model: m,
-		mtx:   sync.RWMutex{},
+		model:    m,
+		mtx:      sync.RWMutex{},
+		relsPool: mempool.NewSlicePool[*dsc.Relation](),
 	}
 }
 
