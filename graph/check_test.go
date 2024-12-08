@@ -7,7 +7,6 @@ import (
 	azmgraph "github.com/aserto-dev/azm/graph"
 	"github.com/aserto-dev/azm/mempool"
 	v3 "github.com/aserto-dev/azm/v3"
-	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,7 +69,7 @@ func TestCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
-	pool := mempool.NewCollectionPool[dsc.Relation]()
+	pool := mempool.NewRelationsPool()
 
 	for _, test := range tests {
 		t.Run(test.check, func(tt *testing.T) {
@@ -94,7 +93,7 @@ func BenchmarkCheck(b *testing.B) {
 		b.Fatalf("failed to load model: %s", err)
 	}
 
-	pool := mempool.NewCollectionPool[dsc.Relation]()
+	pool := mempool.NewRelationsPool()
 
 	b.ResetTimer()
 	for _, test := range tests {

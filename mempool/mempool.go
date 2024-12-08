@@ -1,8 +1,10 @@
 package mempool
 
-import "sync"
+import (
+	"sync"
+)
 
-const defaultSliceCapacity = 128
+const defaultSliceCapacity = 2048
 
 type Pool[T any] struct {
 	sync.Pool
@@ -33,33 +35,34 @@ func NewSlicePool[T any]() *Pool[*[]T] {
 	})
 }
 
-type Resetable[T any] interface {
-	Reset()
-	*T
+type Allocator[T any] interface {
+	New() T
+	Reset(T)
 }
 
-type CollectionPool[M any, T Resetable[M]] struct {
+type CollectionPool[T any] struct {
 	slicePool *Pool[*[]T]
 	msgPool   *Pool[T]
+	alloc     Allocator[T]
 }
 
-func NewCollectionPool[M any, T Resetable[M]]() *CollectionPool[M, T] {
-	return &CollectionPool[M, T]{
+func NewCollectionPool[T any](alloc Allocator[T]) *CollectionPool[T] {
+	return &CollectionPool[T]{
 		slicePool: NewSlicePool[T](),
+		alloc:     alloc,
 		msgPool: NewPool(func() T {
-			return new(M)
+			return alloc.New()
 		}),
 	}
 }
 
-func (p CollectionPool[M, T]) GetSlice() *[]T {
-	// return p.slicePool.Get()
-	return p.slicePool.New().(*[]T)
+func (p CollectionPool[T]) GetSlice() *[]T {
+	return p.slicePool.Get()
 }
 
-func (p *CollectionPool[M, T]) PutSlice(s *[]T) {
+func (p *CollectionPool[T]) PutSlice(s *[]T) {
 	for _, item := range *s {
-		item.Reset()
+		p.alloc.Reset(item)
 		p.msgPool.Put(item)
 	}
 
@@ -67,11 +70,10 @@ func (p *CollectionPool[M, T]) PutSlice(s *[]T) {
 	p.slicePool.Put(s)
 }
 
-func (p *CollectionPool[M, T]) Get() T {
-	// return p.msgPool.Get()
-	return p.msgPool.New().(T)
+func (p *CollectionPool[T]) Get() T {
+	return p.msgPool.Get()
 }
 
-func (p *CollectionPool[M, T]) Put(m T) {
-	p.msgPool.Put(m)
+func (p *CollectionPool[T]) Put(t T) {
+	p.msgPool.Put(t)
 }

@@ -36,7 +36,7 @@ func TestSearchObjects(t *testing.T) {
 		im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase),
 	)
 
-	pool := mempool.NewCollectionPool[dsc.Relation]()
+	pool := mempool.NewRelationsPool()
 
 	for _, test := range searchObjectsTests {
 		t.Run(test.search, func(tt *testing.T) {

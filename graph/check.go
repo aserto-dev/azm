@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -15,10 +16,10 @@ type Checker struct {
 	getRels RelationReader
 
 	memo *checkMemo
-	pool *RelationsPool
+	pool *mempool.RelationsPool
 }
 
-func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool *RelationsPool) *Checker {
+func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool *mempool.RelationsPool) *Checker {
 	return &Checker{
 		m: m,
 		params: &relation{

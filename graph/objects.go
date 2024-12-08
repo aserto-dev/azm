@@ -3,6 +3,7 @@ package graph
 import (
 	"strings"
 
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -16,7 +17,7 @@ type ObjectSearch struct {
 	wildcardSearch *SubjectSearch
 }
 
-func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, pool *RelationsPool) (*ObjectSearch, error) {
+func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, pool *mempool.RelationsPool) (*ObjectSearch, error) {
 	params := searchParams(req)
 	if err := validate(m, params); err != nil {
 		return nil, err
@@ -127,7 +128,7 @@ func wildcardParams(params *relation) *relation {
 }
 
 func invertedRelationReader(m *model.Model, reader RelationReader) RelationReader {
-	return func(r *dsc.Relation, relPool MessagePool[dsc.Relation, *dsc.Relation], out *Relations) error {
+	return func(r *dsc.Relation, relPool MessagePool[*dsc.Relation], out *Relations) error {
 		ir := uninvertRelation(m, relationFromProto(r))
 		if err := reader(ir.asProto(), relPool, out); err != nil {
 			return err

@@ -19,7 +19,7 @@ func TestSearchSubjects(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
-	pool := mempool.NewCollectionPool[dsc.Relation]()
+	pool := mempool.NewRelationsPool()
 
 	for _, test := range searchSubjectsTests {
 		t.Run(test.search, func(tt *testing.T) {

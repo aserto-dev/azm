@@ -50,7 +50,7 @@ func parseRelation(r string) *relation {
 	return rel
 }
 
-func (r *relation) proto(pool graph.MessagePool[dsc.Relation, *dsc.Relation]) *dsc.Relation {
+func (r *relation) proto(pool graph.MessagePool[*dsc.Relation]) *dsc.Relation {
 	rel := pool.Get()
 	rel.ObjectType = r.ObjectType.String()
 	rel.ObjectId = r.ObjectID.String()
@@ -97,7 +97,7 @@ func NewRelationsReader(rels ...string) RelationsReader {
 	})
 }
 
-func (r RelationsReader) GetRelations(req *dsc.Relation, pool graph.MessagePool[dsc.Relation, *dsc.Relation], out *graph.Relations) error {
+func (r RelationsReader) GetRelations(req *dsc.Relation, pool graph.MessagePool[*dsc.Relation], out *graph.Relations) error {
 	ot := model.ObjectName(req.ObjectType)
 	oid := model.ObjectID(req.ObjectId)
 	rn := model.RelationName(req.Relation)

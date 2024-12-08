@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -12,7 +13,12 @@ type SubjectSearch struct {
 	graphSearch
 }
 
-func NewSubjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationReader, pool *RelationsPool) (*SubjectSearch, error) {
+func NewSubjectSearch(
+	m *model.Model,
+	req *dsr.GetGraphRequest,
+	reader RelationReader,
+	pool *mempool.RelationsPool,
+) (*SubjectSearch, error) {
 	params := searchParams(req)
 	if err := validate(m, params); err != nil {
 		return nil, err

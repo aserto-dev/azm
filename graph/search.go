@@ -14,9 +14,8 @@ import (
 )
 
 type (
-	ObjectID      = model.ObjectID
-	Relations     = []*dsc.Relation
-	RelationsPool = mempool.CollectionPool[dsc.Relation, *dsc.Relation]
+	ObjectID  = model.ObjectID
+	Relations = []*dsc.Relation
 
 	searchPath relations
 
@@ -30,12 +29,12 @@ type (
 	searchResults map[object][]searchPath
 )
 
-type MessagePool[M any, T mempool.Resetable[M]] interface {
+type MessagePool[T any] interface {
 	Get() T
 	Put(T)
 }
 
-type RelationPool = MessagePool[dsc.Relation, *dsc.Relation]
+type RelationPool = MessagePool[*dsc.Relation]
 
 // RelationReader retrieves relations that match the given filter.
 type RelationReader func(*dsc.Relation, RelationPool, *Relations) error
@@ -104,7 +103,7 @@ type graphSearch struct {
 
 	memo    *searchMemo
 	explain bool
-	pool    *RelationsPool
+	pool    *mempool.RelationsPool
 }
 
 func validate(m *model.Model, params *relation) error {
