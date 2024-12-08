@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func checkReq(expr string) *dsr.CheckRequest {
-	return parseRelation(expr).checkReq()
+func checkReq(expr string, trace bool) *dsr.CheckRequest {
+	return parseRelation(expr).checkReq(trace)
 }
 
 func graphReq(expr string) *dsr.GetGraphRequest {
@@ -50,25 +50,25 @@ func parseRelation(r string) *relation {
 	return rel
 }
 
-func (r *relation) proto() *dsc.Relation {
-	return &dsc.Relation{
-		ObjectType:      r.ObjectType.String(),
-		ObjectId:        r.ObjectID.String(),
-		Relation:        r.Relation.String(),
-		SubjectType:     r.SubjectType.String(),
-		SubjectId:       r.SubjectID.String(),
-		SubjectRelation: r.SubjectRelation.String(),
-	}
+func (r *relation) proto(pool graph.MessagePool[dsc.Relation, *dsc.Relation]) *dsc.Relation {
+	rel := pool.Get()
+	rel.ObjectType = r.ObjectType.String()
+	rel.ObjectId = r.ObjectID.String()
+	rel.Relation = r.Relation.String()
+	rel.SubjectType = r.SubjectType.String()
+	rel.SubjectId = r.SubjectID.String()
+	rel.SubjectRelation = r.SubjectRelation.String()
+	return rel
 }
 
-func (r *relation) checkReq() *dsr.CheckRequest {
+func (r *relation) checkReq(trace bool) *dsr.CheckRequest {
 	return &dsr.CheckRequest{
 		ObjectType:  r.ObjectType.String(),
 		ObjectId:    r.ObjectID.String(),
 		Relation:    r.Relation.String(),
 		SubjectType: r.SubjectType.String(),
 		SubjectId:   r.SubjectID.String(),
-		Trace:       true,
+		Trace:       trace,
 	}
 }
 
@@ -97,7 +97,7 @@ func NewRelationsReader(rels ...string) RelationsReader {
 	})
 }
 
-func (r RelationsReader) GetRelations(req *dsc.Relation, out *graph.Relations) error {
+func (r RelationsReader) GetRelations(req *dsc.Relation, pool graph.MessagePool[dsc.Relation, *dsc.Relation], out *graph.Relations) error {
 	ot := model.ObjectName(req.ObjectType)
 	oid := model.ObjectID(req.ObjectId)
 	rn := model.RelationName(req.Relation)
@@ -115,7 +115,7 @@ func (r RelationsReader) GetRelations(req *dsc.Relation, out *graph.Relations) e
 	})
 
 	for _, rel := range matches {
-		*out = append(*out, rel.proto())
+		*out = append(*out, rel.proto(pool))
 	}
 
 	return nil

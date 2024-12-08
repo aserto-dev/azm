@@ -119,8 +119,8 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 
 	results := searchResults{}
 
-	relsPtr := s.pool.Get()
-	if err := s.getRels(req, relsPtr); err != nil {
+	relsPtr := s.pool.GetSlice()
+	if err := s.getRels(req, s.pool, relsPtr); err != nil {
 		return results, err
 	}
 
@@ -147,8 +147,7 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 		results[*subj] = path
 	}
 
-	*relsPtr = (*relsPtr)[:0]
-	s.pool.Put(relsPtr)
+	s.pool.PutSlice(relsPtr)
 
 	return results, nil
 }
@@ -164,14 +163,11 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		SubjectRelation: step.Relation.String(),
 	}
 
-	relsPtr := s.pool.Get()
-	if err := s.getRels(req, relsPtr); err != nil {
+	relsPtr := s.pool.GetSlice()
+	if err := s.getRels(req, s.pool, relsPtr); err != nil {
 		return results, err
 	}
-	defer func() {
-		*relsPtr = (*relsPtr)[:0]
-		s.pool.Put(relsPtr)
-	}()
+	defer s.pool.PutSlice(relsPtr)
 
 	for _, rel := range *relsPtr {
 		current := relationFromProto(rel)
@@ -290,7 +286,7 @@ func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, pa
 }
 
 func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
-	relsPtr := s.pool.Get()
+	relsPtr := s.pool.GetSlice()
 
 	req := &dsc.Relation{
 		ObjectType: params.ot.String(),
@@ -299,7 +295,7 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 	}
 
 	// Resolve the base of the arrow.
-	if err := s.getRels(req, relsPtr); err != nil {
+	if err := s.getRels(req, s.pool, relsPtr); err != nil {
 		return []*relation{}, err
 	}
 
@@ -314,8 +310,7 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 		}
 	})
 
-	*relsPtr = (*relsPtr)[:0]
-	s.pool.Put(relsPtr)
+	s.pool.PutSlice(relsPtr)
 
 	return expanded, nil
 }

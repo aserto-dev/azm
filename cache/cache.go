@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/aserto-dev/azm/graph"
-	"github.com/aserto-dev/azm/internal/mempool"
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
 	stts "github.com/aserto-dev/azm/stats"
@@ -29,7 +29,7 @@ func New(m *model.Model) *Cache {
 	return &Cache{
 		model:    m,
 		mtx:      sync.RWMutex{},
-		relsPool: mempool.NewSlicePool[*dsc.Relation](),
+		relsPool: mempool.NewCollectionPool[dsc.Relation, *dsc.Relation](),
 	}
 }
 
@@ -42,8 +42,8 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 }
 
 func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return diff.CanUpdateModel(c.model, other, stats)
 }
 

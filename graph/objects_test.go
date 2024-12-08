@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aserto-dev/azm/graph"
-	"github.com/aserto-dev/azm/internal/mempool"
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -36,7 +36,7 @@ func TestSearchObjects(t *testing.T) {
 		im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase),
 	)
 
-	pool := mempool.NewSlicePool[*dsc.Relation]()
+	pool := mempool.NewCollectionPool[dsc.Relation]()
 
 	for _, test := range searchObjectsTests {
 		t.Run(test.search, func(tt *testing.T) {

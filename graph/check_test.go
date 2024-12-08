@@ -5,83 +5,108 @@ import (
 	"testing"
 
 	azmgraph "github.com/aserto-dev/azm/graph"
-	"github.com/aserto-dev/azm/internal/mempool"
+	"github.com/aserto-dev/azm/mempool"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
 
+var tests = []struct {
+	check    string
+	expected bool
+}{
+	// Relations
+	{"doc:doc1#owner@user:user1", false},
+	{"doc:doc1#viewer@user:user1", true},
+	{"doc:doc2#viewer@user:user1", true},
+	{"doc:doc2#viewer@user:userX", true},
+	{"doc:doc1#viewer@user:user2", true},
+	{"doc:doc1#viewer@user:user3", true},
+	{"doc:doc1#viewer@group:d1_viewers", false},
+
+	{"group:yin#member@user:yin_user", true},
+	{"group:yin#member@user:yang_user", true},
+	{"group:yang#member@user:yin_user", true},
+	{"group:yang#member@user:yang_user", true},
+
+	{"group:alpha#member@user:user1", false},
+
+	// Permissions
+	{"doc:doc1#can_change_owner@user:d1_owner", true},
+	{"doc:doc1#can_change_owner@user:user1", false},
+	{"doc:doc1#can_change_owner@user:userX", false},
+
+	{"doc:doc1#can_read@user:d1_owner", true},
+	{"doc:doc1#can_read@user:f1_owner", true},
+	{"doc:doc1#can_read@user:user1", true},
+	{"doc:doc1#can_read@user:f1_viewer", true},
+	{"doc:doc1#can_read@user:userX", false},
+
+	{"doc:doc1#can_write@user:d1_owner", true},
+	{"doc:doc1#can_write@user:f1_owner", true},
+	{"doc:doc1#can_write@user:user2", false},
+
+	{"folder:folder1#owner@user:f1_owner", true},
+	{"folder:folder1#can_create_file@user:f1_owner", true},
+	{"folder:folder1#can_share@user:f1_owner", true},
+
+	// intersection
+	{"doc:doc1#can_share@user:d1_owner", false},
+	{"doc:doc1#can_share@user:f1_owner", true},
+
+	// negation
+	{"folder:folder1#can_read@user:f1_owner", true},
+	{"doc:doc1#viewer@user:f1_owner", false},
+	{"doc:doc1#can_invite@user:f1_owner", true},
+
+	// cycles
+	{"cycle:loop#can_delete@user:loop_owner", true},
+	{"cycle:loop#can_delete@user:user1", false},
+}
+
 func TestCheck(t *testing.T) {
-	tests := []struct {
-		check    string
-		expected bool
-	}{
-		// Relations
-		{"doc:doc1#owner@user:user1", false},
-		{"doc:doc1#viewer@user:user1", true},
-		{"doc:doc2#viewer@user:user1", true},
-		{"doc:doc2#viewer@user:userX", true},
-		{"doc:doc1#viewer@user:user2", true},
-		{"doc:doc1#viewer@user:user3", true},
-		{"doc:doc1#viewer@group:d1_viewers", false},
-
-		{"group:yin#member@user:yin_user", true},
-		{"group:yin#member@user:yang_user", true},
-		{"group:yang#member@user:yin_user", true},
-		{"group:yang#member@user:yang_user", true},
-
-		{"group:alpha#member@user:user1", false},
-
-		// Permissions
-		{"doc:doc1#can_change_owner@user:d1_owner", true},
-		{"doc:doc1#can_change_owner@user:user1", false},
-		{"doc:doc1#can_change_owner@user:userX", false},
-
-		{"doc:doc1#can_read@user:d1_owner", true},
-		{"doc:doc1#can_read@user:f1_owner", true},
-		{"doc:doc1#can_read@user:user1", true},
-		{"doc:doc1#can_read@user:f1_viewer", true},
-		{"doc:doc1#can_read@user:userX", false},
-
-		{"doc:doc1#can_write@user:d1_owner", true},
-		{"doc:doc1#can_write@user:f1_owner", true},
-		{"doc:doc1#can_write@user:user2", false},
-
-		{"folder:folder1#owner@user:f1_owner", true},
-		{"folder:folder1#can_create_file@user:f1_owner", true},
-		{"folder:folder1#can_share@user:f1_owner", true},
-
-		// intersection
-		{"doc:doc1#can_share@user:d1_owner", false},
-		{"doc:doc1#can_share@user:f1_owner", true},
-
-		// negation
-		{"folder:folder1#can_read@user:f1_owner", true},
-		{"doc:doc1#viewer@user:f1_owner", false},
-		{"doc:doc1#can_invite@user:f1_owner", true},
-
-		// cycles
-		{"cycle:loop#can_delete@user:loop_owner", true},
-		{"cycle:loop#can_delete@user:user1", false},
-	}
-
 	m, err := v3.LoadFile("./check_test.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
-	pool := mempool.NewSlicePool[*dsc.Relation]()
+	pool := mempool.NewCollectionPool[dsc.Relation]()
 
 	for _, test := range tests {
 		t.Run(test.check, func(tt *testing.T) {
 			assert := assert.New(tt)
 
-			checker := azmgraph.NewCheck(m, checkReq(test.check), rels.GetRelations, pool)
+			checker := azmgraph.NewCheck(m, checkReq(test.check, true), rels.GetRelations, pool)
 
 			res, err := checker.Check()
 			assert.NoError(err)
 			tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
 			assert.Equal(test.expected, res)
 		})
+	}
+}
+
+func BenchmarkCheck(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
+	m, err := v3.LoadFile("./check_test.yaml")
+	if err != nil {
+		b.Fatalf("failed to load model: %s", err)
+	}
+
+	pool := mempool.NewCollectionPool[dsc.Relation]()
+
+	b.ResetTimer()
+	for _, test := range tests {
+		assert := assert.New(b)
+
+		b.StopTimer()
+		checker := azmgraph.NewCheck(m, checkReq(test.check, false), rels.GetRelations, pool)
+		b.StartTimer()
+
+		res, err := checker.Check()
+		assert.NoError(err)
+		assert.Equal(test.expected, res)
 	}
 
 }
