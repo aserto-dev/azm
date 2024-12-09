@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/mempool"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/aserto-dev/go-directory/pkg/prop"
@@ -9,10 +10,8 @@ import (
 )
 
 func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
-	checker := graph.NewCheck(c.model, req, relReader, c.relsPool)
+	relsPool := mempool.NewRelationsPool()
+	checker := graph.NewCheck(c.model, req, relReader, relsPool)
 
 	ctx := pb.NewStruct()
 
@@ -29,18 +28,17 @@ type graphSearch interface {
 }
 
 func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReader) (*dsr.GetGraphResponse, error) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
 	var (
 		search graphSearch
 		err    error
 	)
 
+	relsPool := mempool.NewRelationsPool()
+
 	if req.ObjectId == "" {
-		search, err = graph.NewObjectSearch(c.model, req, relReader, c.relsPool)
+		search, err = graph.NewObjectSearch(c.model, req, relReader, relsPool)
 	} else {
-		search, err = graph.NewSubjectSearch(c.model, req, relReader, c.relsPool)
+		search, err = graph.NewSubjectSearch(c.model, req, relReader, relsPool)
 	}
 
 	if err != nil {

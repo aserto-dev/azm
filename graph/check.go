@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -15,10 +16,10 @@ type Checker struct {
 	getRels RelationReader
 
 	memo *checkMemo
-	pool *RelationsPool
+	pool *mempool.RelationsPool
 }
 
-func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool *RelationsPool) *Checker {
+func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool *mempool.RelationsPool) *Checker {
 	return &Checker{
 		m: m,
 		params: &relation{
@@ -91,11 +92,8 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	steps := c.m.StepRelation(r, params.st)
 
 	// Reuse the same slice in all steps.
-	relsPtr := c.pool.Get()
-	defer func() {
-		*relsPtr = (*relsPtr)[:0]
-		c.pool.Put(relsPtr)
-	}()
+	relsPtr := c.pool.GetSlice()
+	defer c.pool.PutSlice(relsPtr)
 
 	for _, step := range steps {
 		*relsPtr = (*relsPtr)[:0]
@@ -114,7 +112,7 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 			req.SubjectRelation = step.Relation.String()
 		}
 
-		if err := c.getRels(req, relsPtr); err != nil {
+		if err := c.getRels(req, c.pool, relsPtr); err != nil {
 			return checkStatusFalse, err
 		}
 
@@ -206,10 +204,10 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 			Relation:   pt.Base.String(),
 		}
 
-		relsPtr := c.pool.Get()
+		relsPtr := c.pool.GetSlice()
 
 		// Resolve the base of the arrow.
-		err := c.getRels(query, relsPtr)
+		err := c.getRels(query, c.pool, relsPtr)
 		if err != nil {
 			return relations{}, err
 		}
@@ -224,8 +222,7 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 			}
 		})
 
-		*relsPtr = (*relsPtr)[:0]
-		c.pool.Put(relsPtr)
+		c.pool.PutSlice(relsPtr)
 
 		return expanded, nil
 	}

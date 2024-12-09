@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aserto-dev/azm/internal/mempool"
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -14,14 +14,8 @@ import (
 )
 
 type (
-	ObjectID = model.ObjectID
-
+	ObjectID  = model.ObjectID
 	Relations = []*dsc.Relation
-
-	// RelationReader retrieves relations that match the given filter.
-	RelationReader func(*dsc.Relation, *Relations) error
-
-	RelationsPool = mempool.Pool[*Relations]
 
 	searchPath relations
 
@@ -34,6 +28,16 @@ type (
 	// and the value is a list of paths that connect the search object and subject.
 	searchResults map[object][]searchPath
 )
+
+type MessagePool[T any] interface {
+	Get() T
+	Put(T)
+}
+
+type RelationPool = MessagePool[*dsc.Relation]
+
+// RelationReader retrieves relations that match the given filter.
+type RelationReader func(*dsc.Relation, RelationPool, *Relations) error
 
 // Objects returns the objects from the search results.
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {
@@ -99,7 +103,7 @@ type graphSearch struct {
 
 	memo    *searchMemo
 	explain bool
-	pool    *RelationsPool
+	pool    *mempool.RelationsPool
 }
 
 func validate(m *model.Model, params *relation) error {
