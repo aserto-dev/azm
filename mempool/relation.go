@@ -25,7 +25,7 @@ func NewRelationAllocator() *RelationAllocator {
 }
 
 func (ra *RelationAllocator) New() *dsc.Relation {
-	rel := new(dsc.Relation)
+	rel := dsc.RelationFromVTPool()
 	rel.CreatedAt = ra.tsPool.Get()
 	rel.UpdatedAt = ra.tsPool.Get()
 	return rel
@@ -41,7 +41,5 @@ func (ra *RelationAllocator) Reset(rel *dsc.Relation) {
 		ra.tsPool.Put(rel.UpdatedAt)
 	}
 
-	rel.Reset()
-	rel.CreatedAt = ra.tsPool.Get()
-	rel.UpdatedAt = ra.tsPool.Get()
+	rel.ReturnToVTPool()
 }

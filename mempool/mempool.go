@@ -71,7 +71,8 @@ func (p *CollectionPool[T]) PutSlice(s *[]T) {
 }
 
 func (p *CollectionPool[T]) Get() T {
-	return p.msgPool.Get()
+	return p.msgPool.New().(T)
+	// return p.msgPool.Get()
 }
 
 func (p *CollectionPool[T]) Put(t T) {
