@@ -19,8 +19,8 @@ type relation struct {
 
 type relations []*relation
 
-// converts a dsc.Relation to a relation.
-func relationFromProto(rel *dsc.Relation) *relation {
+// converts a dsc.RelationIdentifier to a relation.
+func relationFromProto(rel *dsc.RelationIdentifier) *relation {
 	return &relation{
 		ot:   model.ObjectName(rel.ObjectType),
 		oid:  ObjectID(rel.ObjectId),
@@ -31,8 +31,8 @@ func relationFromProto(rel *dsc.Relation) *relation {
 	}
 }
 
-func (r *relation) asProto() *dsc.Relation {
-	return &dsc.Relation{
+func (r *relation) asProto() *dsc.RelationIdentifier {
+	return &dsc.RelationIdentifier{
 		ObjectType:      string(r.ot),
 		ObjectId:        string(r.oid),
 		Relation:        string(r.rel),

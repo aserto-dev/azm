@@ -1,8 +1,6 @@
 package cache
 
 import (
-	"sync"
-
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
 	stts "github.com/aserto-dev/azm/stats"
@@ -16,46 +14,54 @@ type (
 	RelationName = model.RelationName
 )
 
+// nolint: gocritic // commentedOutCode
 type Cache struct {
 	model *model.Model
-	mtx   sync.RWMutex
+	// mtx      sync.RWMutex
+	// relsPool *mempool.RelationsPool
 }
 
 // New, create new model cache instance.
+// nolint: gocritic // commentedOutCode
 func New(m *model.Model) *Cache {
 	return &Cache{
 		model: m,
-		mtx:   sync.RWMutex{},
+		// mtx:      sync.RWMutex{},
+		// relsPool: mempool.NewRelationsPool(),
 	}
 }
 
 // UpdateModel, swaps the cache model instance.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) UpdateModel(m *model.Model) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	// c.mtx.Lock()
+	// defer c.mtx.Unlock()
 	c.model = m
 	return nil
 }
 
+// nolint: gocritic // commentedOutCode
 func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 	return diff.CanUpdateModel(c.model, other, stats)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) ObjectExists(on ObjectName) bool {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 
 	_, ok := c.model.Objects[on]
 	return ok
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 
 	if obj, ok := c.model.Objects[on]; ok {
 		_, ok := obj.Relations[rn]
@@ -65,9 +71,10 @@ func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 
 	if obj, ok := c.model.Objects[on]; ok {
 		_, ok := obj.Permissions[pn]
@@ -76,15 +83,17 @@ func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 	return false
 }
 
+// nolint: gocritic // commentedOutCode
 func (c *Cache) Metadata() *model.Metadata {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 	return c.model.Metadata
 }
 
-func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
+// nolint: gocritic // commentedOutCode
+func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
+	// c.mtx.RLock()
+	// defer c.mtx.RUnlock()
 
 	return c.model.ValidateRelation(
 		ObjectName(relation.ObjectType),
