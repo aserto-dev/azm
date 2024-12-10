@@ -14,7 +14,7 @@ import (
 const sharedPool = true
 
 func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
-	checker := graph.NewCheck(c.model, req, relReader, c.relationsPool())
+	checker := graph.NewCheck(c.model.Load(), req, relReader, c.relationsPool())
 
 	ctx := pb.NewStruct()
 
@@ -37,9 +37,9 @@ func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReade
 	)
 
 	if req.ObjectId == "" {
-		search, err = graph.NewObjectSearch(c.model, req, relReader, c.relationsPool())
+		search, err = graph.NewObjectSearch(c.model.Load(), req, relReader, c.relationsPool())
 	} else {
-		search, err = graph.NewSubjectSearch(c.model, req, relReader, c.relationsPool())
+		search, err = graph.NewSubjectSearch(c.model.Load(), req, relReader, c.relationsPool())
 	}
 
 	if err != nil {

@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"sync/atomic"
+
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
@@ -15,56 +17,40 @@ type (
 	RelationName = model.RelationName
 )
 
-// nolint: gocritic // commentedOutCode
 type Cache struct {
-	model *model.Model
-	// mtx      sync.RWMutex
+	model    atomic.Pointer[model.Model]
 	relsPool *mempool.RelationsPool
 }
 
 // New, create new model cache instance.
-// nolint: gocritic // commentedOutCode
 func New(m *model.Model) *Cache {
-	return &Cache{
-		model: m,
-		// mtx:      sync.RWMutex{},
+	cache := &Cache{
 		relsPool: mempool.NewRelationsPool(),
 	}
+
+	cache.model.Store(m)
+	return cache
 }
 
 // UpdateModel, swaps the cache model instance.
-// nolint: gocritic // commentedOutCode
 func (c *Cache) UpdateModel(m *model.Model) error {
-	// c.mtx.Lock()
-	// defer c.mtx.Unlock()
-	c.model = m
+	c.model.Store(m)
 	return nil
 }
 
-// nolint: gocritic // commentedOutCode
 func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-	return diff.CanUpdateModel(c.model, other, stats)
+	return diff.CanUpdateModel(c.model.Load(), other, stats)
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
-// nolint: gocritic // commentedOutCode
 func (c *Cache) ObjectExists(on ObjectName) bool {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-
-	_, ok := c.model.Objects[on]
+	_, ok := c.model.Load().Objects[on]
 	return ok
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
-// nolint: gocritic // commentedOutCode
 func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-
-	if obj, ok := c.model.Objects[on]; ok {
+	if obj, ok := c.model.Load().Objects[on]; ok {
 		_, ok := obj.Relations[rn]
 		return ok
 	}
@@ -72,31 +58,20 @@ func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
-// nolint: gocritic // commentedOutCode
 func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-
-	if obj, ok := c.model.Objects[on]; ok {
+	if obj, ok := c.model.Load().Objects[on]; ok {
 		_, ok := obj.Permissions[pn]
 		return ok
 	}
 	return false
 }
 
-// nolint: gocritic // commentedOutCode
 func (c *Cache) Metadata() *model.Metadata {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-	return c.model.Metadata
+	return c.model.Load().Metadata
 }
 
-// nolint: gocritic // commentedOutCode
 func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
-	// c.mtx.RLock()
-	// defer c.mtx.RUnlock()
-
-	return c.model.ValidateRelation(
+	return c.model.Load().ValidateRelation(
 		ObjectName(relation.ObjectType),
 		model.ObjectID(relation.ObjectId),
 		RelationName(relation.Relation),
@@ -133,7 +108,7 @@ func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]Re
 		}
 	}
 
-	matches := lo.PickBy(c.model.Objects[on].Relations, func(rn RelationName, r *model.Relation) bool {
+	matches := lo.PickBy(c.model.Load().Objects[on].Relations, func(rn RelationName, r *model.Relation) bool {
 		for _, ref := range r.Union {
 			if ref.Object != sn {
 				// type mismatch
