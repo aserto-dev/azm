@@ -106,6 +106,8 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 		}
 
 		switch {
+		case step.IsDirect():
+			req.SubjectId = params.sid.String()
 		case step.IsWildcard():
 			req.SubjectId = "*"
 		case step.IsSubject():
