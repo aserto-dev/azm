@@ -128,7 +128,7 @@ func wildcardParams(params *relation) *relation {
 }
 
 func invertedRelationReader(m *model.Model, reader RelationReader) RelationReader {
-	return func(r *dsc.Relation, relPool MessagePool[*dsc.Relation], out *Relations) error {
+	return func(r *dsc.RelationIdentifier, relPool MessagePool[*dsc.RelationIdentifier], out *Relations) error {
 		ir := uninvertRelation(m, relationFromProto(r))
 		if err := reader(ir.asProto(), relPool, out); err != nil {
 			return err
@@ -136,7 +136,7 @@ func invertedRelationReader(m *model.Model, reader RelationReader) RelationReade
 
 		res := *out
 		for i, r := range res {
-			res[i] = &dsc.Relation{
+			res[i] = &dsc.RelationIdentifier{
 				ObjectType:  r.SubjectType,
 				ObjectId:    r.SubjectId,
 				Relation:    r.Relation,

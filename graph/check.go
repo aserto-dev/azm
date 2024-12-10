@@ -98,7 +98,7 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	for _, step := range steps {
 		*relsPtr = (*relsPtr)[:0]
 
-		req := &dsc.Relation{
+		req := &dsc.RelationIdentifier{
 			ObjectType:  params.ot.String(),
 			ObjectId:    params.oid.String(),
 			Relation:    params.rel.String(),
@@ -106,6 +106,8 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 		}
 
 		switch {
+		case step.IsDirect():
+			req.SubjectId = params.sid.String()
 		case step.IsWildcard():
 			req.SubjectId = "*"
 		case step.IsSubject():
@@ -198,7 +200,7 @@ func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 
 func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relations, error) {
 	if pt.IsArrow() {
-		query := &dsc.Relation{
+		query := &dsc.RelationIdentifier{
 			ObjectType: params.ot.String(),
 			ObjectId:   params.oid.String(),
 			Relation:   pt.Base.String(),
@@ -212,7 +214,7 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 			return relations{}, err
 		}
 
-		expanded := lo.Map(*relsPtr, func(rel *dsc.Relation, _ int) *relation {
+		expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 			return &relation{
 				ot:  model.ObjectName(rel.SubjectType),
 				oid: ObjectID(rel.SubjectId),

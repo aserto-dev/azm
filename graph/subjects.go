@@ -115,7 +115,7 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 		sid = "*"
 	}
 
-	req := &dsc.Relation{
+	req := &dsc.RelationIdentifier{
 		ObjectType:  params.ot.String(),
 		ObjectId:    params.oid.String(),
 		Relation:    params.rel.String(),
@@ -161,7 +161,7 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *relation) (searchResults, error) {
 	results := searchResults{}
 
-	req := &dsc.Relation{
+	req := &dsc.RelationIdentifier{
 		ObjectType:      params.ot.String(),
 		ObjectId:        params.oid.String(),
 		Relation:        params.rel.String(),
@@ -294,7 +294,7 @@ func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, pa
 func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
 	relsPtr := s.pool.GetSlice()
 
-	req := &dsc.Relation{
+	req := &dsc.RelationIdentifier{
 		ObjectType: params.ot.String(),
 		ObjectId:   params.oid.String(),
 		Relation:   pt.Base.String(),
@@ -305,7 +305,7 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 		return []*relation{}, err
 	}
 
-	expanded := lo.Map(*relsPtr, func(rel *dsc.Relation, _ int) *relation {
+	expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 		return &relation{
 			ot:   model.ObjectName(rel.SubjectType),
 			oid:  ObjectID(rel.SubjectId),

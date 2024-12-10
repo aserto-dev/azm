@@ -70,6 +70,7 @@ func (p *CollectionPool[T]) PutSlice(s *[]T) {
 	p.slicePool.Put(s)
 }
 
+// nolint: gocritic // commentedOutCode
 func (p *CollectionPool[T]) Get() T {
 	return p.msgPool.New().(T)
 	// return p.msgPool.Get()
