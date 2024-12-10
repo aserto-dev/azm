@@ -14,6 +14,7 @@ type (
 	RelationName = model.RelationName
 )
 
+// nolint: gocritic // commentedOutCode
 type Cache struct {
 	model *model.Model
 	// mtx      sync.RWMutex
@@ -21,6 +22,7 @@ type Cache struct {
 }
 
 // New, create new model cache instance.
+// nolint: gocritic // commentedOutCode
 func New(m *model.Model) *Cache {
 	return &Cache{
 		model: m,
@@ -30,6 +32,7 @@ func New(m *model.Model) *Cache {
 }
 
 // UpdateModel, swaps the cache model instance.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) UpdateModel(m *model.Model) error {
 	// c.mtx.Lock()
 	// defer c.mtx.Unlock()
@@ -37,6 +40,7 @@ func (c *Cache) UpdateModel(m *model.Model) error {
 	return nil
 }
 
+// nolint: gocritic // commentedOutCode
 func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
@@ -44,6 +48,7 @@ func (c *Cache) CanUpdate(other *model.Model, stats *stts.Stats) error {
 }
 
 // ObjectExists, checks if given object type name exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) ObjectExists(on ObjectName) bool {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
@@ -53,6 +58,7 @@ func (c *Cache) ObjectExists(on ObjectName) bool {
 }
 
 // RelationExists, checks if given relation type, for the given object type, exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
@@ -65,6 +71,7 @@ func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 }
 
 // PermissionExists, checks if given permission, for the given object type, exists in the model cache.
+// nolint: gocritic // commentedOutCode
 func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
@@ -76,12 +83,14 @@ func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 	return false
 }
 
+// nolint: gocritic // commentedOutCode
 func (c *Cache) Metadata() *model.Metadata {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
 	return c.model.Metadata
 }
 
+// nolint: gocritic // commentedOutCode
 func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
