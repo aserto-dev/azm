@@ -82,7 +82,7 @@ func (c *Cache) Metadata() *model.Metadata {
 	return c.model.Metadata
 }
 
-func (c *Cache) ValidateRelation(relation *dsc.Relation) error {
+func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
 	// c.mtx.RLock()
 	// defer c.mtx.RUnlock()
 

@@ -15,7 +15,7 @@ import (
 
 type (
 	ObjectID  = model.ObjectID
-	Relations = []*dsc.Relation
+	Relations = []*dsc.RelationIdentifier
 
 	searchPath relations
 
@@ -34,10 +34,10 @@ type MessagePool[T any] interface {
 	Put(T)
 }
 
-type RelationPool = MessagePool[*dsc.Relation]
+type RelationPool = MessagePool[*dsc.RelationIdentifier]
 
 // RelationReader retrieves relations that match the given filter.
-type RelationReader func(*dsc.Relation, RelationPool, *Relations) error
+type RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
 
 // Objects returns the objects from the search results.
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {
@@ -132,7 +132,6 @@ func searchParams(req *dsr.GetGraphRequest) *relation {
 		sid:  ObjectID(req.SubjectId),
 		srel: model.RelationName(req.SubjectRelation),
 	}
-
 }
 
 type searchCall struct {
@@ -169,7 +168,6 @@ func (m *searchMemo) MarkVisited(params *relation) searchStatus {
 func (m *searchMemo) MarkComplete(params *relation, results searchResults) {
 	m.visited[*params] = results
 	m.trace(params, searchStatusComplete)
-
 }
 
 func (m *searchMemo) Status(params *relation) searchStatus {
