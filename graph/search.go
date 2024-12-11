@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -12,21 +13,31 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type ObjectID = model.ObjectID
+type (
+	ObjectID  = model.ObjectID
+	Relations = []*dsc.RelationIdentifier
 
-// RelationReader retrieves relations that match the given filter.
-type RelationReader func(*dsc.Relation) ([]*dsc.Relation, error)
+	searchPath relations
 
-type searchPath relations
+	object struct {
+		Type model.ObjectName
+		ID   ObjectID
+	}
 
-type object struct {
-	Type model.ObjectName
-	ID   ObjectID
+	// The results of a search is a map where the key is a matching relations
+	// and the value is a list of paths that connect the search object and subject.
+	searchResults map[object][]searchPath
+)
+
+type MessagePool[T any] interface {
+	Get() T
+	Put(T)
 }
 
-// The results of a search is a map where the key is a matching relations
-// and the value is a list of paths that connect the search object and subject.
-type searchResults map[object][]searchPath
+type RelationPool = MessagePool[*dsc.RelationIdentifier]
+
+// RelationReader retrieves relations that match the given filter.
+type RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
 
 // Objects returns the objects from the search results.
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {
@@ -92,6 +103,7 @@ type graphSearch struct {
 
 	memo    *searchMemo
 	explain bool
+	pool    *mempool.RelationsPool
 }
 
 func validate(m *model.Model, params *relation) error {
@@ -120,7 +132,6 @@ func searchParams(req *dsr.GetGraphRequest) *relation {
 		sid:  ObjectID(req.SubjectId),
 		srel: model.RelationName(req.SubjectRelation),
 	}
-
 }
 
 type searchCall struct {
@@ -157,7 +168,6 @@ func (m *searchMemo) MarkVisited(params *relation) searchStatus {
 func (m *searchMemo) MarkComplete(params *relation, results searchResults) {
 	m.visited[*params] = results
 	m.trace(params, searchStatusComplete)
-
 }
 
 func (m *searchMemo) Status(params *relation) searchStatus {

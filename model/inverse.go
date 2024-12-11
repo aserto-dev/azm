@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"os"
 
 	set "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
@@ -14,7 +15,11 @@ const (
 )
 
 func (m *Model) Invert() *Model {
-	return newInverter(m).invert()
+	if m.inverted == nil {
+		fmt.Fprintln(os.Stderr, "load inverted model")
+		m.inverted = newInverter(m).invert()
+	}
+	return m.inverted
 }
 
 type inverter struct {
