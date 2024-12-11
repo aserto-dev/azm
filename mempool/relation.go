@@ -5,10 +5,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type RelationsPool = CollectionPool[*dsc.Relation]
+type RelationsPool = CollectionPool[*dsc.RelationIdentifier]
 
 func NewRelationsPool() *RelationsPool {
-	return NewCollectionPool[*dsc.Relation](NewRelationAllocator())
+	return NewCollectionPool[*dsc.RelationIdentifier](NewRelationAllocator())
 }
 
 type RelationAllocator struct {
@@ -24,22 +24,11 @@ func NewRelationAllocator() *RelationAllocator {
 	}
 }
 
-func (ra *RelationAllocator) New() *dsc.Relation {
-	rel := dsc.RelationFromVTPool()
-	rel.CreatedAt = ra.tsPool.Get()
-	rel.UpdatedAt = ra.tsPool.Get()
+func (ra *RelationAllocator) New() *dsc.RelationIdentifier {
+	rel := dsc.RelationIdentifierFromVTPool()
 	return rel
 }
 
-func (ra *RelationAllocator) Reset(rel *dsc.Relation) {
-	if rel.CreatedAt != nil {
-		rel.CreatedAt.Reset()
-		ra.tsPool.Put(rel.CreatedAt)
-	}
-	if rel.UpdatedAt != nil {
-		rel.UpdatedAt.Reset()
-		ra.tsPool.Put(rel.UpdatedAt)
-	}
-
+func (ra *RelationAllocator) Reset(rel *dsc.RelationIdentifier) {
 	rel.ReturnToVTPool()
 }

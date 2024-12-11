@@ -28,9 +28,9 @@ func NewPool[T any](newF func() T) *Pool[T] {
 	}
 }
 
-func NewSlicePool[T any]() *Pool[*[]T] {
+func NewSlicePool[T any](capacity int) *Pool[*[]T] {
 	return NewPool(func() *[]T {
-		s := make([]T, 0, defaultSliceCapacity)
+		s := make([]T, 0, capacity)
 		return &s
 	})
 }
@@ -48,7 +48,7 @@ type CollectionPool[T any] struct {
 
 func NewCollectionPool[T any](alloc Allocator[T]) *CollectionPool[T] {
 	return &CollectionPool[T]{
-		slicePool: NewSlicePool[T](),
+		slicePool: NewSlicePool[T](defaultSliceCapacity),
 		alloc:     alloc,
 		msgPool: NewPool(func() T {
 			return alloc.New()
@@ -70,6 +70,7 @@ func (p *CollectionPool[T]) PutSlice(s *[]T) {
 	p.slicePool.Put(s)
 }
 
+// nolint: gocritic // commentedOutCode
 func (p *CollectionPool[T]) Get() T {
 	return p.msgPool.New().(T)
 	// return p.msgPool.Get()

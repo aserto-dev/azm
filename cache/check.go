@@ -9,9 +9,12 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// If true, use a shared memory pool for all requests.
+// Othersise, each call gets its own pool.
+const sharedPool = true
+
 func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*dsr.CheckResponse, error) {
-	relsPool := mempool.NewRelationsPool()
-	checker := graph.NewCheck(c.model, req, relReader, relsPool)
+	checker := graph.NewCheck(c.model.Load(), req, relReader, c.relationsPool())
 
 	ctx := pb.NewStruct()
 
@@ -33,12 +36,10 @@ func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReade
 		err    error
 	)
 
-	relsPool := mempool.NewRelationsPool()
-
 	if req.ObjectId == "" {
-		search, err = graph.NewObjectSearch(c.model, req, relReader, relsPool)
+		search, err = graph.NewObjectSearch(c.model.Load(), req, relReader, c.relationsPool())
 	} else {
-		search, err = graph.NewSubjectSearch(c.model, req, relReader, relsPool)
+		search, err = graph.NewSubjectSearch(c.model.Load(), req, relReader, c.relationsPool())
 	}
 
 	if err != nil {
@@ -46,4 +47,12 @@ func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReade
 	}
 
 	return search.Search()
+}
+
+func (c *Cache) relationsPool() *mempool.RelationsPool {
+	if sharedPool {
+		return c.relsPool
+	}
+
+	return mempool.NewRelationsPool()
 }

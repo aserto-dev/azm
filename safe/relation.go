@@ -13,11 +13,11 @@ import (
 
 // SafeRelation identifier.
 type SafeRelation struct {
-	*dsc3.Relation
+	*dsc3.RelationIdentifier
 	HasSubjectRelation bool
 }
 
-func Relation(i *dsc3.Relation) *SafeRelation { return &SafeRelation{i, true} }
+func Relation(i *dsc3.RelationIdentifier) *SafeRelation { return &SafeRelation{i, true} }
 
 type SafeRelationIdentifier struct {
 	*model.RelationRef
@@ -35,7 +35,7 @@ type SafeRelations struct {
 func GetRelation(i *dsr3.GetRelationRequest) *SafeRelations {
 	return &SafeRelations{
 		&SafeRelation{
-			Relation: &dsc3.Relation{
+			RelationIdentifier: &dsc3.RelationIdentifier{
 				ObjectType:      i.ObjectType,
 				ObjectId:        i.ObjectId,
 				Relation:        i.Relation,
@@ -51,7 +51,7 @@ func GetRelation(i *dsr3.GetRelationRequest) *SafeRelations {
 func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
 	return &SafeRelations{
 		&SafeRelation{
-			Relation: &dsc3.Relation{
+			RelationIdentifier: &dsc3.RelationIdentifier{
 				ObjectType:      i.ObjectType,
 				ObjectId:        i.ObjectId,
 				Relation:        i.Relation,
@@ -79,7 +79,7 @@ func (i *SafeRelation) Subject() *dsc3.ObjectIdentifier {
 }
 
 func (i *SafeRelation) Validate(mc *cache.Cache) error {
-	if i == nil || i.Relation == nil {
+	if i == nil || i.RelationIdentifier == nil {
 		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
 	}
 
@@ -109,11 +109,11 @@ func (i *SafeRelation) Validate(mc *cache.Cache) error {
 		}
 	}
 
-	return mc.ValidateRelation(i.Relation)
+	return mc.ValidateRelation(i.RelationIdentifier)
 }
 
 func (i *SafeRelations) Validate(mc *cache.Cache) error {
-	if i == nil || i.SafeRelation.Relation == nil {
+	if i == nil || i.SafeRelation.RelationIdentifier == nil {
 		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
 	}
 
@@ -152,7 +152,7 @@ func (i *SafeRelation) Hash() string {
 	h := fnv.New64a()
 	h.Reset()
 
-	if i != nil && i.Relation != nil {
+	if i != nil && i.RelationIdentifier != nil {
 		if _, err := h.Write([]byte(i.GetObjectId())); err != nil {
 			return DefaultHash
 		}
