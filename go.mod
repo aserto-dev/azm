@@ -9,7 +9,7 @@ toolchain go1.23.4
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.11
-	github.com/aserto-dev/go-directory v0.33.2-0.20241210213355-3d02dab1a2bd
+	github.com/aserto-dev/go-directory v0.33.2
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
