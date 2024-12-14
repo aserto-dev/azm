@@ -1,4 +1,4 @@
-package lox
+package ds
 
 // Similar to lo.Contains for for slices of pointers.
 func ContainsPtr[T comparable](collection []*T, element *T) bool {

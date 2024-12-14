@@ -25,10 +25,9 @@ func NewRelationAllocator() *RelationAllocator {
 }
 
 func (ra *RelationAllocator) New() *dsc.RelationIdentifier {
-	rel := dsc.RelationIdentifierFromVTPool()
-	return rel
+	return &dsc.RelationIdentifier{}
 }
 
 func (ra *RelationAllocator) Reset(rel *dsc.RelationIdentifier) {
-	rel.ReturnToVTPool()
+	rel.Reset()
 }
