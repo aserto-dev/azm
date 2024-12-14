@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aserto-dev/azm/graph/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -14,8 +15,11 @@ import (
 )
 
 type (
-	ObjectID  = model.ObjectID
-	Relations = []*dsc.RelationIdentifier
+	ObjectID     = model.ObjectID
+	ObjectName   = model.ObjectName
+	RelationName = model.RelationName
+
+	Relations = query.Relations
 
 	searchPath relations
 
@@ -29,15 +33,10 @@ type (
 	searchResults map[object][]searchPath
 )
 
-type MessagePool[T any] interface {
-	Get() T
-	Put(T)
-}
-
-type RelationPool = MessagePool[*dsc.RelationIdentifier]
+type RelationPool = query.RelationPool
 
 // RelationReader retrieves relations that match the given filter.
-type RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
+type RelationReader = query.RelationReader
 
 // Objects returns the objects from the search results.
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {

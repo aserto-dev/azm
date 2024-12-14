@@ -1,7 +1,7 @@
 package diff
 
 import (
-	"github.com/aserto-dev/azm/internal/lox"
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 	stts "github.com/aserto-dev/azm/stats"
 	"github.com/aserto-dev/go-directory/pkg/derr"
@@ -83,7 +83,7 @@ func calculateDelta(from, sub *model.Model) delta {
 				continue
 			}
 
-			relDiff, _ := lox.DifferencePtr(rel.Union, sub.Objects[objName].Relations[relname].Union)
+			relDiff, _ := ds.DifferencePtr(rel.Union, sub.Objects[objName].Relations[relname].Union)
 			if len(relDiff) > 0 {
 				relsDiff[relname] = lo.Associate(relDiff, func(r *model.RelationRef) (model.RelationRef, struct{}) { return *r, struct{}{} })
 			}

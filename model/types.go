@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	"github.com/aserto-dev/azm/internal/lox"
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/samber/lo"
 )
 
@@ -96,7 +96,7 @@ func (r *Relation) AllRefs() []RelationRef {
 }
 
 func (r *Relation) AddRef(rr *RelationRef) {
-	if !lox.ContainsPtr(r.Union, rr) {
+	if !ds.ContainsPtr(r.Union, rr) {
 		r.Union = append(r.Union, rr)
 	}
 }
