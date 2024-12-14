@@ -11,10 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var tests = []struct {
+type checkTest struct {
 	check    string
 	expected bool
-}{
+}
+
+var tests = []checkTest{
 	// Relations
 	{"doc:doc1#owner@user:user1", false},
 	{"doc:doc1#viewer@user:user1", true},
@@ -99,15 +101,12 @@ func BenchmarkCheck(b *testing.B) {
 	for _, test := range tests {
 		assert := assert.New(b)
 
-		b.StopTimer()
 		checker := azmgraph.NewCheck(m, checkReq(test.check, false), rels.GetRelations, pool)
-		b.StartTimer()
 
 		res, err := checker.Check()
 		assert.NoError(err)
 		assert.Equal(test.expected, res)
 	}
-
 }
 
 var rels = NewRelationsReader(
