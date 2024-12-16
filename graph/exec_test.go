@@ -21,7 +21,11 @@ types:
 
   group:
     relations:
-      member: user | group#member
+      member: user | group#member | team#mate
+
+  team:
+    relations:
+      mate: user | team#mate | group#member
 
   doc:
     relations:
@@ -38,23 +42,32 @@ var execRels = NewRelationsReader(
 	"doc:doc1#owner@user:user1",
 	"doc:doc1#editor@user:user1",
 	"doc:doc1#editor@user:user2",
+	"doc:doc1#editor@group:group1#member",
+	"group:group1#member@user:user3",
 )
 
-var singleTests = []checkTest{
+var evalTests = []checkTest{
 	{"doc:doc1#owner@user:user1", true},
 	{"doc:doc1#owner@user:user2", false},
 }
 
-func TestExecSingle(t *testing.T) {
+type (
+	on = model.ObjectName
+	rn = model.RelationName
+)
+
+func TestExecEval(t *testing.T) {
 	assert := assert.New(t)
 	pool := mempool.NewRelationsPool()
 
 	m, err := v3.Load(strings.NewReader(execManifest))
 	assert.NoError(err)
 
-	plan := single("doc", "owner", "user")
+	plan := &query.Plan{
+		Expression: set("doc", "owner", "user"),
+	}
 
-	for _, test := range singleTests {
+	for _, test := range evalTests {
 		t.Run(test.check, func(tt *testing.T) {
 			result, err := query.Exec(checkReq(test.check, false), m, plan, execRels.GetRelations, pool)
 			assert.NoError(err)
@@ -64,6 +77,7 @@ func TestExecSingle(t *testing.T) {
 }
 
 var unionTests = []checkTest{
+	// {"doc:doc1#can_edit@user:user3", true},
 	{"doc:doc1#can_edit@user:user1", true},
 	{"doc:doc1#can_edit@user:user2", true},
 	{"doc:doc2#can_edit@user:user1", false},
@@ -76,11 +90,36 @@ func TestExecUnion(t *testing.T) {
 	m, err := v3.Load(strings.NewReader(execManifest))
 	assert.NoError(err)
 
-	plan := query.Composite{
+	groupMember := query.Composite{
 		Operator: query.Union,
-		Operands: []query.Plan{
-			single("doc", "owner", "user"),
-			single("doc", "editor", "user"),
+		Operands: []query.Expression{
+			set("group", "member", "user"),
+			query.Call{Signature: set("group", "member", "user"), Param: computed("group", "member", "group", "member")},
+			query.Call{Signature: set("team", "mate", "user"), Param: computed("group", "member", "team", "mate")},
+		},
+	}
+
+	teamMate := query.Composite{
+		Operator: query.Union,
+		Operands: []query.Expression{
+			set("team", "mate", "user"),
+			query.Call{Signature: set("team", "mate", "user"), Param: computed("team", "mate", "team", "mate")},
+			query.Call{Signature: set("group", "member", "user"), Param: computed("team", "mate", "group", "user")},
+		},
+	}
+
+	plan := &query.Plan{
+		Expression: query.Composite{
+			Operator: query.Union,
+			Operands: []query.Expression{
+				set("doc", "owner", "user"),
+				set("doc", "editor", "user"),
+				// query.Call{Signature: set("group", "member", "user"), Param: computed("doc", "editor", "group", "member")},
+			},
+		},
+		Functions: map[query.Set]query.Expression{
+			set("group", "member", "user"): groupMember,
+			set("team", "mate", "user"):    teamMate,
 		},
 	}
 
@@ -105,11 +144,13 @@ func TestExecIntersection(t *testing.T) {
 	m, err := v3.Load(strings.NewReader(execManifest))
 	assert.NoError(err)
 
-	plan := query.Composite{
-		Operator: query.Intersection,
-		Operands: []query.Plan{
-			single("doc", "owner", "user"),
-			single("doc", "editor", "user"),
+	plan := &query.Plan{
+		Expression: query.Composite{
+			Operator: query.Intersection,
+			Operands: []query.Expression{
+				set("doc", "owner", "user"),
+				set("doc", "editor", "user"),
+			},
 		},
 	}
 
@@ -134,15 +175,12 @@ func TestExecNegation(t *testing.T) {
 	m, err := v3.Load(strings.NewReader(execManifest))
 	assert.NoError(err)
 
-	plan := query.Composite{
-		Operator: query.Intersection,
-		Operands: []query.Plan{
-			single("doc", "editor", "user"),
-			query.Composite{
-				Operator: query.Negation,
-				Operands: []query.Plan{
-					single("doc", "owner", "user"),
-				},
+	plan := &query.Plan{
+		Expression: query.Composite{
+			Operator: query.Difference,
+			Operands: []query.Expression{
+				set("doc", "editor", "user"),
+				set("doc", "owner", "user"),
 			},
 		},
 	}
@@ -156,10 +194,27 @@ func TestExecNegation(t *testing.T) {
 	}
 }
 
-func single(ot, rt, st string) query.Plan {
-	return query.Single{
-		OT: model.ObjectName(ot),
-		RT: model.RelationName(rt),
-		ST: model.ObjectName(st),
+func set(ot, rt, st string) query.Set {
+	return query.Set{
+		OT: on(ot),
+		RT: rn(rt),
+		ST: on(st),
+	}
+}
+
+func computed(ot, rt, st string, srt ...string) query.ComputedSet {
+	var sr model.RelationName
+	switch len(srt) {
+	case 0:
+		break
+	case 1:
+		sr = rn(srt[0])
+	default:
+		panic("only one subject relation type allowed")
+	}
+
+	return query.ComputedSet{
+		Set:       set(ot, rt, st),
+		Expansion: sr,
 	}
 }

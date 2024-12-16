@@ -3,12 +3,14 @@ package query
 import (
 	"slices"
 
+	"github.com/hashicorp/go-set"
+
+	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
+
 	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
-	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
-	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-	"github.com/samber/lo"
 )
 
 type MessagePool[T any] interface {
@@ -26,7 +28,7 @@ type (
 )
 
 type step struct {
-	cond Plan
+	cond Expression
 	oid  model.ObjectID
 	sid  model.ObjectID
 }
@@ -34,23 +36,39 @@ type step struct {
 func Exec(
 	req *dsr.CheckRequest,
 	m *model.Model,
-	plan Plan,
+	plan *Plan,
 	getRels RelationReader,
 	pool *mempool.RelationsPool,
 ) (bool, error) {
 	backlog := ds.NewStack[step]()
-	backlog.Push(step{plan, ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
+	backlog.Push(step{plan.Expression, ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
 
-	state := ds.NewStack[marker]()
-	state.Push(marker{op: Union, len: 1})
+	stack := ds.NewStack[*marker]()
+	stack.Push(newMarker(Union, 1))
 
 	for !backlog.IsEmpty() {
 		cur := backlog.Pop()
 
 		switch cond := cur.cond.(type) {
-		case Single:
-			curMarker := state.Top()
-			if curMarker.hasResult() {
+		case Composite:
+			stack.Pop()
+			stack.Push(newMarker(cond.Operator, len(cond.Operands)))
+
+			// push operands in reverse order so they pop out in the right order.
+			for _, op := range slices.Backward(cond.Operands) {
+				backlog.Push(step{op, cur.oid, cur.sid})
+			}
+		// case Call:
+		// fun := plan.Functions[cond.Signature]
+		//
+		// rid := &dsc.RelationIdentifier{
+		// 	ObjectType: cond.Param.OT.String(),
+		// }
+		// backlog.Push(step{fun,
+
+		case Set:
+			curMarker := stack.Top()
+			if curMarker.HasResult() {
 				// Short circuit. We already have a result.
 				continue
 			}
@@ -68,32 +86,29 @@ func Exec(
 				return false, err
 			}
 
-			curMarker.completeStep(len(*relsPtr) > 0)
+			resultSet := set.FromFunc(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
+				return model.ObjectID(rid.SubjectId)
+			})
+
+			curMarker.CompleteStep(resultSet)
 			pool.PutSlice(relsPtr)
 
-			for curMarker.isDone() && state.Len() > 1 {
+			for curMarker.IsDone() && stack.Len() > 1 {
 				// The current condition is done. Roll up the result.
-				state.Pop()
-				prevMarker := state.Top()
-				prevMarker.completeStep(curMarker.result == dTrue)
+				stack.Pop()
+				prevMarker := stack.Top()
+				prevMarker.CompleteStep(curMarker.Result())
 				curMarker = prevMarker
 			}
 
-		case Composite:
-			state.Pop()
-			state.Push(marker{op: cond.Operator, len: len(cond.Operands)})
-			// push operands in reverse order so they pop out in the right order.
-			for _, op := range slices.Backward(cond.Operands) {
-				backlog.Push(step{op, cur.oid, cur.sid})
-			}
 		}
 	}
 
-	if state.Len() != 1 {
+	if stack.Len() != 1 {
 		panic("unbalanced stack")
 	}
 
-	return state.Top().result == dTrue, nil
+	return !stack.Top().Result().Empty(), nil
 }
 
 type decision int
@@ -104,38 +119,68 @@ const (
 	dTrue
 )
 
+type ObjSet = set.Set[model.ObjectID]
+
 type marker struct {
-	op     Operator
-	len    int
-	result decision
+	op        Operator
+	size      int
+	remaining int
+	hasResult bool
+	result    *ObjSet
 }
 
-func (m *marker) hasResult() bool {
-	return m.result != dPending
+func newMarker(op Operator, size int) *marker {
+	return &marker{
+		op:        op,
+		size:      size,
+		remaining: size,
+		result:    set.New[model.ObjectID](1),
+	}
 }
 
-func (m *marker) isDone() bool {
-	return m.len == 0
+func (m *marker) HasResult() bool {
+	return m.hasResult
 }
 
-func (m *marker) completeStep(result bool) {
-	m.len--
+func (m *marker) Result() *ObjSet {
+	return m.result
+}
+
+func (m *marker) IsDone() bool {
+	return m.remaining == 0
+}
+
+func (m *marker) CompleteStep(resultSet *ObjSet) {
+	m.remaining--
 
 	switch m.op {
 	case Union:
-		if result || m.len == 0 {
+		m.result = m.result.Union(resultSet)
+		if !m.result.Empty() || m.remaining == 0 {
 			// either we found a hit or exhausted all options.
-			m.result = lo.Ternary(result, dTrue, dFalse)
+			m.hasResult = true
 		}
 	case Intersection:
-		if !result || m.len == 0 {
-			// we either found a miss or exhausted all options.
-			m.result = lo.Ternary(!result, dFalse, dTrue)
+		if m.result.Empty() {
+			m.result = resultSet
+		} else {
+			m.result = m.result.Intersect(resultSet)
 		}
-	case Negation:
-		if result || m.len == 0 {
+		if m.result.Empty() || m.remaining == 0 {
 			// we either found a miss or exhausted all options.
-			m.result = lo.Ternary(result, dFalse, dTrue)
+			m.hasResult = true
+		}
+	case Difference:
+		isFirst := m.remaining+1 == m.size
+		if isFirst {
+			m.result = resultSet
+		} else {
+			m.result = m.result.Difference(resultSet)
+		}
+
+		if m.result.Empty() || m.remaining == 0 {
+			// we either found a miss or exhausted all options.
+			m.hasResult = true
 		}
 	}
 }
