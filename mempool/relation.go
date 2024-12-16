@@ -8,7 +8,7 @@ import (
 type RelationsPool = CollectionPool[*dsc.RelationIdentifier]
 
 func NewRelationsPool() *RelationsPool {
-	return NewCollectionPool[*dsc.RelationIdentifier](NewRelationAllocator())
+	return NewCollectionPool(NewRelationAllocator())
 }
 
 type RelationAllocator struct {
@@ -17,7 +17,7 @@ type RelationAllocator struct {
 
 func NewRelationAllocator() *RelationAllocator {
 	return &RelationAllocator{
-		tsPool: NewPool[*timestamppb.Timestamp](
+		tsPool: NewPool(
 			func() *timestamppb.Timestamp {
 				return new(timestamppb.Timestamp)
 			}),

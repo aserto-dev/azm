@@ -12,8 +12,8 @@ func (s Stack[T]) Len() int {
 	return len(s.items)
 }
 
-func (s Stack[T]) Top() *T {
-	return &s.items[s.Len()-1]
+func (s Stack[T]) Top() T {
+	return s.items[s.Len()-1]
 }
 
 func (s Stack[T]) IsEmpty() bool {

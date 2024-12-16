@@ -10,11 +10,11 @@ import (
 type PlannedCheck struct {
 	m       *model.Model
 	getRels RelationReader
-	plan    query.Plan
+	plan    *query.Plan
 	pool    *mempool.RelationsPool
 }
 
-func NewPlannedCheck(m *model.Model, plan query.Plan, reader RelationReader, pool *mempool.RelationsPool) *PlannedCheck {
+func NewPlannedCheck(m *model.Model, plan *query.Plan, reader RelationReader, pool *mempool.RelationsPool) *PlannedCheck {
 	return &PlannedCheck{m: m, plan: plan, getRels: reader, pool: pool}
 }
 

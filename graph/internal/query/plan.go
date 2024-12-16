@@ -1,75 +1,79 @@
 package query
 
 import (
-	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 )
-
-type RelationType struct {
-	OT  model.ObjectName
-	RT  model.RelationName
-	ST  model.ObjectName
-	SRT model.RelationName
-}
-
-type Relation struct {
-	RelationType
-	ObjectID  model.ObjectID
-	SubjectID model.ObjectID
-}
 
 type Operator int
 
 const (
 	Union Operator = iota
 	Intersection
-	Negation
+	Difference
 )
 
-type Term interface {
-	isTerm()
+type Expression interface {
+	isExpression()
 }
 
-func (rt *RelationType) isTerm() {}
-
-func (o Operator) isTerm() {}
-
-type Plan interface {
-	isPlan()
+type Set struct {
+	OT  model.ObjectName
+	RT  model.RelationName
+	ST  model.ObjectName
+	SRT model.RelationName
 }
 
-type Single RelationType
+func (s Set) isExpression() {}
 
-func (s Single) isPlan() {}
+type ComputedSet struct {
+	Set
+	Expansion model.RelationName
+}
 
+func (cs ComputedSet) isExpression() {}
+
+// Function call.
+type Call struct {
+	Signature Set
+	Param     Expression
+}
+
+func (c Call) isExpression() {}
+
+// Composite applies an operator to a set of expressions.
 type Composite struct {
 	Operator Operator
-	Operands []Plan
+	Operands []Expression
 }
 
-func (c Composite) isPlan() {}
+func (c Composite) isExpression() {}
 
-func BuildQueryPlan(m *model.Model, qry *RelationType) Plan {
-	in := ds.NewStack[*RelationType]()
-	//nolint:gocritic
-	// out := ds.NewStack[Term]()
-
-	in.Push(qry)
-
-	for !in.IsEmpty() {
-		cur := in.Pop()
-
-		ot := m.Objects[cur.OT]
-		if ot.HasRelation(cur.RT) {
-			rt := ot.Relations[cur.RT]
-			steps := m.StepRelation(rt, cur.ST)
-			if len(steps) == 0 {
-				panic("todo")
-			}
-		} else {
-			continue
-		}
-	}
-
-	return nil
+type Plan struct {
+	Expression Expression
+	Functions  map[Set]Expression
 }
+
+// func BuildQueryPlan(m *model.Model, qry *RelationType) Plan {
+// 	in := ds.NewStack[*RelationType]()
+// 	//nolint:gocritic
+// 	// out := ds.NewStack[Term]()
+//
+// 	in.Push(qry)
+//
+// 	for !in.IsEmpty() {
+// 		cur := in.Pop()
+//
+// 		ot := m.Objects[cur.OT]
+// 		if ot.HasRelation(cur.RT) {
+// 			rt := ot.Relations[cur.RT]
+// 			steps := m.StepRelation(rt, cur.ST)
+// 			if len(steps) == 0 {
+// 				panic("todo")
+// 			}
+// 		} else {
+// 			continue
+// 		}
+// 	}
+//
+// 	return nil
+// }
