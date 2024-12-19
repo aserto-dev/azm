@@ -4,8 +4,8 @@ type Stack[T any] struct {
 	items []T
 }
 
-func NewStack[T any]() *Stack[T] {
-	return &Stack[T]{nil}
+func NewStack[T any](items ...T) *Stack[T] {
+	return &Stack[T]{items}
 }
 
 func (s Stack[T]) Len() int {

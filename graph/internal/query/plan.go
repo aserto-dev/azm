@@ -1,6 +1,9 @@
 package query
 
 import (
+	"slices"
+
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 )
 
@@ -11,6 +14,12 @@ const (
 	Intersection
 	Difference
 )
+
+type ExpressionVisitor interface {
+	VisitSet(Set) (bool, error)
+	VisitCall(Call) (bool, error)
+	VisitComposite(Composite) (bool, error)
+}
 
 type Expression interface {
 	isExpression()
@@ -24,13 +33,6 @@ type Set struct {
 }
 
 func (s Set) isExpression() {}
-
-type ComputedSet struct {
-	Set
-	Expansion model.RelationName
-}
-
-func (cs ComputedSet) isExpression() {}
 
 // Function call.
 type Call struct {
@@ -48,9 +50,31 @@ type Composite struct {
 
 func (c Composite) isExpression() {}
 
+type Functions map[Set]Expression
+
 type Plan struct {
 	Expression Expression
-	Functions  map[Set]Expression
+	Functions  Functions
+}
+
+func (p *Plan) Visit(visitor ExpressionVisitor) {
+	backlog := ds.NewStack(p.Expression)
+
+	for !backlog.IsEmpty() {
+		switch e := backlog.Pop().(type) {
+		case Set:
+			visitor.VisitSet(e)
+		case Call:
+			visitor.VisitCall(e)
+			backlog.Push(e.Param)
+			backlog.Push(p.Functions[e.Signature])
+		case Composite:
+			visitor.VisitComposite(e)
+			for _, op := range slices.Backward(e.Operands) {
+				backlog.Push(op)
+			}
+		}
+	}
 }
 
 // func BuildQueryPlan(m *model.Model, qry *RelationType) Plan {

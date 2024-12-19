@@ -19,5 +19,5 @@ func NewPlannedCheck(m *model.Model, plan *query.Plan, reader RelationReader, po
 }
 
 func (c *PlannedCheck) Check(req *dsr.CheckRequest) (bool, error) {
-	return query.Exec(req, c.m, c.plan, c.getRels, c.pool)
+	return query.Exec(req, c.plan, c.getRels, c.pool)
 }
