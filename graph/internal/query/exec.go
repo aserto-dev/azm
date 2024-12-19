@@ -35,16 +35,14 @@ type step struct {
 
 func Exec(
 	req *dsr.CheckRequest,
-	m *model.Model,
 	plan *Plan,
 	getRels RelationReader,
 	pool *mempool.RelationsPool,
 ) (bool, error) {
-	backlog := ds.NewStack[step]()
-	backlog.Push(step{plan.Expression, ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
+	backlog := ds.NewStack(step{plan.Expression, ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
 
-	stack := ds.NewStack[*marker]()
-	stack.Push(newMarker(Union, 1))
+	stack := ds.NewStack[State]()
+	stack.Push(NewCompositeState(Union, 1))
 
 	for !backlog.IsEmpty() {
 		cur := backlog.Pop()
@@ -52,33 +50,30 @@ func Exec(
 		switch cond := cur.cond.(type) {
 		case Composite:
 			stack.Pop()
-			stack.Push(newMarker(cond.Operator, len(cond.Operands)))
+			stack.Push(NewCompositeState(cond.Operator, len(cond.Operands)))
 
 			// push operands in reverse order so they pop out in the right order.
 			for _, op := range slices.Backward(cond.Operands) {
 				backlog.Push(step{op, cur.oid, cur.sid})
 			}
-		// case Call:
-		// fun := plan.Functions[cond.Signature]
-		//
-		// rid := &dsc.RelationIdentifier{
-		// 	ObjectType: cond.Param.OT.String(),
-		// }
-		// backlog.Push(step{fun,
-
+		case Call:
+			fun := plan.Functions[cond.Signature]
+			stack.Push(NewCallState(fun))
+			backlog.Push(step{cond.Param, cur.oid, ""})
 		case Set:
 			curMarker := stack.Top()
-			if curMarker.HasResult() {
+			if curMarker.ShortCircuit() {
 				// Short circuit. We already have a result.
 				continue
 			}
 
 			rid := &dsc.RelationIdentifier{
-				ObjectType:  cond.OT.String(),
-				ObjectId:    cur.oid.String(),
-				Relation:    cond.RT.String(),
-				SubjectType: cond.ST.String(),
-				SubjectId:   cur.sid.String(),
+				ObjectType:      cond.OT.String(),
+				ObjectId:        cur.oid.String(),
+				Relation:        cond.RT.String(),
+				SubjectType:     cond.ST.String(),
+				SubjectId:       cur.sid.String(),
+				SubjectRelation: cond.SRT.String(),
 			}
 
 			relsPtr := pool.GetSlice()
@@ -90,17 +85,16 @@ func Exec(
 				return model.ObjectID(rid.SubjectId)
 			})
 
-			curMarker.CompleteStep(resultSet)
+			curMarker.AddResult(resultSet)
 			pool.PutSlice(relsPtr)
 
 			for curMarker.IsDone() && stack.Len() > 1 {
 				// The current condition is done. Roll up the result.
 				stack.Pop()
-				prevMarker := stack.Top()
-				prevMarker.CompleteStep(curMarker.Result())
+				prevMarker := stack.Top().(*CompositeState)
+				prevMarker.AddResult(curMarker.Result())
 				curMarker = prevMarker
 			}
-
 		}
 	}
 
@@ -111,76 +105,81 @@ func Exec(
 	return !stack.Top().Result().Empty(), nil
 }
 
-type decision int
-
-const (
-	dPending decision = iota
-	dFalse
-	dTrue
-)
-
 type ObjSet = set.Set[model.ObjectID]
 
-type marker struct {
-	op        Operator
-	size      int
-	remaining int
-	hasResult bool
-	result    *ObjSet
+type IDs struct {
+	ObjectID  model.ObjectID
+	SubjectID model.ObjectID
 }
 
-func newMarker(op Operator, size int) *marker {
-	return &marker{
-		op:        op,
-		size:      size,
-		remaining: size,
-		result:    set.New[model.ObjectID](1),
+type State interface {
+	AddResult(*ObjSet)
+	ShortCircuit() bool
+	IsDone() bool
+	Result() *ObjSet
+}
+
+type RelationLoader func(*dsc.RelationIdentifier, *Relations) error
+
+func newRelationLoader(reader RelationReader, pool RelationPool) RelationLoader {
+	return func(rid *dsc.RelationIdentifier, outRels *Relations) error {
+		return reader(rid, pool, outRels)
 	}
 }
 
-func (m *marker) HasResult() bool {
-	return m.hasResult
+type Interpreter struct {
+	plan   *Plan
+	loader RelationLoader
+	pool   *mempool.RelationsPool
+	state  *ds.Stack[State]
+	ids    *ds.Stack[IDs]
 }
 
-func (m *marker) Result() *ObjSet {
-	return m.result
-}
-
-func (m *marker) IsDone() bool {
-	return m.remaining == 0
-}
-
-func (m *marker) CompleteStep(resultSet *ObjSet) {
-	m.remaining--
-
-	switch m.op {
-	case Union:
-		m.result = m.result.Union(resultSet)
-		if !m.result.Empty() || m.remaining == 0 {
-			// either we found a hit or exhausted all options.
-			m.hasResult = true
-		}
-	case Intersection:
-		if m.result.Empty() {
-			m.result = resultSet
-		} else {
-			m.result = m.result.Intersect(resultSet)
-		}
-		if m.result.Empty() || m.remaining == 0 {
-			// we either found a miss or exhausted all options.
-			m.hasResult = true
-		}
-	case Difference:
-		isFirst := m.remaining+1 == m.size
-		if isFirst {
-			m.result = resultSet
-		} else {
-			m.result = m.result.Difference(resultSet)
-		}
-
-		if m.result.Empty() || m.remaining == 0 {
-			// we either found a miss or exhausted all options.
-			m.hasResult = true
-		}
+func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsPool) *Interpreter {
+	return &Interpreter{
+		plan:   plan,
+		loader: newRelationLoader(getRels, pool),
+		pool:   pool,
 	}
+}
+
+func (i *Interpreter) Run(req *dsr.CheckRequest) {
+	i.state = ds.NewStack[State](NewCompositeState(Union, 1))
+	i.ids = ds.NewStack(IDs{ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
+	i.plan.Visit(i)
+}
+
+func (i *Interpreter) VisitSet(expr Set) (bool, error) {
+	ids := i.ids.Pop()
+
+	rid := &dsc.RelationIdentifier{
+		ObjectType:      expr.OT.String(),
+		ObjectId:        ids.ObjectID.String(),
+		Relation:        expr.RT.String(),
+		SubjectType:     expr.ST.String(),
+		SubjectId:       ids.SubjectID.String(),
+		SubjectRelation: expr.SRT.String(),
+	}
+
+	relsPtr := i.pool.GetSlice()
+	if err := i.loader(rid, relsPtr); err != nil {
+		return false, err
+	}
+
+	resultSet := set.FromFunc(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
+		return model.ObjectID(rid.SubjectId)
+	})
+
+	state := i.state.Top()
+	state.AddResult(resultSet)
+
+	return !state.ShortCircuit(), nil
+}
+
+func (i *Interpreter) VisitCall(call Call) (bool, error) {
+	return true, nil
+}
+
+func (i *Interpreter) VisitComposite(expr Composite) (bool, error) {
+	return true, nil
 }
