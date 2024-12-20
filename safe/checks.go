@@ -15,8 +15,8 @@ func Checks(i *dsr3.ChecksRequest) *SafeChecks {
 	return &SafeChecks{i}
 }
 
-// Checks returns an iterator that materializes all checks in order.
-func (c *SafeChecks) Checks() iter.Seq[SafeCheck] {
+// CheckRequests returns an iterator that materializes all checks in order.
+func (c *SafeChecks) CheckRequests() iter.Seq[SafeCheck] {
 	return func(yield func(SafeCheck) bool) {
 		defaults := &dsc3.RelationIdentifier{
 			ObjectType:  c.Default.ObjectType,
@@ -26,7 +26,7 @@ func (c *SafeChecks) Checks() iter.Seq[SafeCheck] {
 			SubjectId:   c.Default.SubjectId,
 		}
 
-		for _, check := range c.ChecksRequest.Checks {
+		for _, check := range c.Checks {
 			req := &dsr3.CheckRequest{
 				ObjectType:  fallback(check.ObjectType, defaults.ObjectType),
 				ObjectId:    fallback(check.ObjectId, defaults.ObjectId),
