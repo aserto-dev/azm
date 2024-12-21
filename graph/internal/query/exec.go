@@ -1,9 +1,8 @@
 package query
 
 import (
-	"slices"
-
 	"github.com/hashicorp/go-set"
+	"github.com/pkg/errors"
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -12,6 +11,8 @@ import (
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 )
+
+var ErrInterpreter = errors.New("query interpreter error")
 
 type MessagePool[T any] interface {
 	Get() T
@@ -25,89 +26,11 @@ type (
 
 	// RelationReader retrieves relations that match the given filter.
 	RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
+
+	ObjSet = set.Set[model.ObjectID]
 )
 
-type step struct {
-	cond Expression
-	oid  model.ObjectID
-	sid  model.ObjectID
-}
-
-func Exec(
-	req *dsr.CheckRequest,
-	plan *Plan,
-	getRels RelationReader,
-	pool *mempool.RelationsPool,
-) (bool, error) {
-	backlog := ds.NewStack(step{plan.Expression, ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
-
-	stack := ds.NewStack[State]()
-	stack.Push(NewCompositeState(Union, 1))
-
-	for !backlog.IsEmpty() {
-		cur := backlog.Pop()
-
-		switch cond := cur.cond.(type) {
-		case Composite:
-			stack.Pop()
-			stack.Push(NewCompositeState(cond.Operator, len(cond.Operands)))
-
-			// push operands in reverse order so they pop out in the right order.
-			for _, op := range slices.Backward(cond.Operands) {
-				backlog.Push(step{op, cur.oid, cur.sid})
-			}
-		case Call:
-			fun := plan.Functions[cond.Signature]
-			stack.Push(NewCallState(fun))
-			backlog.Push(step{cond.Param, cur.oid, ""})
-		case Set:
-			curMarker := stack.Top()
-			if curMarker.ShortCircuit() {
-				// Short circuit. We already have a result.
-				continue
-			}
-
-			rid := &dsc.RelationIdentifier{
-				ObjectType:      cond.OT.String(),
-				ObjectId:        cur.oid.String(),
-				Relation:        cond.RT.String(),
-				SubjectType:     cond.ST.String(),
-				SubjectId:       cur.sid.String(),
-				SubjectRelation: cond.SRT.String(),
-			}
-
-			relsPtr := pool.GetSlice()
-			if err := getRels(rid, pool, relsPtr); err != nil {
-				return false, err
-			}
-
-			resultSet := set.FromFunc(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
-				return model.ObjectID(rid.SubjectId)
-			})
-
-			curMarker.AddResult(resultSet)
-			pool.PutSlice(relsPtr)
-
-			for curMarker.IsDone() && stack.Len() > 1 {
-				// The current condition is done. Roll up the result.
-				stack.Pop()
-				prevMarker := stack.Top().(*CompositeState)
-				prevMarker.AddResult(curMarker.Result())
-				curMarker = prevMarker
-			}
-		}
-	}
-
-	if stack.Len() != 1 {
-		panic("unbalanced stack")
-	}
-
-	return !stack.Top().Result().Empty(), nil
-}
-
-type ObjSet = set.Set[model.ObjectID]
-
-type IDs struct {
+type scope struct {
 	ObjectID  model.ObjectID
 	SubjectID model.ObjectID
 }
@@ -115,7 +38,7 @@ type IDs struct {
 type State interface {
 	AddResult(*ObjSet)
 	ShortCircuit() bool
-	IsDone() bool
+	Scopes() []scope
 	Result() *ObjSet
 }
 
@@ -132,7 +55,6 @@ type Interpreter struct {
 	loader RelationLoader
 	pool   *mempool.RelationsPool
 	state  *ds.Stack[State]
-	ids    *ds.Stack[IDs]
 }
 
 func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsPool) *Interpreter {
@@ -143,43 +65,81 @@ func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsP
 	}
 }
 
-func (i *Interpreter) Run(req *dsr.CheckRequest) {
-	i.state = ds.NewStack[State](NewCompositeState(Union, 1))
-	i.ids = ds.NewStack(IDs{ObjectID(req.ObjectId), ObjectID(req.SubjectId)})
-	i.plan.Visit(i)
+func (i *Interpreter) Run(req *dsr.CheckRequest) (*ObjSet, error) {
+	i.state = ds.NewStack[State](NewCompositeState(Union, 1, []scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
+	if err := i.plan.Visit(i); err != nil {
+		return nil, err
+	}
+
+	if i.state.Len() != 1 {
+		return nil, errors.Wrap(ErrInterpreter, "unbalanced stack")
+	}
+
+	return i.state.Top().Result(), nil
 }
 
-func (i *Interpreter) VisitSet(expr Set) (bool, error) {
-	ids := i.ids.Pop()
-
-	rid := &dsc.RelationIdentifier{
-		ObjectType:      expr.OT.String(),
-		ObjectId:        ids.ObjectID.String(),
-		Relation:        expr.RT.String(),
-		SubjectType:     expr.ST.String(),
-		SubjectId:       ids.SubjectID.String(),
-		SubjectRelation: expr.SRT.String(),
-	}
-
-	relsPtr := i.pool.GetSlice()
-	if err := i.loader(rid, relsPtr); err != nil {
-		return false, err
-	}
-
-	resultSet := set.FromFunc(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
-		return model.ObjectID(rid.SubjectId)
-	})
-
+func (i *Interpreter) OnSet(expr *Set) error {
 	state := i.state.Top()
-	state.AddResult(resultSet)
 
-	return !state.ShortCircuit(), nil
+	for _, ids := range state.Scopes() {
+		if state.ShortCircuit() {
+			return nil
+		}
+
+		rid := &dsc.RelationIdentifier{
+			ObjectType:      expr.OT.String(),
+			ObjectId:        ids.ObjectID.String(),
+			Relation:        expr.RT.String(),
+			SubjectType:     expr.ST.String(),
+			SubjectId:       ids.SubjectID.String(),
+			SubjectRelation: expr.SRT.String(),
+		}
+
+		relsPtr := i.pool.GetSlice()
+		if err := i.loader(rid, relsPtr); err != nil {
+			return err
+		}
+
+		resultSet := set.FromFunc(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
+			return model.ObjectID(rid.SubjectId)
+		})
+
+		i.pool.PutSlice(relsPtr)
+
+		state.AddResult(resultSet)
+	}
+
+	return nil
 }
 
-func (i *Interpreter) VisitCall(call Call) (bool, error) {
-	return true, nil
+func (i *Interpreter) OnCallStart(call *Call) (VisitOption, error) {
+	state := i.state.Top()
+	if state.ShortCircuit() {
+		return StepOver, nil
+	}
+
+	f := i.plan.Functions[*call.Signature]
+	i.state.Push(NewCallState(f, i.state.Top().Scopes()))
+
+	return StepInto, nil
 }
 
-func (i *Interpreter) VisitComposite(expr Composite) (bool, error) {
-	return true, nil
+func (i *Interpreter) OnCallEnd(_ *Call) {
+	i.rollupResult()
+}
+
+func (i *Interpreter) OnCompositeStart(expr *Composite) error {
+	i.state.Push(NewCompositeState(expr.Operator, len(expr.Operands), i.state.Top().Scopes()))
+	return nil
+}
+
+func (i *Interpreter) OnCompositeEnd(_ *Composite) {
+	i.rollupResult()
+}
+
+func (i *Interpreter) rollupResult() {
+	if i.state.Len() > 1 {
+		state := i.state.Pop()
+		i.state.Top().AddResult(state.Result())
+	}
 }
