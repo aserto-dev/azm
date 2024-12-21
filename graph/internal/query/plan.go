@@ -15,10 +15,19 @@ const (
 	Difference
 )
 
+type VisitOption bool
+
+const (
+	StepInto VisitOption = false
+	StepOver VisitOption = true
+)
+
 type ExpressionVisitor interface {
-	VisitSet(Set) (bool, error)
-	VisitCall(Call) (bool, error)
-	VisitComposite(Composite) (bool, error)
+	OnSet(*Set) error
+	OnCallStart(*Call) (VisitOption, error)
+	OnCallEnd(*Call)
+	OnCompositeStart(*Composite) error
+	OnCompositeEnd(*Composite)
 }
 
 type Expression interface {
@@ -32,15 +41,15 @@ type Set struct {
 	SRT model.RelationName
 }
 
-func (s Set) isExpression() {}
+func (s *Set) isExpression() {}
 
 // Function call.
 type Call struct {
-	Signature Set
+	Signature *Set
 	Param     Expression
 }
 
-func (c Call) isExpression() {}
+func (c *Call) isExpression() {}
 
 // Composite applies an operator to a set of expressions.
 type Composite struct {
@@ -48,7 +57,7 @@ type Composite struct {
 	Operands []Expression
 }
 
-func (c Composite) isExpression() {}
+func (c *Composite) isExpression() {}
 
 type Functions map[Set]Expression
 
@@ -57,25 +66,60 @@ type Plan struct {
 	Functions  Functions
 }
 
-func (p *Plan) Visit(visitor ExpressionVisitor) {
+func (p *Plan) Visit(visitor ExpressionVisitor) error {
 	backlog := ds.NewStack(p.Expression)
 
 	for !backlog.IsEmpty() {
 		switch e := backlog.Pop().(type) {
-		case Set:
-			visitor.VisitSet(e)
-		case Call:
-			visitor.VisitCall(e)
-			backlog.Push(e.Param)
-			backlog.Push(p.Functions[e.Signature])
-		case Composite:
-			visitor.VisitComposite(e)
+		case *Set:
+			if err := visitor.OnSet(e); err != nil {
+				return err
+			}
+
+		case *Call:
+			abort, err := visitor.OnCallStart(e)
+			if err != nil {
+				return err
+			}
+
+			if !abort {
+				backlog.Push(unwind{e})
+				backlog.Push(p.Functions[*e.Signature])
+				backlog.Push(e.Param)
+			}
+
+		case *Composite:
+			if err := visitor.OnCompositeStart(e); err != nil {
+				return err
+			}
+
+			backlog.Push(unwind{e})
 			for _, op := range slices.Backward(e.Operands) {
 				backlog.Push(op)
 			}
+
+		case unwind:
+			visitUnwind(visitor, e.expr)
 		}
 	}
+
+	return nil
 }
+
+func visitUnwind(visitor ExpressionVisitor, e Expression) {
+	switch e := e.(type) {
+	case *Call:
+		visitor.OnCallEnd(e)
+	case *Composite:
+		visitor.OnCompositeEnd(e)
+	}
+}
+
+type unwind struct {
+	expr Expression
+}
+
+func (u unwind) isExpression() {}
 
 // func BuildQueryPlan(m *model.Model, qry *RelationType) Plan {
 // 	in := ds.NewStack[*RelationType]()

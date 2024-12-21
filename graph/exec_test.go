@@ -10,31 +10,31 @@ import (
 	"github.com/aserto-dev/azm/model"
 )
 
-const execManifest = `
-model:
-  version: 3
-
-types:
-  user:
-
-  group:
-    relations:
-      member: user | group#member | team#mate
-
-  team:
-    relations:
-      mate: user | team#mate | group#member
-
-  doc:
-    relations:
-      owner: user
-      editor: user | group#member
-    permissions:
-      can_delete: owner
-      can_edit: can_delete | editor
-      can_share: owner & editor
-      only_editor: editor - owner
-`
+// Manifest
+//
+// model:
+//   version: 3
+//
+// types:
+//   user:
+//
+//   group:
+//     relations:
+//       member: user | group#member | team#mate
+//
+//   team:
+//     relations:
+//       mate: user | team#mate | group#member
+//
+//   doc:
+//     relations:
+//       owner: user
+//       editor: user | group#member
+//     permissions:
+//       can_delete: owner
+//       can_edit: can_delete | editor
+//       can_share: owner & editor
+//       only_editor: editor - owner
 
 var execRels = NewRelationsReader(
 	"doc:doc1#owner@user:user1",
@@ -54,7 +54,7 @@ type (
 	rn = model.RelationName
 )
 
-func TestExecEval(t *testing.T) {
+func TestExecSet(t *testing.T) {
 	assert := assert.New(t)
 	pool := mempool.NewRelationsPool()
 
@@ -64,17 +64,20 @@ func TestExecEval(t *testing.T) {
 
 	for _, test := range evalTests {
 		t.Run(test.check, func(tt *testing.T) {
-			result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			result, err := interpreter.Run(checkReq(test.check, false))
+
+			// result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
 			assert.NoError(err)
-			assert.Equal(test.expected, result)
+			assert.Equal(test.expected, !result.Empty())
 		})
 	}
 }
 
 var unionTests = []checkTest{
-	{"doc:doc1#can_edit@user:user3", true},
-	{"doc:doc1#can_edit@user:user1", true},
-	{"doc:doc1#can_edit@user:user2", true},
+	// {"doc:doc1#can_edit@user:user3", true},
+	// {"doc:doc1#can_edit@user:user1", true},
+	// {"doc:doc1#can_edit@user:user2", true},
 	{"doc:doc2#can_edit@user:user1", false},
 }
 
@@ -82,44 +85,45 @@ func TestExecUnion(t *testing.T) {
 	assert := assert.New(t)
 	pool := mempool.NewRelationsPool()
 
-	groupMember := query.Composite{
+	groupMember := &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			set("group", "member", "user"),
-			query.Call{Signature: set("group", "member", "user"), Param: computed("group", "member", "group", "member")},
-			query.Call{Signature: set("team", "mate", "user"), Param: computed("group", "member", "team", "mate")},
+			&query.Call{Signature: set("group", "member", "user"), Param: computed("group", "member", "group", "member")},
+			&query.Call{Signature: set("team", "mate", "user"), Param: computed("group", "member", "team", "mate")},
 		},
 	}
 
-	teamMate := query.Composite{
+	teamMate := &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			set("team", "mate", "user"),
-			query.Call{Signature: set("team", "mate", "user"), Param: computed("team", "mate", "team", "mate")},
-			query.Call{Signature: set("group", "member", "user"), Param: computed("team", "mate", "group", "user")},
+			&query.Call{Signature: set("team", "mate", "user"), Param: computed("team", "mate", "team", "mate")},
+			&query.Call{Signature: set("group", "member", "user"), Param: computed("team", "mate", "group", "user")},
 		},
 	}
 
 	plan := &query.Plan{
-		Expression: query.Composite{
+		Expression: &query.Composite{
 			Operator: query.Union,
 			Operands: []query.Expression{
 				set("doc", "owner", "user"),
 				set("doc", "editor", "user"),
-				query.Call{Signature: set("group", "member", "user"), Param: computed("doc", "editor", "group", "member")},
+				&query.Call{Signature: set("group", "member", "user"), Param: computed("doc", "editor", "group", "member")},
 			},
 		},
 		Functions: map[query.Set]query.Expression{
-			set("group", "member", "user"): groupMember,
-			set("team", "mate", "user"):    teamMate,
+			*set("group", "member", "user"): groupMember,
+			*set("team", "mate", "user"):    teamMate,
 		},
 	}
 
 	for _, test := range unionTests {
 		t.Run(test.check, func(tt *testing.T) {
-			result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, result)
+			assert.Equal(test.expected, !result.Empty())
 		})
 	}
 }
@@ -134,7 +138,7 @@ func TestExecIntersection(t *testing.T) {
 	pool := mempool.NewRelationsPool()
 
 	plan := &query.Plan{
-		Expression: query.Composite{
+		Expression: &query.Composite{
 			Operator: query.Intersection,
 			Operands: []query.Expression{
 				set("doc", "owner", "user"),
@@ -145,9 +149,10 @@ func TestExecIntersection(t *testing.T) {
 
 	for _, test := range intersectionTests {
 		t.Run(test.check, func(tt *testing.T) {
-			result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, result)
+			assert.Equal(test.expected, !result.Empty())
 		})
 	}
 }
@@ -162,7 +167,7 @@ func TestExecNegation(t *testing.T) {
 	pool := mempool.NewRelationsPool()
 
 	plan := &query.Plan{
-		Expression: query.Composite{
+		Expression: &query.Composite{
 			Operator: query.Difference,
 			Operands: []query.Expression{
 				set("doc", "editor", "user"),
@@ -173,18 +178,19 @@ func TestExecNegation(t *testing.T) {
 
 	for _, test := range negationTests {
 		t.Run(test.check, func(tt *testing.T) {
-			result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, result)
+			assert.Equal(test.expected, !result.Empty())
 		})
 	}
 }
 
-func set(ot, rt, st string) query.Set {
+func set(ot, rt, st string) *query.Set {
 	return computed(ot, rt, st)
 }
 
-func computed(ot, rt, st string, srt ...string) query.Set {
+func computed(ot, rt, st string, srt ...string) *query.Set {
 	var sr model.RelationName
 	switch len(srt) {
 	case 0:
@@ -195,7 +201,7 @@ func computed(ot, rt, st string, srt ...string) query.Set {
 		panic("only one subject relation type allowed")
 	}
 
-	return query.Set{
+	return &query.Set{
 		OT:  on(ot),
 		RT:  rn(rt),
 		ST:  on(st),

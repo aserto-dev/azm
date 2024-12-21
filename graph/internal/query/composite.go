@@ -10,28 +10,18 @@ type CompositeState struct {
 	size      int
 	remaining int
 	hasResult bool
+	scopes    []scope
 	result    *ObjSet
 }
 
-func NewCompositeState(op Operator, size int) *CompositeState {
+func NewCompositeState(op Operator, size int, scopes []scope) *CompositeState {
 	return &CompositeState{
 		op:        op,
 		size:      size,
 		remaining: size,
 		result:    set.New[model.ObjectID](1),
+		scopes:    scopes,
 	}
-}
-
-func (m *CompositeState) ShortCircuit() bool {
-	return m.hasResult
-}
-
-func (m *CompositeState) Result() *ObjSet {
-	return m.result
-}
-
-func (m *CompositeState) IsDone() bool {
-	return m.remaining == 0
 }
 
 func (m *CompositeState) AddResult(result *ObjSet) {
@@ -67,4 +57,16 @@ func (m *CompositeState) AddResult(result *ObjSet) {
 			m.hasResult = true
 		}
 	}
+}
+
+func (m *CompositeState) ShortCircuit() bool {
+	return m.hasResult
+}
+
+func (m *CompositeState) Scopes() []scope {
+	return m.scopes
+}
+
+func (m *CompositeState) Result() *ObjSet {
+	return m.result
 }
