@@ -69,15 +69,15 @@ func TestExecSet(t *testing.T) {
 
 			// result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.Empty())
+			assert.Equal(test.expected, !result.IsEmpty())
 		})
 	}
 }
 
 var unionTests = []checkTest{
-	// {"doc:doc1#can_edit@user:user3", true},
-	// {"doc:doc1#can_edit@user:user1", true},
-	// {"doc:doc1#can_edit@user:user2", true},
+	{"doc:doc1#can_edit@user:user3", true},
+	{"doc:doc1#can_edit@user:user1", true},
+	{"doc:doc1#can_edit@user:user2", true},
 	{"doc:doc2#can_edit@user:user1", false},
 }
 
@@ -123,7 +123,7 @@ func TestExecUnion(t *testing.T) {
 			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.Empty())
+			assert.Equal(test.expected, !result.IsEmpty())
 		})
 	}
 }
@@ -152,7 +152,7 @@ func TestExecIntersection(t *testing.T) {
 			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.Empty())
+			assert.Equal(test.expected, !result.IsEmpty())
 		})
 	}
 }
@@ -181,7 +181,7 @@ func TestExecNegation(t *testing.T) {
 			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.Empty())
+			assert.Equal(test.expected, !result.IsEmpty())
 		})
 	}
 }

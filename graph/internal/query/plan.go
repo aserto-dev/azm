@@ -15,18 +15,18 @@ const (
 	Difference
 )
 
-type VisitOption bool
+type StepOption bool
 
 const (
-	StepInto VisitOption = false
-	StepOver VisitOption = true
+	StepInto StepOption = false
+	StepOver StepOption = true
 )
 
 type ExpressionVisitor interface {
 	OnSet(*Set) error
-	OnCallStart(*Call) (VisitOption, error)
+	OnCallStart(*Call) (StepOption, error)
 	OnCallEnd(*Call)
-	OnCompositeStart(*Composite) error
+	OnCompositeStart(*Composite) (StepOption, error)
 	OnCompositeEnd(*Composite)
 }
 
@@ -77,25 +77,28 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 			}
 
 		case *Call:
-			abort, err := visitor.OnCallStart(e)
+			step, err := visitor.OnCallStart(e)
 			if err != nil {
 				return err
 			}
 
-			if !abort {
+			if step == StepInto {
 				backlog.Push(unwind{e})
 				backlog.Push(p.Functions[*e.Signature])
 				backlog.Push(e.Param)
 			}
 
 		case *Composite:
-			if err := visitor.OnCompositeStart(e); err != nil {
+			step, err := visitor.OnCompositeStart(e)
+			if err != nil {
 				return err
 			}
 
-			backlog.Push(unwind{e})
-			for _, op := range slices.Backward(e.Operands) {
-				backlog.Push(op)
+			if step == StepInto {
+				backlog.Push(unwind{e})
+				for _, op := range slices.Backward(e.Operands) {
+					backlog.Push(op)
+				}
 			}
 
 		case unwind:
