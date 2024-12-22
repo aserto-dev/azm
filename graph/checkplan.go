@@ -20,5 +20,5 @@ func (c *PlannedCheck) Check(req *dsr.CheckRequest) (bool, error) {
 		return false, err
 	}
 
-	return !result.Empty(), nil
+	return !result.IsEmpty(), nil
 }

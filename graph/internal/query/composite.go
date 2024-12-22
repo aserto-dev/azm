@@ -2,7 +2,6 @@ package query
 
 import (
 	"github.com/aserto-dev/azm/model"
-	"github.com/hashicorp/go-set"
 )
 
 type CompositeState struct {
@@ -10,37 +9,37 @@ type CompositeState struct {
 	size      int
 	remaining int
 	hasResult bool
-	scopes    []scope
-	result    *ObjSet
+	paths     []Path
+	result    ObjSet
 }
 
-func NewCompositeState(op Operator, size int, scopes []scope) *CompositeState {
+func NewCompositeState(op Operator, size int, paths []Path) *CompositeState {
 	return &CompositeState{
 		op:        op,
 		size:      size,
 		remaining: size,
-		result:    set.New[model.ObjectID](1),
-		scopes:    scopes,
+		result:    NewSet[model.ObjectID](),
+		paths:     paths,
 	}
 }
 
-func (m *CompositeState) AddResult(result *ObjSet) {
+func (m *CompositeState) AddResult(result ObjSet) {
 	m.remaining--
 
 	switch m.op {
 	case Union:
 		m.result = m.result.Union(result)
-		if !m.result.Empty() || m.remaining == 0 {
+		if !m.result.IsEmpty() || m.remaining == 0 {
 			// either we found a hit or exhausted all options.
 			m.hasResult = true
 		}
 	case Intersection:
-		if m.result.Empty() {
+		if m.result.IsEmpty() {
 			m.result = result
 		} else {
 			m.result = m.result.Intersect(result)
 		}
-		if m.result.Empty() || m.remaining == 0 {
+		if m.result.IsEmpty() || m.remaining == 0 {
 			// we either found a miss or exhausted all options.
 			m.hasResult = true
 		}
@@ -52,7 +51,7 @@ func (m *CompositeState) AddResult(result *ObjSet) {
 			m.result = m.result.Difference(result)
 		}
 
-		if m.result.Empty() || m.remaining == 0 {
+		if m.result.IsEmpty() || m.remaining == 0 {
 			// we either found a miss or exhausted all options.
 			m.hasResult = true
 		}
@@ -63,10 +62,10 @@ func (m *CompositeState) ShortCircuit() bool {
 	return m.hasResult
 }
 
-func (m *CompositeState) Scopes() []scope {
-	return m.scopes
+func (m *CompositeState) Paths() []Path {
+	return m.paths
 }
 
-func (m *CompositeState) Result() *ObjSet {
+func (m *CompositeState) Result() ObjSet {
 	return m.result
 }
