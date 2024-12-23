@@ -38,7 +38,7 @@ type Path struct {
 type PathSet = mapset.Set[Path]
 
 type State interface {
-	AddResult(ObjSet)
+	AddSet(ObjSet)
 	ShortCircuit() bool
 	Paths() []Path
 	Result() ObjSet
@@ -95,10 +95,23 @@ func (i *Interpreter) OnSet(expr *Set) error {
 			return err
 		}
 
-		state.AddResult(result)
+		state.AddSet(result)
 	}
 
 	return nil
+}
+
+func (i *Interpreter) OnPipeStart(pipe *Pipe) (StepOption, error) {
+	state := i.state.Top()
+	if state.ShortCircuit() {
+		return StepOver, nil
+	}
+	i.state.Push(NewChainState(state.Paths()))
+	return StepInto, nil
+}
+
+func (i *Interpreter) OnPipeEnd(_ *Pipe) {
+	i.rollupResult()
 }
 
 func (i *Interpreter) OnCallStart(call *Call) (StepOption, error) {
@@ -133,7 +146,7 @@ func (i *Interpreter) OnCompositeEnd(_ *Composite) {
 func (i *Interpreter) rollupResult() {
 	if i.state.Len() > 1 {
 		state := i.state.Pop()
-		i.state.Top().AddResult(state.Result())
+		i.state.Top().AddSet(state.Result())
 	}
 }
 
