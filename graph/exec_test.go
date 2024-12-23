@@ -67,9 +67,8 @@ func TestExecSet(t *testing.T) {
 			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 
-			// result, err := query.Exec(checkReq(test.check, false), plan, execRels.GetRelations, pool)
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.IsEmpty())
+			assert.Equal(test.expected, !result.IsEmpty(), test.check)
 		})
 	}
 }
@@ -89,8 +88,8 @@ func TestExecUnion(t *testing.T) {
 		Operator: query.Union,
 		Operands: []query.Expression{
 			set("group", "member", "user"),
-			&query.Call{Signature: set("group", "member", "user"), Param: computed("group", "member", "group", "member")},
-			&query.Call{Signature: set("team", "mate", "user"), Param: computed("group", "member", "team", "mate")},
+			&query.Pipe{From: set("group", "member", "group", "member"), To: &query.Call{Signature: set("group", "member", "user")}},
+			&query.Pipe{From: set("group", "member", "team", "mate"), To: &query.Call{Signature: set("team", "mate", "user")}},
 		},
 	}
 
@@ -98,8 +97,8 @@ func TestExecUnion(t *testing.T) {
 		Operator: query.Union,
 		Operands: []query.Expression{
 			set("team", "mate", "user"),
-			&query.Call{Signature: set("team", "mate", "user"), Param: computed("team", "mate", "team", "mate")},
-			&query.Call{Signature: set("group", "member", "user"), Param: computed("team", "mate", "group", "user")},
+			&query.Pipe{From: set("team", "mate", "team", "mate"), To: &query.Call{Signature: set("team", "mate", "user")}},
+			&query.Pipe{From: set("team", "mate", "group", "user"), To: &query.Call{Signature: set("group", "member", "user")}},
 		},
 	}
 
@@ -109,7 +108,7 @@ func TestExecUnion(t *testing.T) {
 			Operands: []query.Expression{
 				set("doc", "owner", "user"),
 				set("doc", "editor", "user"),
-				&query.Call{Signature: set("group", "member", "user"), Param: computed("doc", "editor", "group", "member")},
+				&query.Pipe{From: set("doc", "editor", "group", "member"), To: &query.Call{Signature: set("group", "member", "user")}},
 			},
 		},
 		Functions: map[query.Set]query.Expression{
@@ -123,7 +122,7 @@ func TestExecUnion(t *testing.T) {
 			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
-			assert.Equal(test.expected, !result.IsEmpty())
+			assert.Equal(test.expected, !result.IsEmpty(), test.check)
 		})
 	}
 }
@@ -186,11 +185,7 @@ func TestExecNegation(t *testing.T) {
 	}
 }
 
-func set(ot, rt, st string) *query.Set {
-	return computed(ot, rt, st)
-}
-
-func computed(ot, rt, st string, srt ...string) *query.Set {
+func set(ot, rt, st string, srt ...string) *query.Set {
 	var sr model.RelationName
 	switch len(srt) {
 	case 0:

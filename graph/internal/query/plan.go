@@ -24,6 +24,8 @@ const (
 
 type ExpressionVisitor interface {
 	OnSet(*Set) error
+	OnPipeStart(*Pipe) (StepOption, error)
+	OnPipeEnd(*Pipe)
 	OnCallStart(*Call) (StepOption, error)
 	OnCallEnd(*Call)
 	OnCompositeStart(*Composite) (StepOption, error)
@@ -43,10 +45,16 @@ type Set struct {
 
 func (s *Set) isExpression() {}
 
+type Pipe struct {
+	From Expression
+	To   Expression
+}
+
+func (c *Pipe) isExpression() {}
+
 // Function call.
 type Call struct {
 	Signature *Set
-	Param     Expression
 }
 
 func (c *Call) isExpression() {}
@@ -76,6 +84,18 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 				return err
 			}
 
+		case *Pipe:
+			step, err := visitor.OnPipeStart(e)
+			if err != nil {
+				return err
+			}
+
+			if step == StepInto {
+				backlog.Push(unwind{e})
+				backlog.Push(e.To)
+				backlog.Push(e.From)
+			}
+
 		case *Call:
 			step, err := visitor.OnCallStart(e)
 			if err != nil {
@@ -85,7 +105,6 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 			if step == StepInto {
 				backlog.Push(unwind{e})
 				backlog.Push(p.Functions[*e.Signature])
-				backlog.Push(e.Param)
 			}
 
 		case *Composite:
@@ -113,6 +132,8 @@ func visitUnwind(visitor ExpressionVisitor, e Expression) {
 	switch e := e.(type) {
 	case *Call:
 		visitor.OnCallEnd(e)
+	case *Pipe:
+		visitor.OnPipeEnd(e)
 	case *Composite:
 		visitor.OnCompositeEnd(e)
 	}
@@ -123,28 +144,3 @@ type unwind struct {
 }
 
 func (u unwind) isExpression() {}
-
-// func BuildQueryPlan(m *model.Model, qry *RelationType) Plan {
-// 	in := ds.NewStack[*RelationType]()
-// 	//nolint:gocritic
-// 	// out := ds.NewStack[Term]()
-//
-// 	in.Push(qry)
-//
-// 	for !in.IsEmpty() {
-// 		cur := in.Pop()
-//
-// 		ot := m.Objects[cur.OT]
-// 		if ot.HasRelation(cur.RT) {
-// 			rt := ot.Relations[cur.RT]
-// 			steps := m.StepRelation(rt, cur.ST)
-// 			if len(steps) == 0 {
-// 				panic("todo")
-// 			}
-// 		} else {
-// 			continue
-// 		}
-// 	}
-//
-// 	return nil
-// }

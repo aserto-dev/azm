@@ -23,49 +23,49 @@ func NewCompositeState(op Operator, size int, paths []Path) *CompositeState {
 	}
 }
 
-func (m *CompositeState) AddResult(result ObjSet) {
-	m.remaining--
+func (s *CompositeState) AddSet(result ObjSet) {
+	s.remaining--
 
-	switch m.op {
+	switch s.op {
 	case Union:
-		m.result = m.result.Union(result)
-		if !m.result.IsEmpty() || m.remaining == 0 {
+		s.result = s.result.Union(result)
+		if !s.result.IsEmpty() || s.remaining == 0 {
 			// either we found a hit or exhausted all options.
-			m.hasResult = true
+			s.hasResult = true
 		}
 	case Intersection:
-		if m.result.IsEmpty() {
-			m.result = result
+		if s.result.IsEmpty() {
+			s.result = result
 		} else {
-			m.result = m.result.Intersect(result)
+			s.result = s.result.Intersect(result)
 		}
-		if m.result.IsEmpty() || m.remaining == 0 {
+		if s.result.IsEmpty() || s.remaining == 0 {
 			// we either found a miss or exhausted all options.
-			m.hasResult = true
+			s.hasResult = true
 		}
 	case Difference:
-		isFirst := m.remaining+1 == m.size
+		isFirst := s.remaining+1 == s.size
 		if isFirst {
-			m.result = result
+			s.result = result
 		} else {
-			m.result = m.result.Difference(result)
+			s.result = s.result.Difference(result)
 		}
 
-		if m.result.IsEmpty() || m.remaining == 0 {
+		if s.result.IsEmpty() || s.remaining == 0 {
 			// we either found a miss or exhausted all options.
-			m.hasResult = true
+			s.hasResult = true
 		}
 	}
 }
 
-func (m *CompositeState) ShortCircuit() bool {
-	return m.hasResult
+func (s *CompositeState) ShortCircuit() bool {
+	return s.hasResult
 }
 
-func (m *CompositeState) Paths() []Path {
-	return m.paths
+func (s *CompositeState) Paths() []Path {
+	return s.paths
 }
 
-func (m *CompositeState) Result() ObjSet {
-	return m.result
+func (s *CompositeState) Result() ObjSet {
+	return s.result
 }
