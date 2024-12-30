@@ -10,39 +10,6 @@ import (
 	"github.com/aserto-dev/azm/model"
 )
 
-// Manifest
-//
-// model:
-//   version: 3
-//
-// types:
-//   user:
-//
-//   group:
-//     relations:
-//       member: user | group#member | team#mate
-//
-//   team:
-//     relations:
-//       mate: user | team#mate | group#member
-//
-//   folder:
-//     relations:
-//       editor: user | group#member
-//     permissions:
-//       can_edit: editor
-//
-//   doc:
-//     relations:
-//       parent: folder
-//       owner: user
-//       editor: user | user:* | group#member
-//     permissions:
-//       can_delete: owner
-//       can_edit: can_delete | editor | parent->can_edit
-//       can_share: owner & editor
-//       only_editor: editor - owner
-
 var execRels = NewRelationsReader(
 	"doc:doc1#parent@folder:folder1",
 	"doc:doc1#owner@user:doc1owner",
@@ -85,22 +52,22 @@ func TestExecSet(t *testing.T) {
 	}
 }
 
-var Functions = map[query.Load]query.Expression{
-	*load("group", "member", "user"): &query.Composite{
+var Functions = map[query.RelationType]query.Expression{
+	*load("group", "member", "user").RelationType: &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("group", "member", "user"),
-			&query.Pipe{From: load("group", "member", "group", "member"), To: &query.Call{Signature: load("group", "member", "user")}},
-			&query.Pipe{From: load("group", "member", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user")}},
+			&query.Pipe{From: load("group", "member", "group", "member"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
+			&query.Pipe{From: load("group", "member", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user").RelationType}},
 		},
 	},
 
-	*load("team", "mate", "user"): &query.Composite{
+	*load("team", "mate", "user").RelationType: &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("team", "mate", "user"),
-			&query.Pipe{From: load("team", "mate", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user")}},
-			&query.Pipe{From: load("team", "mate", "group", "user"), To: &query.Call{Signature: load("group", "member", "user")}},
+			&query.Pipe{From: load("team", "mate", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user").RelationType}},
+			&query.Pipe{From: load("team", "mate", "group", "user"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
 		},
 	},
 }
@@ -122,7 +89,7 @@ func TestExecUnion(t *testing.T) {
 			Operands: []query.Expression{
 				load("doc", "owner", "user"),
 				load("doc", "editor", "user"),
-				&query.Pipe{From: load("doc", "editor", "group", "member"), To: &query.Call{Signature: load("group", "member", "user")}},
+				&query.Pipe{From: load("doc", "editor", "group", "member"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
 			},
 		},
 		Functions: Functions,
@@ -219,7 +186,7 @@ func TestExecArrow(t *testing.T) {
 							load("folder", "editor", "user"),
 							&query.Pipe{
 								From: load("folder", "editor", "group", "member"),
-								To:   &query.Call{Signature: load("group", "member", "user")},
+								To:   &query.Call{Signature: load("group", "member", "user").RelationType},
 							},
 						},
 					},
@@ -278,7 +245,7 @@ func load(ot, rt, st string, srt ...string) *query.Load {
 	}
 
 	return &query.Load{
-		RelationType: query.RelationType{
+		RelationType: &query.RelationType{
 			OT:  on(ot),
 			RT:  rn(rt),
 			ST:  on(st),
@@ -289,7 +256,7 @@ func load(ot, rt, st string, srt ...string) *query.Load {
 
 func wildcard(ot, rt, st string) *query.Load {
 	return &query.Load{
-		RelationType: query.RelationType{
+		RelationType: &query.RelationType{
 			OT: on(ot),
 			RT: rn(rt),
 			ST: on(st),

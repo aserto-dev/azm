@@ -6,19 +6,19 @@ import (
 )
 
 type CallState struct {
-	signature *Load
+	signature *RelationType
 	paths     []Path
 	result    ObjSet
 	cache     Cache
 }
 
-func NewCallState(sig *Load, paths []Path, cache Cache) *CallState {
+func NewCallState(sig *RelationType, paths []Path, cache Cache) *CallState {
 	result := NewSet[model.ObjectID]()
 
 	paths = lo.Filter(paths, func(p Path, _ int) bool {
 		key := Relation{
-			Load: *sig,
-			Path: p,
+			RelationType: sig,
+			Path:         p,
 		}
 		if res, ok := cache.LookupCall(&key); ok {
 			if res != nil {
@@ -44,8 +44,8 @@ func (s *CallState) AddSet(result ObjSet) {
 	s.paths = s.paths[1:]
 
 	key := Relation{
-		Load: *s.signature,
-		Path: path,
+		RelationType: s.signature,
+		Path:         path,
 	}
 	s.cache.StoreCall(&key, result)
 	s.result = s.result.Union(result)

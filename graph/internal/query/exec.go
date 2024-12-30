@@ -97,7 +97,7 @@ func (i *Interpreter) OnLoad(expr *Load) error {
 			path.OID = "*"
 		}
 
-		result, err := i.loadSet(&Relation{Load: *expr, Path: path})
+		result, err := i.loadSet(&Relation{RelationType: expr.RelationType, Path: path})
 		if err != nil {
 			return err
 		}

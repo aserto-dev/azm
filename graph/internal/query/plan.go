@@ -48,7 +48,7 @@ type Expression interface {
 
 // A Load expression specifies a relation-set to load.
 type Load struct {
-	RelationType
+	*RelationType
 	Modifier ScopeModifier
 }
 
@@ -75,7 +75,7 @@ func (c *Pipe) isExpression() {}
 // Call expressions execute a function.
 // Functions aren't named and are identified by their signature.
 type Call struct {
-	Signature *Load
+	Signature *RelationType
 }
 
 func (c *Call) isExpression() {}
@@ -88,7 +88,7 @@ type Composite struct {
 
 func (c *Composite) isExpression() {}
 
-type Functions map[Load]Expression
+type Functions map[RelationType]Expression
 
 type Plan struct {
 	Expression Expression
