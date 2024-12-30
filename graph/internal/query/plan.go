@@ -1,41 +1,32 @@
 package query
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 )
 
+// Operator represents one of the three set operations:
+// union, intersection, or difference.
 type Operator int
 
 const (
+	// Set union.
 	Union Operator = iota
+	// Set intersection.
 	Intersection
+	// Set difference.
 	Difference
 )
 
-type StepOption bool
-
-const (
-	StepInto StepOption = false
-	StepOver StepOption = true
-)
-
-type ExpressionVisitor interface {
-	OnSet(*Set) error
-	OnPipeStart(*Pipe) (StepOption, error)
-	OnPipeEnd(*Pipe)
-	OnCallStart(*Call) (StepOption, error)
-	OnCallEnd(*Call)
-	OnCompositeStart(*Composite) (StepOption, error)
-	OnCompositeEnd(*Composite)
-}
-
+// Expression is a node in the query-plan's AST.
 type Expression interface {
 	isExpression()
 }
 
+// Set expressions load a set of relations.
 type Set struct {
 	OT  model.ObjectName
 	RT  model.RelationName
@@ -45,6 +36,17 @@ type Set struct {
 
 func (s *Set) isExpression() {}
 
+func (s *Set) String() string {
+	srt := ""
+	if s.SRT != "" {
+		srt = "#" + s.SRT.String()
+	}
+
+	return fmt.Sprintf("%s#%s@%s%s", s.OT, s.RT, s.ST, srt)
+}
+
+// Pipe expressions perform set expansions.
+// The results of From are forwarded to To.
 type Pipe struct {
 	From Expression
 	To   Expression
@@ -52,7 +54,8 @@ type Pipe struct {
 
 func (c *Pipe) isExpression() {}
 
-// Function call.
+// Call expressions execute a function.
+// Functions aren't named and are identified by their signature.
 type Call struct {
 	Signature *Set
 }
@@ -74,54 +77,71 @@ type Plan struct {
 	Functions  Functions
 }
 
+type ExpressionVisitor interface {
+	OnSet(*Set) error
+	OnCallStart(*Call) (StepOption, error)
+	OnCallEnd(*Call)
+	OnCompositeStart(*Composite) (StepOption, error)
+	OnCompositeEnd(*Composite)
+	OnPipeStart(*Pipe) (StepOption, error)
+	OnPipeEnd(*Pipe)
+}
+
+type StepOption bool
+
+const (
+	StepInto StepOption = false
+	StepOver StepOption = true
+)
+
 func (p *Plan) Visit(visitor ExpressionVisitor) error {
 	backlog := ds.NewStack(p.Expression)
 
 	for !backlog.IsEmpty() {
-		switch e := backlog.Pop().(type) {
+		switch expr := backlog.Pop().(type) {
 		case *Set:
-			if err := visitor.OnSet(e); err != nil {
+			if err := visitor.OnSet(expr); err != nil {
 				return err
 			}
 
 		case *Pipe:
-			step, err := visitor.OnPipeStart(e)
+			step, err := visitor.OnPipeStart(expr)
 			if err != nil {
 				return err
 			}
 
 			if step == StepInto {
-				backlog.Push(unwind{e})
-				backlog.Push(e.To)
-				backlog.Push(e.From)
+				backlog.Push(unwind{expr})
+				backlog.Push(expr.To)
+				backlog.Push(expr.From)
 			}
 
 		case *Call:
-			step, err := visitor.OnCallStart(e)
+			step, err := visitor.OnCallStart(expr)
 			if err != nil {
 				return err
 			}
 
 			if step == StepInto {
-				backlog.Push(unwind{e})
-				backlog.Push(p.Functions[*e.Signature])
+				backlog.Push(unwind{expr})
+				backlog.Push(p.Functions[*expr.Signature])
 			}
 
 		case *Composite:
-			step, err := visitor.OnCompositeStart(e)
+			step, err := visitor.OnCompositeStart(expr)
 			if err != nil {
 				return err
 			}
 
 			if step == StepInto {
-				backlog.Push(unwind{e})
-				for _, op := range slices.Backward(e.Operands) {
+				backlog.Push(unwind{expr})
+				for _, op := range slices.Backward(expr.Operands) {
 					backlog.Push(op)
 				}
 			}
 
 		case unwind:
-			visitUnwind(visitor, e.expr)
+			visitUnwind(visitor, expr.expr)
 		}
 	}
 
