@@ -15,7 +15,7 @@ type compiler struct {
 	funcs Functions
 }
 
-func Compile(m *model.Model, set *Set) (*Plan, error) {
+func Compile(m *model.Model, set *Load) (*Plan, error) {
 	plan := &Plan{}
 
 	c := &compiler{m, Functions{}}
@@ -31,7 +31,7 @@ func Compile(m *model.Model, set *Set) (*Plan, error) {
 	return plan, nil
 }
 
-func (c *compiler) compile(set *Set) (Expression, error) {
+func (c *compiler) compile(set *Load) (Expression, error) {
 	obj := c.m.Objects[set.OT]
 	if obj == nil {
 		return nil, derr.ErrObjectTypeNotFound.Msg(set.OT.String())
@@ -48,10 +48,14 @@ func (c *compiler) compile(set *Set) (Expression, error) {
 	return nil, derr.ErrRelationNotFound.Msg(set.RT.String())
 }
 
-func (c *compiler) compileRelation(r *model.Relation, set *Set) (Expression, error) {
+func (c *compiler) compileRelation(r *model.Relation, set *Load) (Expression, error) {
+	// steps := c.m.StepRelation(r, set.ST)
+	// for _, step := range steps {
+	// }
+
 	return nil, nil
 }
 
-func (c *compiler) compilePermission(p *model.Permission, set *Set) (Expression, error) {
+func (c *compiler) compilePermission(p *model.Permission, set *Load) (Expression, error) {
 	return nil, nil
 }

@@ -10,7 +10,6 @@ require (
 	github.com/aserto-dev/go-directory v0.33.3
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-set v0.1.14
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/pkg/errors v0.9.1
@@ -31,7 +30,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/shoenig/test v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

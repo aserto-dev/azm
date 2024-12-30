@@ -82,7 +82,7 @@ func (i *Interpreter) Run(req *dsr.CheckRequest) (ObjSet, error) {
 	return i.state.Top().Result(), nil
 }
 
-func (i *Interpreter) OnSet(expr *Set) error {
+func (i *Interpreter) OnLoad(expr *Load) error {
 	state := i.state.Top()
 
 	for _, path := range state.Paths() {
@@ -90,7 +90,14 @@ func (i *Interpreter) OnSet(expr *Set) error {
 			return nil
 		}
 
-		result, err := i.loadSet(&Relation{Set: *expr, Path: path})
+		if expr.Modifier.Has(SubjectWildcard) {
+			path.SID = "*"
+		}
+		if expr.Modifier.Has(ObjectWildcard) {
+			path.OID = "*"
+		}
+
+		result, err := i.loadSet(&Relation{Load: *expr, Path: path})
 		if err != nil {
 			return err
 		}

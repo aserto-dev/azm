@@ -3,7 +3,7 @@ package query
 import dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 
 type Relation struct {
-	Set
+	Load
 	Path
 }
 

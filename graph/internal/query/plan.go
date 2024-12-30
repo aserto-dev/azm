@@ -21,22 +21,40 @@ const (
 	Difference
 )
 
-// Expression is a node in the query-plan's AST.
-type Expression interface {
-	isExpression()
+type ScopeModifier int
+
+const (
+	Unmodified      ScopeModifier = 0x0
+	SubjectWildcard ScopeModifier = 0x1
+	ObjectWildcard  ScopeModifier = 0x2
+)
+
+func (s ScopeModifier) Has(mod ScopeModifier) bool {
+	return s&mod != 0
 }
 
-// Set expressions load a set of relations.
-type Set struct {
+// A relation type is identified by its object type, relation type, subject type, and subject relation.
+type RelationType struct {
 	OT  model.ObjectName
 	RT  model.RelationName
 	ST  model.ObjectName
 	SRT model.RelationName
 }
 
-func (s *Set) isExpression() {}
+// Expression is a node in the query-plan's AST.
+type Expression interface {
+	isExpression()
+}
 
-func (s *Set) String() string {
+// A Load expression specifies a relation-set to load.
+type Load struct {
+	RelationType
+	Modifier ScopeModifier
+}
+
+func (s *Load) isExpression() {}
+
+func (s *Load) String() string {
 	srt := ""
 	if s.SRT != "" {
 		srt = "#" + s.SRT.String()
@@ -57,7 +75,7 @@ func (c *Pipe) isExpression() {}
 // Call expressions execute a function.
 // Functions aren't named and are identified by their signature.
 type Call struct {
-	Signature *Set
+	Signature *Load
 }
 
 func (c *Call) isExpression() {}
@@ -70,7 +88,7 @@ type Composite struct {
 
 func (c *Composite) isExpression() {}
 
-type Functions map[Set]Expression
+type Functions map[Load]Expression
 
 type Plan struct {
 	Expression Expression
@@ -78,7 +96,7 @@ type Plan struct {
 }
 
 type ExpressionVisitor interface {
-	OnSet(*Set) error
+	OnLoad(*Load) error
 	OnCallStart(*Call) (StepOption, error)
 	OnCallEnd(*Call)
 	OnCompositeStart(*Composite) (StepOption, error)
@@ -99,8 +117,8 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 
 	for !backlog.IsEmpty() {
 		switch expr := backlog.Pop().(type) {
-		case *Set:
-			if err := visitor.OnSet(expr); err != nil {
+		case *Load:
+			if err := visitor.OnLoad(expr); err != nil {
 				return err
 			}
 

@@ -36,7 +36,7 @@ import (
 //     relations:
 //       parent: folder
 //       owner: user
-//       editor: user | group#member
+//       editor: user | user:* | group#member
 //     permissions:
 //       can_delete: owner
 //       can_edit: can_delete | editor | parent->can_edit
@@ -53,6 +53,7 @@ var execRels = NewRelationsReader(
 	"folder:folder1#editor@user:folder1editor",
 	"folder:folder1#editor@group:folder1editors#member",
 	"group:folder1editors#member@user:folder1editorsmember",
+	"doc:doc2#editor@user:*",
 )
 
 var evalTests = []checkTest{
@@ -70,7 +71,7 @@ func TestExecSet(t *testing.T) {
 	pool := mempool.NewRelationsPool()
 
 	plan := &query.Plan{
-		Expression: set("doc", "owner", "user"),
+		Expression: load("doc", "owner", "user"),
 	}
 
 	for _, test := range evalTests {
@@ -84,22 +85,22 @@ func TestExecSet(t *testing.T) {
 	}
 }
 
-var Functions = map[query.Set]query.Expression{
-	*set("group", "member", "user"): &query.Composite{
+var Functions = map[query.Load]query.Expression{
+	*load("group", "member", "user"): &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
-			set("group", "member", "user"),
-			&query.Pipe{From: set("group", "member", "group", "member"), To: &query.Call{Signature: set("group", "member", "user")}},
-			&query.Pipe{From: set("group", "member", "team", "mate"), To: &query.Call{Signature: set("team", "mate", "user")}},
+			load("group", "member", "user"),
+			&query.Pipe{From: load("group", "member", "group", "member"), To: &query.Call{Signature: load("group", "member", "user")}},
+			&query.Pipe{From: load("group", "member", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user")}},
 		},
 	},
 
-	*set("team", "mate", "user"): &query.Composite{
+	*load("team", "mate", "user"): &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
-			set("team", "mate", "user"),
-			&query.Pipe{From: set("team", "mate", "team", "mate"), To: &query.Call{Signature: set("team", "mate", "user")}},
-			&query.Pipe{From: set("team", "mate", "group", "user"), To: &query.Call{Signature: set("group", "member", "user")}},
+			load("team", "mate", "user"),
+			&query.Pipe{From: load("team", "mate", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user")}},
+			&query.Pipe{From: load("team", "mate", "group", "user"), To: &query.Call{Signature: load("group", "member", "user")}},
 		},
 	},
 }
@@ -119,9 +120,9 @@ func TestExecUnion(t *testing.T) {
 		Expression: &query.Composite{
 			Operator: query.Union,
 			Operands: []query.Expression{
-				set("doc", "owner", "user"),
-				set("doc", "editor", "user"),
-				&query.Pipe{From: set("doc", "editor", "group", "member"), To: &query.Call{Signature: set("group", "member", "user")}},
+				load("doc", "owner", "user"),
+				load("doc", "editor", "user"),
+				&query.Pipe{From: load("doc", "editor", "group", "member"), To: &query.Call{Signature: load("group", "member", "user")}},
 			},
 		},
 		Functions: Functions,
@@ -150,8 +151,8 @@ func TestExecIntersection(t *testing.T) {
 		Expression: &query.Composite{
 			Operator: query.Intersection,
 			Operands: []query.Expression{
-				set("doc", "owner", "user"),
-				set("doc", "editor", "user"),
+				load("doc", "owner", "user"),
+				load("doc", "editor", "user"),
 			},
 		},
 	}
@@ -179,8 +180,8 @@ func TestExecNegation(t *testing.T) {
 		Expression: &query.Composite{
 			Operator: query.Difference,
 			Operands: []query.Expression{
-				set("doc", "editor", "user"),
-				set("doc", "owner", "user"),
+				load("doc", "editor", "user"),
+				load("doc", "owner", "user"),
 			},
 		},
 	}
@@ -208,17 +209,17 @@ func TestExecArrow(t *testing.T) {
 		Expression: &query.Composite{
 			Operator: query.Union,
 			Operands: []query.Expression{
-				set("doc", "owner", "user"),
-				set("doc", "editor", "user"),
+				load("doc", "owner", "user"),
+				load("doc", "editor", "user"),
 				&query.Pipe{
-					From: set("doc", "parent", "folder"),
+					From: load("doc", "parent", "folder"),
 					To: &query.Composite{
 						Operator: query.Union,
 						Operands: []query.Expression{
-							set("folder", "editor", "user"),
+							load("folder", "editor", "user"),
 							&query.Pipe{
-								From: set("folder", "editor", "group", "member"),
-								To:   &query.Call{Signature: set("group", "member", "user")},
+								From: load("folder", "editor", "group", "member"),
+								To:   &query.Call{Signature: load("group", "member", "user")},
 							},
 						},
 					},
@@ -237,7 +238,35 @@ func TestExecArrow(t *testing.T) {
 	}
 }
 
-func set(ot, rt, st string, srt ...string) *query.Set {
+var wildcardTests = []checkTest{
+	{"doc:doc2#editor@user:any", true},
+}
+
+func TestExecWildcard(t *testing.T) {
+	assert := assert.New(t)
+	pool := mempool.NewRelationsPool()
+
+	plan := &query.Plan{
+		Expression: &query.Composite{
+			Operator: query.Union,
+			Operands: []query.Expression{
+				load("doc", "editor", "user"),
+				wildcard("doc", "editor", "user"),
+			},
+		},
+	}
+
+	for _, test := range wildcardTests {
+		t.Run(test.check, func(tt *testing.T) {
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			result, err := interpreter.Run(checkReq(test.check, false))
+			assert.NoError(err)
+			assert.Equal(test.expected, !result.IsEmpty(), test.check)
+		})
+	}
+}
+
+func load(ot, rt, st string, srt ...string) *query.Load {
 	var sr model.RelationName
 	switch len(srt) {
 	case 0:
@@ -248,10 +277,23 @@ func set(ot, rt, st string, srt ...string) *query.Set {
 		panic("only one subject relation type allowed")
 	}
 
-	return &query.Set{
-		OT:  on(ot),
-		RT:  rn(rt),
-		ST:  on(st),
-		SRT: sr,
+	return &query.Load{
+		RelationType: query.RelationType{
+			OT:  on(ot),
+			RT:  rn(rt),
+			ST:  on(st),
+			SRT: sr,
+		},
+	}
+}
+
+func wildcard(ot, rt, st string) *query.Load {
+	return &query.Load{
+		RelationType: query.RelationType{
+			OT: on(ot),
+			RT: rn(rt),
+			ST: on(st),
+		},
+		Modifier: query.SubjectWildcard,
 	}
 }
