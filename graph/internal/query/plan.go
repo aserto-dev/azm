@@ -41,6 +41,15 @@ type RelationType struct {
 	SRT model.RelationName
 }
 
+func (r *RelationType) String() string {
+	srt := ""
+	if r.SRT != "" {
+		srt = "#" + r.SRT.String()
+	}
+
+	return fmt.Sprintf("%s#%s@%s%s", r.OT, r.RT, r.ST, srt)
+}
+
 // Expression is a node in the query-plan's AST.
 type Expression interface {
 	isExpression()
@@ -53,15 +62,6 @@ type Load struct {
 }
 
 func (s *Load) isExpression() {}
-
-func (s *Load) String() string {
-	srt := ""
-	if s.SRT != "" {
-		srt = "#" + s.SRT.String()
-	}
-
-	return fmt.Sprintf("%s#%s@%s%s", s.OT, s.RT, s.ST, srt)
-}
 
 // Pipe expressions perform set expansions.
 // The results of From are forwarded to To.

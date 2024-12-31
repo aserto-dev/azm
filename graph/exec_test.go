@@ -53,7 +53,7 @@ func TestExecSet(t *testing.T) {
 }
 
 var Functions = map[query.RelationType]query.Expression{
-	*load("group", "member", "user").RelationType: &query.Composite{
+	*rel("group", "member", "user"): &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("group", "member", "user"),
@@ -62,7 +62,7 @@ var Functions = map[query.RelationType]query.Expression{
 		},
 	},
 
-	*load("team", "mate", "user").RelationType: &query.Composite{
+	*rel("team", "mate", "user"): &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("team", "mate", "user"),

@@ -5,17 +5,17 @@ import (
 	"github.com/samber/lo"
 )
 
-type ChainState struct {
+type PipeState struct {
 	paths     []Path
 	expansion PathSet
 	result    ObjSet
 }
 
-func NewChainState(paths []Path) *ChainState {
-	return &ChainState{paths: paths, expansion: NewSet[Path](), result: NewSet[model.ObjectID]()}
+func NewChainState(paths []Path) *PipeState {
+	return &PipeState{paths: paths, expansion: NewSet[Path](), result: NewSet[model.ObjectID]()}
 }
 
-func (s *ChainState) AddSet(result ObjSet) {
+func (s *PipeState) AddSet(result ObjSet) {
 	if len(s.paths) > 0 {
 		path := s.paths[0]
 		s.paths = s.paths[1:]
@@ -30,11 +30,11 @@ func (s *ChainState) AddSet(result ObjSet) {
 	s.result = s.result.Union(result)
 }
 
-func (s *ChainState) ShortCircuit() bool {
+func (s *PipeState) ShortCircuit() bool {
 	return len(s.paths) == 0 && s.expansion.IsEmpty()
 }
 
-func (s *ChainState) Paths() []Path {
+func (s *PipeState) Paths() []Path {
 	if len(s.paths) > 0 {
 		return lo.Map(s.paths, func(p Path, _ int) Path {
 			return Path{OID: p.OID}
@@ -44,4 +44,4 @@ func (s *ChainState) Paths() []Path {
 	return s.expansion.ToSlice()
 }
 
-func (s *ChainState) Result() ObjSet { return s.result }
+func (s *PipeState) Result() ObjSet { return s.result }

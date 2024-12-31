@@ -43,6 +43,8 @@ func (c *compiler) compile(set *RelationType) (Expression, error) {
 		return expr, nil
 	}
 
+	c.funcs[*set] = emptySet{}
+
 	obj := c.m.Objects[set.OT]
 	if obj == nil {
 		return nil, derr.ErrObjectTypeNotFound.Msg(set.OT.String())
@@ -138,6 +140,7 @@ func (c *compiler) compilePermission(p *model.Permission, set *RelationType) (Ex
 			baseRel := c.m.Objects[set.OT].Relations[term.Base]
 			baseRelTypes := baseRel.Types()
 			paths := make([]Expression, len(baseRelTypes))
+
 			for i, baseType := range baseRelTypes {
 				expr, err := c.compile(&RelationType{OT: baseType.Object, RT: term.RelOrPerm, ST: set.ST})
 				if err != nil {
@@ -154,6 +157,12 @@ func (c *compiler) compilePermission(p *model.Permission, set *RelationType) (Ex
 						To: expr,
 					}
 				}
+			}
+
+			if len(paths) == 1 {
+				ops[i] = paths[0]
+			} else {
+				ops[i] = &Composite{Operator: Union, Operands: paths}
 			}
 
 		default:

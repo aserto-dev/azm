@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const testManifest = `
@@ -44,31 +46,95 @@ types:
       only_editor: editor - owner
 `
 
-var relationTests = []checkTest{
-	{"doc:doc1#owner@user:doc1owner", true},
-	{"doc:doc1#owner@user:doc1editor", false},
+type compileTest struct {
+	signature *query.RelationType
+	tests     []checkTest
 }
 
-func TestCompileRelation(t *testing.T) {
-	assert := assert.New(t)
+var compileTests = []compileTest{
+	simpleRelationTests,
+	compositeRelationTests,
+	simplePermissionTests,
+	unionPermissionTests,
+	intersectionPermissionTests,
+	negationPermissionTests,
+}
+
+func TestCompile(t *testing.T) {
+	require := require.New(t)
 	m, err := loadManifest(testManifest)
-	assert.NoError(err)
+	require.NoError(err)
 
 	pool := mempool.NewRelationsPool()
 
-	plan, err := query.Compile(m, rel("doc", "owner", "user"))
-	assert.NoError(err)
-	assert.NotNil(plan)
+	for _, suite := range compileTests {
+		plan, err := query.Compile(m, suite.signature)
+		require.NoError(err)
+		require.NotNil(plan)
 
-	for _, test := range relationTests {
-		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
-			result, err := interpreter.Run(checkReq(test.check, false))
+		for _, test := range suite.tests {
+			t.Run(fmt.Sprintf("%s---%s", suite.signature, test.check), func(tt *testing.T) {
+				interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+				result, err := interpreter.Run(checkReq(test.check, false))
 
-			assert.NoError(err)
-			assert.Equal(test.expected, !result.IsEmpty(), test.check)
-		})
+				assert.NoError(tt, err)
+				assert.Equal(tt, test.expected, !result.IsEmpty(), test.check)
+			})
+		}
 	}
+}
+
+var simpleRelationTests = compileTest{
+	signature: rel("doc", "owner", "user"),
+	tests: []checkTest{
+		{"doc:doc1#owner@user:doc1owner", true},
+		{"doc:doc1#owner@user:doc1editor", false},
+	},
+}
+
+var compositeRelationTests = compileTest{
+	signature: rel("doc", "editor", "user"),
+	tests: []checkTest{
+		{"doc:doc1#editor@user:doc1owner", true},
+		{"doc:doc1#editor@user:doc1editor", true},
+		{"doc:doc1#editor@user:someuser", false},
+		{"doc:doc2#editor@user:someuser", true},
+	},
+}
+
+var simplePermissionTests = compileTest{
+	signature: rel("doc", "can_delete", "user"),
+	tests: []checkTest{
+		{"doc:doc1#can_delete@user:doc1owner", true},
+		{"doc:doc1#can_delete@user:doc1editor", false},
+	},
+}
+
+var unionPermissionTests = compileTest{
+	signature: rel("doc", "can_edit", "user"),
+	tests: []checkTest{
+		{"doc:doc1#can_delete@user:doc1owner", true},
+		{"doc:doc1#editor@user:doc1editor", true},
+		{"doc:doc2#editor@user:someuser", true},
+		{"doc:doc1#can_edit@user:folder1editor", true},
+		{"doc:doc1#can_edit@user:folder1editorsmember", true},
+	},
+}
+
+var intersectionPermissionTests = compileTest{
+	signature: rel("doc", "can_share", "user"),
+	tests: []checkTest{
+		{"doc:doc1#can_share@user:doc1owner", true},
+		{"doc:doc1#can_share@user:doc1editor", false},
+	},
+}
+
+var negationPermissionTests = compileTest{
+	signature: rel("doc", "only_editor", "user"),
+	tests: []checkTest{
+		{"doc:doc1#only_editor@user:doc1owner", false},
+		{"doc:doc1#only_editor@user:doc1editor", true},
+	},
 }
 
 func loadManifest(manifest string) (*model.Model, error) {
