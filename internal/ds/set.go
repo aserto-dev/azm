@@ -1,4 +1,4 @@
-package query
+package ds
 
 import (
 	"iter"

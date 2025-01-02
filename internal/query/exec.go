@@ -26,7 +26,7 @@ type (
 	// RelationReader retrieves relations that match the given filter.
 	RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
 
-	ObjSet = Set[model.ObjectID]
+	ObjSet = ds.Set[model.ObjectID]
 )
 
 type Scope struct {
@@ -34,7 +34,7 @@ type Scope struct {
 	SID model.ObjectID
 }
 
-type PathSet = Set[Scope]
+type PathSet = ds.Set[Scope]
 
 type State interface {
 	AddSet(ObjSet)
@@ -159,7 +159,7 @@ func (i *Interpreter) rollupResult() {
 func (i *Interpreter) loadSet(rel *Relation) (ObjSet, error) {
 	if result, ok := i.cache.LookupSet(rel); ok {
 		if result == nil {
-			result = NewSet[model.ObjectID]()
+			result = ds.NewSet[model.ObjectID]()
 		}
 		return result, nil
 	}
@@ -172,7 +172,7 @@ func (i *Interpreter) loadSet(rel *Relation) (ObjSet, error) {
 		return nil, err
 	}
 
-	resultSet := SetFromSlice(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
+	resultSet := ds.SetFromSlice(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
 		return model.ObjectID(rid.SubjectId)
 	})
 

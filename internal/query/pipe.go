@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 	"github.com/samber/lo"
 )
@@ -12,7 +13,7 @@ type PipeState struct {
 }
 
 func NewChainState(scopes []Scope) *PipeState {
-	return &PipeState{scopes: scopes, expansion: NewSet[Scope](), result: NewSet[model.ObjectID]()}
+	return &PipeState{scopes: scopes, expansion: ds.NewSet[Scope](), result: ds.NewSet[model.ObjectID]()}
 }
 
 func (s *PipeState) AddSet(result ObjSet) {

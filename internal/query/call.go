@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 	"github.com/samber/lo"
 )
@@ -13,7 +14,7 @@ type CallState struct {
 }
 
 func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
-	result := NewSet[model.ObjectID]()
+	result := ds.NewSet[model.ObjectID]()
 
 	scopes = lo.Filter(scopes, func(p Scope, _ int) bool {
 		key := Relation{

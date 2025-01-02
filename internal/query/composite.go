@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/model"
 )
 
@@ -18,7 +19,7 @@ func NewCompositeState(op Operator, size int, scopes []Scope) *CompositeState {
 		op:        op,
 		size:      size,
 		remaining: size,
-		result:    NewSet[model.ObjectID](),
+		result:    ds.NewSet[model.ObjectID](),
 		scopes:    scopes,
 	}
 }
