@@ -12,7 +12,7 @@ type nothing struct{}
 type Set[T comparable] map[T]nothing
 
 func NewSet[T comparable](vals ...T) Set[T] {
-	return make(Set[T])
+	return SetFromSlice(vals, func(v T) T { return v })
 }
 
 func SetFromSlice[S any, T comparable](l []S, transform func(S) T) Set[T] {

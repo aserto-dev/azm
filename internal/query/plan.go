@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/aserto-dev/azm/internal/ds"
+	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 )
 
@@ -126,8 +127,16 @@ const (
 	StepOver StepOption = true
 )
 
+var exprSlicePool = mempool.NewSlicePool[Expression](32)
+
 func (p *Plan) Visit(visitor ExpressionVisitor) error {
-	backlog := ds.NewStack(p.Expression)
+	slicePtr := exprSlicePool.Get()
+	*slicePtr = append(*slicePtr, p.Expression)
+
+	backlog := ds.NewStack(slicePtr)
+	defer func() {
+		exprSlicePool.Put(backlog.Release())
+	}()
 
 	for !backlog.IsEmpty() {
 		switch expr := backlog.Pop().(type) {

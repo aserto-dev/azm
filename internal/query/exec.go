@@ -34,7 +34,7 @@ type Scope struct {
 	SID model.ObjectID
 }
 
-type PathSet = ds.Set[Scope]
+type ScopeSet = ds.Set[Scope]
 
 type State interface {
 	AddSet(ObjSet)
@@ -68,8 +68,17 @@ func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsP
 	}
 }
 
+var stateSlicePool = mempool.NewSlicePool[State](32)
+
 func (i *Interpreter) Run(req *dsr.CheckRequest) (ObjSet, error) {
-	i.state = ds.NewStack[State](NewCompositeState(Union, 1, []Scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
+	slicePtr := stateSlicePool.Get()
+	*slicePtr = append(*slicePtr, NewCompositeState(Union, 1, []Scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
+
+	i.state = ds.NewStack(slicePtr)
+	defer func() {
+		stateSlicePool.Put(i.state.Release())
+	}()
+
 	if err := i.plan.Visit(i); err != nil {
 		return nil, err
 	}

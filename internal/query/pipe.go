@@ -8,7 +8,7 @@ import (
 
 type PipeState struct {
 	scopes    []Scope
-	expansion PathSet
+	expansion ScopeSet
 	result    ObjSet
 }
 
