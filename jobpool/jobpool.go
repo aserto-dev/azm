@@ -83,12 +83,10 @@ func (jp *JobPool[IN, OUT]) Start() {
 // Results are returned in the order that jobs were produced.
 func (jp *JobPool[IN, OUT]) Wait() []OUT {
 	close(jp.inbox)
-	go func() {
-		jp.wg.Wait()
-		close(jp.outbox)
-	}()
+	jp.wg.Wait()
+	close(jp.outbox)
 
-	results := make([]OUT, len(jp.inbox))
+	results := make([]OUT, len(jp.outbox))
 	for result := range jp.outbox {
 		results[result.index] = result.result
 	}

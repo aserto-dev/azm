@@ -7,18 +7,18 @@ import (
 
 type CallState struct {
 	signature *RelationType
-	paths     []Path
+	scopes    []Scope
 	result    ObjSet
 	cache     Cache
 }
 
-func NewCallState(sig *RelationType, paths []Path, cache Cache) *CallState {
+func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
 	result := NewSet[model.ObjectID]()
 
-	paths = lo.Filter(paths, func(p Path, _ int) bool {
+	scopes = lo.Filter(scopes, func(p Scope, _ int) bool {
 		key := Relation{
 			RelationType: sig,
-			Path:         p,
+			Scope:        p,
 		}
 		if res, ok := cache.LookupCall(&key); ok {
 			if res != nil {
@@ -33,19 +33,19 @@ func NewCallState(sig *RelationType, paths []Path, cache Cache) *CallState {
 
 	return &CallState{
 		signature: sig,
-		paths:     paths,
+		scopes:    scopes,
 		result:    result,
 		cache:     cache,
 	}
 }
 
 func (s *CallState) AddSet(result ObjSet) {
-	path := s.paths[0]
-	s.paths = s.paths[1:]
+	path := s.scopes[0]
+	s.scopes = s.scopes[1:]
 
 	key := Relation{
 		RelationType: s.signature,
-		Path:         path,
+		Scope:        path,
 	}
 	s.cache.StoreCall(&key, result)
 	s.result = s.result.Union(result)
@@ -55,8 +55,8 @@ func (s *CallState) ShortCircuit() bool {
 	return !s.result.IsEmpty()
 }
 
-func (s *CallState) Paths() []Path {
-	return s.paths
+func (s *CallState) Scopes() []Scope {
+	return s.scopes
 }
 
 func (s *CallState) Result() ObjSet {

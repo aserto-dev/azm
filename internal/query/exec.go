@@ -1,7 +1,6 @@
 package query
 
 import (
-	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/pkg/errors"
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -27,20 +26,20 @@ type (
 	// RelationReader retrieves relations that match the given filter.
 	RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
 
-	ObjSet = mapset.Set[model.ObjectID]
+	ObjSet = Set[model.ObjectID]
 )
 
-type Path struct {
+type Scope struct {
 	OID model.ObjectID
 	SID model.ObjectID
 }
 
-type PathSet = mapset.Set[Path]
+type PathSet = Set[Scope]
 
 type State interface {
 	AddSet(ObjSet)
 	ShortCircuit() bool
-	Paths() []Path
+	Scopes() []Scope
 	Result() ObjSet
 }
 
@@ -70,7 +69,7 @@ func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsP
 }
 
 func (i *Interpreter) Run(req *dsr.CheckRequest) (ObjSet, error) {
-	i.state = ds.NewStack[State](NewCompositeState(Union, 1, []Path{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
+	i.state = ds.NewStack[State](NewCompositeState(Union, 1, []Scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
 	if err := i.plan.Visit(i); err != nil {
 		return nil, err
 	}
@@ -85,19 +84,19 @@ func (i *Interpreter) Run(req *dsr.CheckRequest) (ObjSet, error) {
 func (i *Interpreter) OnLoad(expr *Load) error {
 	state := i.state.Top()
 
-	for _, path := range state.Paths() {
+	for _, scope := range state.Scopes() {
 		if state.ShortCircuit() {
 			return nil
 		}
 
 		if expr.Modifier.Has(SubjectWildcard) {
-			path.SID = "*"
+			scope.SID = "*"
 		}
 		if expr.Modifier.Has(ObjectWildcard) {
-			path.OID = "*"
+			scope.OID = "*"
 		}
 
-		result, err := i.loadSet(&Relation{RelationType: expr.RelationType, Path: path})
+		result, err := i.loadSet(&Relation{RelationType: expr.RelationType, Scope: scope})
 		if err != nil {
 			return err
 		}
@@ -113,7 +112,7 @@ func (i *Interpreter) OnPipeStart(pipe *Pipe) (StepOption, error) {
 	if state.ShortCircuit() {
 		return StepOver, nil
 	}
-	i.state.Push(NewChainState(state.Paths()))
+	i.state.Push(NewChainState(state.Scopes()))
 	return StepInto, nil
 }
 
@@ -127,7 +126,7 @@ func (i *Interpreter) OnCallStart(call *Call) (StepOption, error) {
 		return StepOver, nil
 	}
 
-	i.state.Push(NewCallState(call.Signature, i.state.Top().Paths(), i.cache))
+	i.state.Push(NewCallState(call.Signature, i.state.Top().Scopes(), i.cache))
 
 	return StepInto, nil
 }
@@ -142,7 +141,7 @@ func (i *Interpreter) OnCompositeStart(expr *Composite) (StepOption, error) {
 		return StepOver, nil
 	}
 
-	i.state.Push(NewCompositeState(expr.Operator, len(expr.Operands), i.state.Top().Paths()))
+	i.state.Push(NewCompositeState(expr.Operator, len(expr.Operands), i.state.Top().Scopes()))
 	return StepInto, nil
 }
 

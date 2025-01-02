@@ -3,6 +3,7 @@ package cache
 import (
 	"sync/atomic"
 
+	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/model/diff"
@@ -18,14 +19,16 @@ type (
 )
 
 type Cache struct {
-	model    atomic.Pointer[model.Model]
-	relsPool *mempool.RelationsPool
+	model      atomic.Pointer[model.Model]
+	relsPool   *mempool.RelationsPool
+	queryCache query.Module
 }
 
 // New, create new model cache instance.
 func New(m *model.Model) *Cache {
 	cache := &Cache{
-		relsPool: mempool.NewRelationsPool(),
+		relsPool:   mempool.NewRelationsPool(),
+		queryCache: query.Module{},
 	}
 
 	cache.model.Store(m)

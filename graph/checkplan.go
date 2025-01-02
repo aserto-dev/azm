@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"github.com/aserto-dev/azm/graph/internal/query"
+	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 )

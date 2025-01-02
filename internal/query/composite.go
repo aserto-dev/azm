@@ -9,17 +9,17 @@ type CompositeState struct {
 	size      int
 	remaining int
 	hasResult bool
-	paths     []Path
+	scopes    []Scope
 	result    ObjSet
 }
 
-func NewCompositeState(op Operator, size int, paths []Path) *CompositeState {
+func NewCompositeState(op Operator, size int, scopes []Scope) *CompositeState {
 	return &CompositeState{
 		op:        op,
 		size:      size,
 		remaining: size,
 		result:    NewSet[model.ObjectID](),
-		paths:     paths,
+		scopes:    scopes,
 	}
 }
 
@@ -62,8 +62,8 @@ func (s *CompositeState) ShortCircuit() bool {
 	return s.hasResult
 }
 
-func (s *CompositeState) Paths() []Path {
-	return s.paths
+func (s *CompositeState) Scopes() []Scope {
+	return s.scopes
 }
 
 func (s *CompositeState) Result() ObjSet {

@@ -41,6 +41,20 @@ type RelationType struct {
 	SRT model.RelationName
 }
 
+func NewRelationType(objType, relType, subjType string, subjRelType ...string) *RelationType {
+	srt := ""
+	if len(subjRelType) > 0 {
+		srt = subjRelType[0]
+	}
+
+	return &RelationType{
+		OT:  model.ObjectName(objType),
+		RT:  model.RelationName(relType),
+		ST:  model.ObjectName(subjType),
+		SRT: model.RelationName(srt),
+	}
+}
+
 func (r *RelationType) String() string {
 	srt := ""
 	if r.SRT != "" {
@@ -88,11 +102,11 @@ type Composite struct {
 
 func (c *Composite) isExpression() {}
 
-type Functions map[RelationType]Expression
+type Module map[RelationType]Expression
 
 type Plan struct {
 	Expression Expression
-	Functions  Functions
+	Module     Module
 }
 
 type ExpressionVisitor interface {
@@ -142,7 +156,7 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 
 			if step == StepInto {
 				backlog.Push(unwind{expr})
-				backlog.Push(p.Functions[*expr.Signature])
+				backlog.Push(p.Module[*expr.Signature])
 			}
 
 		case *Composite:

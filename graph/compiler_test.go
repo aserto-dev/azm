@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aserto-dev/azm/graph/internal/query"
+	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	rqur "github.com/stretchr/testify/require"
 )
 
 const testManifest = `
@@ -61,14 +61,14 @@ var compileTests = []compileTest{
 }
 
 func TestCompile(t *testing.T) {
-	require := require.New(t)
+	require := rqur.New(t)
 	m, err := loadManifest(testManifest)
 	require.NoError(err)
 
 	pool := mempool.NewRelationsPool()
 
 	for _, suite := range compileTests {
-		plan, err := query.Compile(m, suite.signature)
+		plan, err := query.Compile(m, suite.signature, nil)
 		require.NoError(err)
 		require.NotNil(plan)
 

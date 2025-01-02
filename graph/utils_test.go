@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
@@ -18,6 +19,10 @@ func checkReq(expr string, trace bool) *dsr.CheckRequest {
 
 func graphReq(expr string) *dsr.GetGraphRequest {
 	return parseRelation(expr).graphReq()
+}
+
+func relationType(expr string) *query.RelationType {
+	return parseRelation(expr).relationType()
 }
 
 type relation struct {
@@ -82,6 +87,15 @@ func (r *relation) graphReq() *dsr.GetGraphRequest {
 		SubjectRelation: r.SubjectRelation.String(),
 		Explain:         true,
 		Trace:           true,
+	}
+}
+
+func (r *relation) relationType() *query.RelationType {
+	return &query.RelationType{
+		OT:  r.ObjectType,
+		RT:  r.Relation,
+		ST:  r.SubjectType,
+		SRT: r.SubjectRelation,
 	}
 }
 

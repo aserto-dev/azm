@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	set "github.com/deckarep/golang-set/v2"
+	set "github.com/deckarep/golang-set/v2"golang-set
 	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 )

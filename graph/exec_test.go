@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/aserto-dev/azm/graph/internal/query"
+	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 )
@@ -52,13 +52,13 @@ func TestExecSet(t *testing.T) {
 	}
 }
 
-var Functions = map[query.RelationType]query.Expression{
+var Module = map[query.RelationType]query.Expression{
 	*rel("group", "member", "user"): &query.Composite{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("group", "member", "user"),
-			&query.Pipe{From: load("group", "member", "group", "member"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
-			&query.Pipe{From: load("group", "member", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user").RelationType}},
+			&query.Pipe{From: load("group", "member", "group", "member"), To: &query.Call{Signature: rel("group", "member", "user")}},
+			&query.Pipe{From: load("group", "member", "team", "mate"), To: &query.Call{Signature: rel("team", "mate", "user")}},
 		},
 	},
 
@@ -66,8 +66,8 @@ var Functions = map[query.RelationType]query.Expression{
 		Operator: query.Union,
 		Operands: []query.Expression{
 			load("team", "mate", "user"),
-			&query.Pipe{From: load("team", "mate", "team", "mate"), To: &query.Call{Signature: load("team", "mate", "user").RelationType}},
-			&query.Pipe{From: load("team", "mate", "group", "user"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
+			&query.Pipe{From: load("team", "mate", "team", "mate"), To: &query.Call{Signature: rel("team", "mate", "user")}},
+			&query.Pipe{From: load("team", "mate", "group", "user"), To: &query.Call{Signature: rel("group", "member", "user")}},
 		},
 	},
 }
@@ -89,10 +89,10 @@ func TestExecUnion(t *testing.T) {
 			Operands: []query.Expression{
 				load("doc", "owner", "user"),
 				load("doc", "editor", "user"),
-				&query.Pipe{From: load("doc", "editor", "group", "member"), To: &query.Call{Signature: load("group", "member", "user").RelationType}},
+				&query.Pipe{From: load("doc", "editor", "group", "member"), To: &query.Call{Signature: rel("group", "member", "user")}},
 			},
 		},
-		Functions: Functions,
+		Module: Module,
 	}
 
 	for _, test := range unionTests {
@@ -186,14 +186,14 @@ func TestExecArrow(t *testing.T) {
 							load("folder", "editor", "user"),
 							&query.Pipe{
 								From: load("folder", "editor", "group", "member"),
-								To:   &query.Call{Signature: load("group", "member", "user").RelationType},
+								To:   &query.Call{Signature: rel("group", "member", "user")},
 							},
 						},
 					},
 				},
 			},
 		},
-		Functions: Functions,
+		Module: Module,
 	}
 	for _, test := range arrowTests {
 		t.Run(test.check, func(tt *testing.T) {

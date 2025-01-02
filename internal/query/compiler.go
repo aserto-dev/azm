@@ -18,14 +18,18 @@ type emptySet struct{}
 func (emptySet) isExpression() {}
 
 type compiler struct {
-	m     *model.Model
-	funcs Functions
+	m      *model.Model
+	module Module
 }
 
-func Compile(m *model.Model, set *RelationType) (*Plan, error) {
+func Compile(m *model.Model, set *RelationType, funcs Module) (*Plan, error) {
+	if funcs == nil {
+		funcs = Module{}
+	}
+
 	plan := &Plan{}
 
-	c := &compiler{m, Functions{}}
+	c := &compiler{m, funcs}
 
 	expr, err := c.compile(set)
 	if err != nil {
@@ -33,17 +37,17 @@ func Compile(m *model.Model, set *RelationType) (*Plan, error) {
 	}
 
 	plan.Expression = expr
-	plan.Functions = c.funcs
+	plan.Module = c.module
 
 	return plan, nil
 }
 
 func (c *compiler) compile(set *RelationType) (Expression, error) {
-	if expr, ok := c.funcs[*set]; ok {
+	if expr, ok := c.module[*set]; ok {
 		return expr, nil
 	}
 
-	c.funcs[*set] = emptySet{}
+	c.module[*set] = emptySet{}
 
 	obj := c.m.Objects[set.OT]
 	if obj == nil {
@@ -68,7 +72,7 @@ func (c *compiler) compile(set *RelationType) (Expression, error) {
 		return nil, err
 	}
 
-	c.funcs[*set] = expr
+	c.module[*set] = expr
 	return expr, nil
 }
 
