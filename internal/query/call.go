@@ -1,21 +1,17 @@
 package query
 
 import (
-	"github.com/aserto-dev/azm/internal/ds"
-	"github.com/aserto-dev/azm/model"
 	"github.com/samber/lo"
 )
 
-type CallState struct {
+type CallContext struct {
 	signature *RelationType
 	scopes    []Scope
 	result    ObjSet
 	cache     Cache
 }
 
-func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
-	result := ds.NewSet[model.ObjectID]()
-
+func newCallContext(sig *RelationType, scopes []Scope, result ObjSet, cache Cache) *CallContext {
 	scopes = lo.Filter(scopes, func(p Scope, _ int) bool {
 		key := Relation{
 			RelationType: sig,
@@ -23,7 +19,7 @@ func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
 		}
 		if res, ok := cache.LookupCall(&key); ok {
 			if res != nil {
-				result = result.Union(res)
+				result.Union(*res)
 			}
 			return false
 		}
@@ -32,7 +28,7 @@ func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
 		return true
 	})
 
-	return &CallState{
+	return &CallContext{
 		signature: sig,
 		scopes:    scopes,
 		result:    result,
@@ -40,26 +36,26 @@ func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
 	}
 }
 
-func (s *CallState) AddSet(result ObjSet) {
-	path := s.scopes[0]
+func (s *CallContext) AddSet(result ObjSet) {
+	scope := s.scopes[0]
 	s.scopes = s.scopes[1:]
 
 	key := Relation{
 		RelationType: s.signature,
-		Scope:        &path,
+		Scope:        &scope,
 	}
-	s.cache.StoreCall(&key, result)
-	s.result = s.result.Union(result)
+	s.cache.StoreCall(&key, &result)
+	s.result.Union(result)
 }
 
-func (s *CallState) ShortCircuit() bool {
+func (s *CallContext) ShortCircuit() bool {
 	return !s.result.IsEmpty()
 }
 
-func (s *CallState) Scopes() []Scope {
+func (s *CallContext) Scopes() []Scope {
 	return s.scopes
 }
 
-func (s *CallState) Result() ObjSet {
+func (s *CallContext) Result() ObjSet {
 	return s.result
 }

@@ -166,7 +166,7 @@ func (p *Plan) Visit(visitor ExpressionVisitor) error {
 	slicePtr := exprSlicePool.Get()
 	*slicePtr = append(*slicePtr, p.Expression)
 
-	backlog := ds.NewStack(slicePtr)
+	backlog := ds.AttachStack(slicePtr)
 	defer func() {
 		exprSlicePool.Put(backlog.Release())
 	}()

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
@@ -35,7 +36,8 @@ type (
 
 func TestExecSet(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: load("doc", "owner", "user"),
@@ -43,7 +45,7 @@ func TestExecSet(t *testing.T) {
 
 	for _, test := range evalTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 
 			assert.NoError(err)
@@ -81,7 +83,8 @@ var unionTests = []checkTest{
 
 func TestExecUnion(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: &query.Composite{
@@ -97,7 +100,7 @@ func TestExecUnion(t *testing.T) {
 
 	for _, test := range unionTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
 			assert.Equal(test.expected, !result.IsEmpty(), test.check)
@@ -112,7 +115,8 @@ var intersectionTests = []checkTest{
 
 func TestExecIntersection(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: &query.Composite{
@@ -126,7 +130,7 @@ func TestExecIntersection(t *testing.T) {
 
 	for _, test := range intersectionTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
 			assert.Equal(test.expected, !result.IsEmpty())
@@ -141,7 +145,8 @@ var negationTests = []checkTest{
 
 func TestExecNegation(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: &query.Composite{
@@ -155,7 +160,7 @@ func TestExecNegation(t *testing.T) {
 
 	for _, test := range negationTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
 			assert.Equal(test.expected, !result.IsEmpty())
@@ -170,7 +175,8 @@ var arrowTests = []checkTest{
 
 func TestExecArrow(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: &query.Composite{
@@ -197,7 +203,7 @@ func TestExecArrow(t *testing.T) {
 	}
 	for _, test := range arrowTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
 			assert.Equal(test.expected, !result.IsEmpty(), test.check)
@@ -211,7 +217,8 @@ var wildcardTests = []checkTest{
 
 func TestExecWildcard(t *testing.T) {
 	assert := assert.New(t)
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	plan := &query.Plan{
 		Expression: &query.Composite{
@@ -225,7 +232,7 @@ func TestExecWildcard(t *testing.T) {
 
 	for _, test := range wildcardTests {
 		t.Run(test.check, func(tt *testing.T) {
-			interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+			interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 			result, err := interpreter.Run(checkReq(test.check, false))
 			assert.NoError(err)
 			assert.Equal(test.expected, !result.IsEmpty(), test.check)

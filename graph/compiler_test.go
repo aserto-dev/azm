@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
@@ -65,7 +66,8 @@ func TestCompile(t *testing.T) {
 	m, err := loadManifest(testManifest)
 	require.NoError(err)
 
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 
 	for _, suite := range compileTests {
 		plan, err := query.Compile(m, suite.signature, nil)
@@ -74,7 +76,7 @@ func TestCompile(t *testing.T) {
 
 		for _, test := range suite.tests {
 			t.Run(fmt.Sprintf("%s---%s", suite.signature, test.check), func(tt *testing.T) {
-				interpreter := query.NewInterpreter(plan, execRels.GetRelations, pool)
+				interpreter := query.NewInterpreter(plan, execRels.GetRelations, relPool, objSetPool)
 				result, err := interpreter.Run(checkReq(test.check, false))
 
 				assert.NoError(tt, err)

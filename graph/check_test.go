@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	azmgraph "github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
+	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +73,8 @@ func TestCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, m)
 
-	pool := mempool.NewRelationsPool()
+	relPool := mempool.NewRelationsPool()
+	objSetPool := ds.NewSetPool[model.ObjectID]()
 	module := query.Module{}
 
 	for _, test := range tests {
@@ -81,7 +84,7 @@ func TestCheck(t *testing.T) {
 			plan, err := query.Compile(m, relationType(test.check), module)
 			assert.NoError(err)
 
-			checker := azmgraph.NewPlannedCheck(plan, rels.GetRelations, pool)
+			checker := azmgraph.NewPlannedCheck(plan, rels.GetRelations, relPool, objSetPool)
 
 			res, err := checker.Check(checkReq(test.check, false))
 			assert.NoError(err)

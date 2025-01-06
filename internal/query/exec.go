@@ -1,6 +1,8 @@
 package query
 
 import (
+	"slices"
+
 	"github.com/pkg/errors"
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -25,23 +27,7 @@ type (
 
 	// RelationReader retrieves relations that match the given filter.
 	RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) error
-
-	ObjSet = ds.Set[model.ObjectID]
 )
-
-type Scope struct {
-	OID model.ObjectID
-	SID model.ObjectID
-}
-
-type ScopeSet = ds.Set[Scope]
-
-type State interface {
-	AddSet(ObjSet)
-	ShortCircuit() bool
-	Scopes() []Scope
-	Result() ObjSet
-}
 
 type RelationLoader func(*dsc.RelationIdentifier, *Relations) error
 
@@ -52,46 +38,53 @@ func newRelationLoader(reader RelationReader, pool RelationPool) RelationLoader 
 }
 
 type Interpreter struct {
-	plan   *Plan
-	loader RelationLoader
-	pool   *mempool.RelationsPool
-	state  *ds.Stack[State]
-	cache  Cache
+	plan       *Plan
+	loader     RelationLoader
+	relPool    *mempool.RelationsPool
+	setPool    *ObjSetPool
+	ctxFactory *ContextFactory
+	cache      Cache
+	context    *ds.Stack[ExecutionContext]
 }
 
-func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsPool) *Interpreter {
+func NewInterpreter(plan *Plan, getRels RelationReader, pool *mempool.RelationsPool, setPool *ObjSetPool) *Interpreter {
+	cache := Cache{}
 	return &Interpreter{
-		plan:   plan,
-		loader: newRelationLoader(getRels, pool),
-		pool:   pool,
-		cache:  Cache{},
+		plan:       plan,
+		loader:     newRelationLoader(getRels, pool),
+		relPool:    pool,
+		setPool:    setPool,
+		ctxFactory: &ContextFactory{cache, setPool},
+		cache:      cache,
 	}
 }
 
-var stateSlicePool = mempool.NewSlicePool[State](32)
+var stateSlicePool = mempool.NewSlicePool[ExecutionContext](32)
 
 func (i *Interpreter) Run(req *dsr.CheckRequest) (ObjSet, error) {
 	slicePtr := stateSlicePool.Get()
-	*slicePtr = append(*slicePtr, NewCompositeState(Union, 1, []Scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
+	*slicePtr = append(*slicePtr, i.ctxFactory.NewCompositeContext(Union, 1, []Scope{{ObjectID(req.ObjectId), ObjectID(req.SubjectId)}}))
 
-	i.state = ds.NewStack(slicePtr)
+	i.context = ds.AttachStack(slicePtr)
 	defer func() {
-		stateSlicePool.Put(i.state.Release())
+		stateSlicePool.Put(i.context.Release())
 	}()
 
 	if err := i.plan.Visit(i); err != nil {
-		return nil, err
+		return ObjSet{}, err
 	}
 
-	if i.state.Len() != 1 {
-		return nil, errors.Wrap(ErrInterpreter, "unbalanced stack")
+	if i.context.Len() != 1 {
+		return ObjSet{}, errors.Wrap(ErrInterpreter, "unbalanced stack")
 	}
 
-	return i.state.Top().Result(), nil
+	i.cache.Clear(i.setPool)
+
+	return i.context.Top().Result(), nil
 }
 
 func (i *Interpreter) OnLoad(expr *Load) error {
-	state := i.state.Top()
+	state := i.context.Top()
 
 	for _, scope := range state.Scopes() {
 		if state.ShortCircuit() {
@@ -117,11 +110,11 @@ func (i *Interpreter) OnLoad(expr *Load) error {
 }
 
 func (i *Interpreter) OnPipeStart(pipe *Pipe) (StepOption, error) {
-	state := i.state.Top()
+	state := i.context.Top()
 	if state.ShortCircuit() {
 		return StepOver, nil
 	}
-	i.state.Push(NewChainState(state.Scopes()))
+	i.context.Push(i.ctxFactory.NewPipeContext(state.Scopes()))
 	return StepInto, nil
 }
 
@@ -130,12 +123,12 @@ func (i *Interpreter) OnPipeEnd(_ *Pipe) {
 }
 
 func (i *Interpreter) OnCallStart(call *Call) (StepOption, error) {
-	state := i.state.Top()
+	state := i.context.Top()
 	if state.ShortCircuit() {
 		return StepOver, nil
 	}
 
-	i.state.Push(NewCallState(call.Signature, i.state.Top().Scopes(), i.cache))
+	i.context.Push(i.ctxFactory.NewCallContext(call.Signature, i.context.Top().Scopes()))
 
 	return StepInto, nil
 }
@@ -145,12 +138,12 @@ func (i *Interpreter) OnCallEnd(_ *Call) {
 }
 
 func (i *Interpreter) OnCompositeStart(expr *Composite) (StepOption, error) {
-	state := i.state.Top()
+	state := i.context.Top()
 	if state.ShortCircuit() {
 		return StepOver, nil
 	}
 
-	i.state.Push(NewCompositeState(expr.Operator, len(expr.Operands), i.state.Top().Scopes()))
+	i.context.Push(i.ctxFactory.NewCompositeContext(expr.Operator, len(expr.Operands), i.context.Top().Scopes()))
 	return StepInto, nil
 }
 
@@ -159,33 +152,36 @@ func (i *Interpreter) OnCompositeEnd(_ *Composite) {
 }
 
 func (i *Interpreter) rollupResult() {
-	if i.state.Len() > 1 {
-		state := i.state.Pop()
-		i.state.Top().AddSet(state.Result())
+	if i.context.Len() > 1 {
+		state := i.context.Pop()
+		result := state.Result()
+		i.context.Top().AddSet(result)
+		i.setPool.PutSet(result)
 	}
 }
 
 func (i *Interpreter) loadSet(rel *Relation) (ObjSet, error) {
 	if result, ok := i.cache.LookupSet(rel); ok {
 		if result == nil {
-			result = ds.NewSet[model.ObjectID]()
+			result = &ObjSet{}
 		}
-		return result, nil
+		return *result, nil
 	}
 
 	var rid dsc.RelationIdentifier
 	rel.Identifier(&rid)
 
-	relsPtr := i.pool.GetSlice()
+	relsPtr := i.relPool.GetSlice()
 	if err := i.loader(&rid, relsPtr); err != nil {
-		return nil, err
+		return ObjSet{}, err
 	}
 
-	resultSet := ds.SetFromSlice(*relsPtr, func(rid *dsc.RelationIdentifier) model.ObjectID {
+	resultSet := i.setPool.GetSet()
+	resultSet.Add(ds.TransformIter(slices.Values(*relsPtr), func(rid *dsc.RelationIdentifier) model.ObjectID {
 		return model.ObjectID(rid.SubjectId)
-	})
+	}))
 
-	i.pool.PutSlice(relsPtr)
+	i.relPool.PutSlice(relsPtr)
 
 	i.cache.StoreSet(rel, resultSet)
 

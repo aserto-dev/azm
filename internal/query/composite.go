@@ -1,11 +1,6 @@
 package query
 
-import (
-	"github.com/aserto-dev/azm/internal/ds"
-	"github.com/aserto-dev/azm/model"
-)
-
-type CompositeState struct {
+type CompositeContext struct {
 	op        Operator
 	size      int
 	remaining int
@@ -14,31 +9,31 @@ type CompositeState struct {
 	result    ObjSet
 }
 
-func NewCompositeState(op Operator, size int, scopes []Scope) *CompositeState {
-	return &CompositeState{
+func newCompositeContext(op Operator, size int, scopes []Scope, result ObjSet) *CompositeContext {
+	return &CompositeContext{
 		op:        op,
 		size:      size,
 		remaining: size,
-		result:    ds.NewSet[model.ObjectID](),
+		result:    result,
 		scopes:    scopes,
 	}
 }
 
-func (s *CompositeState) AddSet(result ObjSet) {
+func (s *CompositeContext) AddSet(result ObjSet) {
 	s.remaining--
 
 	switch s.op {
 	case Union:
-		s.result = s.result.Union(result)
+		s.result.Add(result.Elements())
 		if !s.result.IsEmpty() || s.remaining == 0 {
 			// either we found a hit or exhausted all options.
 			s.hasResult = true
 		}
 	case Intersection:
 		if s.result.IsEmpty() {
-			s.result = result
+			s.result.Union(result)
 		} else {
-			s.result = s.result.Intersect(result)
+			s.result.Intersect(result)
 		}
 		if s.result.IsEmpty() || s.remaining == 0 {
 			// we either found a miss or exhausted all options.
@@ -47,9 +42,9 @@ func (s *CompositeState) AddSet(result ObjSet) {
 	case Difference:
 		isFirst := s.remaining+1 == s.size
 		if isFirst {
-			s.result = result
+			s.result.Union(result)
 		} else {
-			s.result = s.result.Difference(result)
+			s.result.Difference(result)
 		}
 
 		if s.result.IsEmpty() || s.remaining == 0 {
@@ -59,14 +54,14 @@ func (s *CompositeState) AddSet(result ObjSet) {
 	}
 }
 
-func (s *CompositeState) ShortCircuit() bool {
+func (s *CompositeContext) ShortCircuit() bool {
 	return s.hasResult
 }
 
-func (s *CompositeState) Scopes() []Scope {
+func (s *CompositeContext) Scopes() []Scope {
 	return s.scopes
 }
 
-func (s *CompositeState) Result() ObjSet {
+func (s *CompositeContext) Result() ObjSet {
 	return s.result
 }

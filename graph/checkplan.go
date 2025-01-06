@@ -10,8 +10,8 @@ type PlannedCheck struct {
 	interpreter *query.Interpreter
 }
 
-func NewPlannedCheck(plan *query.Plan, reader RelationReader, pool *mempool.RelationsPool) *PlannedCheck {
-	return &PlannedCheck{interpreter: query.NewInterpreter(plan, reader, pool)}
+func NewPlannedCheck(plan *query.Plan, reader RelationReader, relPool *mempool.RelationsPool, setPool *query.ObjSetPool) *PlannedCheck {
+	return &PlannedCheck{interpreter: query.NewInterpreter(plan, reader, relPool, setPool)}
 }
 
 func (c *PlannedCheck) Check(req *dsr.CheckRequest) (bool, error) {

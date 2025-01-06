@@ -2,8 +2,10 @@ package cache
 
 import (
 	"github.com/aserto-dev/azm/graph"
+	"github.com/aserto-dev/azm/internal/ds"
 	"github.com/aserto-dev/azm/internal/query"
 	"github.com/aserto-dev/azm/mempool"
+	"github.com/aserto-dev/azm/model"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/aserto-dev/go-directory/pkg/prop"
@@ -38,7 +40,7 @@ func (c *Cache) PlannedCheck(req *dsr.CheckRequest, relReader graph.RelationRead
 	}
 
 	ctx := pb.NewStruct()
-	interpreter := query.NewInterpreter(plan, relReader, c.relationsPool())
+	interpreter := query.NewInterpreter(plan, relReader, c.relationsPool(), c.objSetPool())
 
 	result, err := interpreter.Run(req)
 	if err != nil {
@@ -77,4 +79,11 @@ func (c *Cache) relationsPool() *mempool.RelationsPool {
 	}
 
 	return mempool.NewRelationsPool()
+}
+
+func (c *Cache) objSetPool() *query.ObjSetPool {
+	if sharedPool {
+		return c.setPool
+	}
+	return ds.NewSetPool[model.ObjectID]()
 }

@@ -4,7 +4,12 @@ type Stack[T any] struct {
 	items *[]T
 }
 
-func NewStack[T any](items *[]T) *Stack[T] {
+func NewStack[T any](capacity int) *Stack[T] {
+	items := make([]T, 0, capacity)
+	return &Stack[T]{&items}
+}
+
+func AttachStack[T any](items *[]T) *Stack[T] {
 	return &Stack[T]{items}
 }
 

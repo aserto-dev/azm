@@ -18,15 +18,15 @@ func (r *Relation) Identifier(out *dsc.RelationIdentifier) {
 
 type Cache struct {
 	sets  map[Relation]ObjSet
-	calls map[Relation]ObjSet
+	calls map[Relation]*ObjSet
 }
 
-func (c *Cache) LookupSet(rel *Relation) (ObjSet, bool) {
+func (c *Cache) LookupSet(rel *Relation) (*ObjSet, bool) {
 	if c.sets == nil {
 		return nil, false
 	}
 	set, ok := c.sets[*rel]
-	return set, ok
+	return &set, ok
 }
 
 func (c *Cache) StoreSet(rel *Relation, set ObjSet) {
@@ -36,7 +36,7 @@ func (c *Cache) StoreSet(rel *Relation, set ObjSet) {
 	c.sets[*rel] = set
 }
 
-func (c *Cache) LookupCall(rel *Relation) (ObjSet, bool) {
+func (c *Cache) LookupCall(rel *Relation) (*ObjSet, bool) {
 	if c.calls == nil {
 		return nil, false
 	}
@@ -44,9 +44,23 @@ func (c *Cache) LookupCall(rel *Relation) (ObjSet, bool) {
 	return set, ok
 }
 
-func (c *Cache) StoreCall(rel *Relation, set ObjSet) {
+func (c *Cache) StoreCall(rel *Relation, set *ObjSet) {
 	if c.calls == nil {
-		c.calls = make(map[Relation]ObjSet)
+		c.calls = make(map[Relation]*ObjSet)
 	}
 	c.calls[*rel] = set
+}
+
+func (c *Cache) Clear(pool *ObjSetPool) {
+	for _, set := range c.sets {
+		pool.PutSet(set)
+	}
+	c.sets = nil
+
+	for _, set := range c.calls {
+		if set != nil {
+			pool.PutSet(*set)
+		}
+	}
+	c.calls = nil
 }
