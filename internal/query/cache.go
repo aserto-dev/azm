@@ -4,7 +4,7 @@ import dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 
 type Relation struct {
 	*RelationType
-	Scope
+	*Scope
 }
 
 func (r *Relation) Identifier(out *dsc.RelationIdentifier) {

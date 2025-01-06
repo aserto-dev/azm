@@ -1,6 +1,7 @@
 package query
 
 import (
+	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -22,6 +23,21 @@ const (
 	Difference
 )
 
+func (o Operator) MarshalJSON() ([]byte, error) {
+	var s string
+
+	switch o {
+	case Union:
+		s = "union"
+	case Intersection:
+		s = "intersection"
+	case Difference:
+		s = "difference"
+	}
+
+	return json.Marshal(s)
+}
+
 type ScopeModifier int
 
 const (
@@ -30,8 +46,25 @@ const (
 	ObjectWildcard  ScopeModifier = 0x2
 )
 
-func (s ScopeModifier) Has(mod ScopeModifier) bool {
-	return s&mod != 0
+func (m ScopeModifier) MarshalJSON() ([]byte, error) {
+	var s string
+
+	switch m {
+	case Unmodified:
+		s = ""
+	case SubjectWildcard:
+		s = ":*"
+	case ObjectWildcard:
+		s = "*:"
+	case SubjectWildcard | ObjectWildcard:
+		s = "*:*"
+	}
+
+	return json.Marshal(s)
+}
+
+func (m ScopeModifier) Has(mod ScopeModifier) bool {
+	return m&mod != 0
 }
 
 // A relation type is identified by its object type, relation type, subject type, and subject relation.

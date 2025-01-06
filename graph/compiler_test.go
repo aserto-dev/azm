@@ -142,7 +142,7 @@ func loadManifest(manifest string) (*model.Model, error) {
 	return v3.Load(r)
 }
 
-func rel(ot, rt, st string, srt ...string) *query.RelationType {
+func rel(ot, rt, st string, srt ...string) *query.RelationType { //nolint:unparam
 	sr := ""
 	if len(srt) > 0 {
 		sr = srt[0]

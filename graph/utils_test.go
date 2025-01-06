@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func checkReq(expr string, trace bool) *dsr.CheckRequest {
+func checkReq(expr string, trace bool) *dsr.CheckRequest { //nolint:unparam
 	return parseRelation(expr).checkReq(trace)
 }
 

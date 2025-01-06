@@ -85,6 +85,7 @@ func TestCheck(t *testing.T) {
 
 			res, err := checker.Check(checkReq(test.check, false))
 			assert.NoError(err)
+			//nolint:gocritic
 			// tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
 			assert.Equal(test.expected, res)
 		})

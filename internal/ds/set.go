@@ -16,7 +16,8 @@ func NewSet[T comparable](vals ...T) Set[T] {
 }
 
 func SetFromSlice[S any, T comparable](l []S, transform func(S) T) Set[T] {
-	s := make(Set[T], len(l))
+	capacity := lo.Ternary(len(l) > 0, len(l), 32)
+	s := make(Set[T], capacity)
 	for _, v := range l {
 		s.Add(transform(v))
 	}

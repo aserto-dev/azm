@@ -105,7 +105,7 @@ func (i *Interpreter) OnLoad(expr *Load) error {
 			scope.OID = "*"
 		}
 
-		result, err := i.loadSet(&Relation{RelationType: expr.RelationType, Scope: scope})
+		result, err := i.loadSet(&Relation{RelationType: expr.RelationType, Scope: &scope})
 		if err != nil {
 			return err
 		}

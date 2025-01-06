@@ -141,26 +141,9 @@ func (c *compiler) compilePermission(p *model.Permission, set *RelationType) (Ex
 			}
 
 		case term.IsArrow():
-			baseRel := c.m.Objects[set.OT].Relations[term.Base]
-			baseRelTypes := baseRel.Types()
-			paths := make([]Expression, len(baseRelTypes))
-
-			for i, baseType := range baseRelTypes {
-				expr, err := c.compile(&RelationType{OT: baseType.Object, RT: term.RelOrPerm, ST: set.ST})
-				if err != nil {
-					return nil, err
-				}
-
-				if isEmptySet(expr) {
-					paths[i] = emptySet{}
-				} else {
-					paths[i] = &Pipe{
-						From: &Load{
-							RelationType: &RelationType{OT: set.OT, RT: term.Base, ST: baseType.Object, SRT: baseType.Relation},
-						},
-						To: expr,
-					}
-				}
+			paths, err := c.compileArrowTerm(term, set)
+			if err != nil {
+				return nil, err
 			}
 
 			if len(paths) == 1 {
@@ -200,6 +183,32 @@ func (c *compiler) compilePermission(p *model.Permission, set *RelationType) (Ex
 	}
 
 	return &Composite{Operator: op, Operands: ops}, nil
+}
+
+func (c *compiler) compileArrowTerm(term *model.PermissionTerm, set *RelationType) ([]Expression, error) {
+	baseRel := c.m.Objects[set.OT].Relations[term.Base]
+	baseRelTypes := baseRel.Types()
+	paths := make([]Expression, len(baseRelTypes))
+
+	for i, baseType := range baseRelTypes {
+		expr, err := c.compile(&RelationType{OT: baseType.Object, RT: term.RelOrPerm, ST: set.ST})
+		if err != nil {
+			return nil, err
+		}
+
+		if isEmptySet(expr) {
+			paths[i] = emptySet{}
+		} else {
+			paths[i] = &Pipe{
+				From: &Load{
+					RelationType: &RelationType{OT: set.OT, RT: term.Base, ST: baseType.Object, SRT: baseType.Relation},
+				},
+				To: expr,
+			}
+		}
+	}
+
+	return paths, nil
 }
 
 func isEmptySet(expr Expression) bool {

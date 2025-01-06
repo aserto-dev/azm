@@ -19,7 +19,7 @@ func NewCallState(sig *RelationType, scopes []Scope, cache Cache) *CallState {
 	scopes = lo.Filter(scopes, func(p Scope, _ int) bool {
 		key := Relation{
 			RelationType: sig,
-			Scope:        p,
+			Scope:        &p,
 		}
 		if res, ok := cache.LookupCall(&key); ok {
 			if res != nil {
@@ -46,7 +46,7 @@ func (s *CallState) AddSet(result ObjSet) {
 
 	key := Relation{
 		RelationType: s.signature,
-		Scope:        path,
+		Scope:        &path,
 	}
 	s.cache.StoreCall(&key, result)
 	s.result = s.result.Union(result)
