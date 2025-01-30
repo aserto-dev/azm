@@ -1,6 +1,8 @@
 package graph
 
 import (
+	"fmt"
+
 	"github.com/aserto-dev/azm/mempool"
 	"github.com/aserto-dev/azm/model"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
@@ -55,6 +57,15 @@ func (c *Checker) Check() (bool, error) {
 
 func (c *Checker) Trace() []string {
 	return c.memo.Trace()
+}
+
+func (c *Checker) Reason() string {
+	if len(c.memo.cycles) == 0 {
+		return ""
+	}
+
+	cycles := fmt.Sprintf("%v", c.memo.cycles)
+	return "cycles detected: " + cycles
 }
 
 func (c *Checker) check(params *relation) (checkStatus, error) {
@@ -145,7 +156,6 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 				} else if status == checkStatusTrue {
 					return status, nil
 				}
-				// TODO: handle cycles?
 			}
 		}
 	}

@@ -17,10 +17,17 @@ func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*d
 	checker := graph.NewCheck(c.model.Load(), req, relReader, c.relationsPool())
 
 	ctx := pb.NewStruct()
+	reason := ""
 
 	ok, err := checker.Check()
 	if err != nil {
-		ctx.Fields[prop.Reason] = structpb.NewStringValue(err.Error())
+		reason = err.Error()
+	} else {
+		reason = checker.Reason()
+	}
+
+	if reason != "" {
+		ctx.Fields[prop.Reason] = structpb.NewStringValue(reason)
 	}
 
 	return &dsr.CheckResponse{Check: ok, Trace: checker.Trace(), Context: ctx}, nil

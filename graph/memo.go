@@ -48,6 +48,7 @@ type checkCall struct {
 type checkMemo struct {
 	memo    map[relation]checkStatus
 	history []*checkCall
+	cycles  []*relation
 }
 
 func newCheckMemo(trace bool) *checkMemo {
@@ -61,9 +62,14 @@ func newCheckMemo(trace bool) *checkMemo {
 func (m *checkMemo) MarkVisited(params *relation) checkStatus {
 	prior := m.memo[*params]
 	current := prior
-	if prior == checkStatusNew {
+	switch prior {
+	case checkStatusNew:
 		current = checkStatusPending
 		m.memo[*params] = current
+	case checkStatusPending:
+		m.cycles = append(m.cycles, params)
+	case checkStatusTrue, checkStatusFalse:
+		break
 	}
 
 	m.trace(params, current)
