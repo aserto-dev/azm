@@ -11,57 +11,65 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type cycle bool
+
+const (
+	noCycle  cycle = false
+	hasCycle cycle = true
+)
+
 var tests = []struct {
 	check    string
 	expected bool
+	cycle    cycle
 }{
 	// Relations
-	{"doc:doc1#owner@user:user1", false},
-	{"doc:doc1#viewer@user:user1", true},
-	{"doc:doc2#viewer@user:user1", true},
-	{"doc:doc2#viewer@user:userX", true},
-	{"doc:doc1#viewer@user:user2", true},
-	{"doc:doc1#viewer@user:user3", true},
-	{"doc:doc1#viewer@group:d1_viewers", false},
+	{"doc:doc1#owner@user:user1", false, noCycle},
+	{"doc:doc1#viewer@user:user1", true, noCycle},
+	{"doc:doc2#viewer@user:user1", true, noCycle},
+	{"doc:doc2#viewer@user:userX", true, noCycle},
+	{"doc:doc1#viewer@user:user2", true, noCycle},
+	{"doc:doc1#viewer@user:user3", true, noCycle},
+	{"doc:doc1#viewer@group:d1_viewers", false, noCycle},
 
-	{"group:yin#member@user:yin_user", true},
-	{"group:yin#member@user:yang_user", true},
-	{"group:yang#member@user:yin_user", true},
-	{"group:yang#member@user:yang_user", true},
+	{"group:yin#member@user:yin_user", true, hasCycle},
+	{"group:yin#member@user:yang_user", true, hasCycle},
+	{"group:yang#member@user:yin_user", true, hasCycle},
+	{"group:yang#member@user:yang_user", true, hasCycle},
 
-	{"group:alpha#member@user:user1", false},
+	{"group:alpha#member@user:user1", false, hasCycle},
 
 	// Permissions
-	{"doc:doc1#can_change_owner@user:d1_owner", true},
-	{"doc:doc1#can_change_owner@user:user1", false},
-	{"doc:doc1#can_change_owner@user:userX", false},
+	{"doc:doc1#can_change_owner@user:d1_owner", true, noCycle},
+	{"doc:doc1#can_change_owner@user:user1", false, noCycle},
+	{"doc:doc1#can_change_owner@user:userX", false, noCycle},
 
-	{"doc:doc1#can_read@user:d1_owner", true},
-	{"doc:doc1#can_read@user:f1_owner", true},
-	{"doc:doc1#can_read@user:user1", true},
-	{"doc:doc1#can_read@user:f1_viewer", true},
-	{"doc:doc1#can_read@user:userX", false},
+	{"doc:doc1#can_read@user:d1_owner", true, noCycle},
+	{"doc:doc1#can_read@user:f1_owner", true, noCycle},
+	{"doc:doc1#can_read@user:user1", true, noCycle},
+	{"doc:doc1#can_read@user:f1_viewer", true, noCycle},
+	{"doc:doc1#can_read@user:userX", false, noCycle},
 
-	{"doc:doc1#can_write@user:d1_owner", true},
-	{"doc:doc1#can_write@user:f1_owner", true},
-	{"doc:doc1#can_write@user:user2", false},
+	{"doc:doc1#can_write@user:d1_owner", true, noCycle},
+	{"doc:doc1#can_write@user:f1_owner", true, noCycle},
+	{"doc:doc1#can_write@user:user2", false, noCycle},
 
-	{"folder:folder1#owner@user:f1_owner", true},
-	{"folder:folder1#can_create_file@user:f1_owner", true},
-	{"folder:folder1#can_share@user:f1_owner", true},
+	{"folder:folder1#owner@user:f1_owner", true, noCycle},
+	{"folder:folder1#can_create_file@user:f1_owner", true, noCycle},
+	{"folder:folder1#can_share@user:f1_owner", true, noCycle},
 
 	// intersection
-	{"doc:doc1#can_share@user:d1_owner", false},
-	{"doc:doc1#can_share@user:f1_owner", true},
+	{"doc:doc1#can_share@user:d1_owner", false, noCycle},
+	{"doc:doc1#can_share@user:f1_owner", true, noCycle},
 
 	// negation
-	{"folder:folder1#can_read@user:f1_owner", true},
-	{"doc:doc1#viewer@user:f1_owner", false},
-	{"doc:doc1#can_invite@user:f1_owner", true},
+	{"folder:folder1#can_read@user:f1_owner", true, noCycle},
+	{"doc:doc1#viewer@user:f1_owner", false, noCycle},
+	{"doc:doc1#can_invite@user:f1_owner", true, noCycle},
 
 	// cycles
-	{"cycle:loop#can_delete@user:loop_owner", true},
-	{"cycle:loop#can_delete@user:user1", false},
+	{"cycle:loop#can_delete@user:loop_owner", true, hasCycle},
+	{"cycle:loop#can_delete@user:user1", false, noCycle},
 }
 
 func TestCheck(t *testing.T) {
@@ -81,6 +89,14 @@ func TestCheck(t *testing.T) {
 			assert.NoError(err)
 			tt.Log("trace:\n", strings.Join(checker.Trace(), "\n"))
 			assert.Equal(test.expected, res)
+
+			reason := checker.Reason()
+			if test.cycle {
+				assert.True(strings.HasPrefix(reason, "cycles detected:"), "expected 'reason' to begin with 'cycles detected:'")
+				assert.Contains(reason, test.check)
+			} else {
+				assert.Empty(reason)
+			}
 		})
 	}
 }
