@@ -226,11 +226,12 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 
 		expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 			return &relation{
-				ot:  model.ObjectName(rel.SubjectType),
-				oid: ObjectID(rel.SubjectId),
-				rel: pt.RelOrPerm,
-				st:  params.st,
-				sid: params.sid,
+				ot:   model.ObjectName(rel.SubjectType),
+				oid:  ObjectID(rel.SubjectId),
+				rel:  pt.RelOrPerm,
+				st:   params.st,
+				sid:  params.sid,
+				srel: model.RelationName(rel.SubjectRelation),
 			}
 		})
 
