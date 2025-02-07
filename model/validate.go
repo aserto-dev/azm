@@ -110,7 +110,7 @@ func (v *validator) validateUniqueNames(on ObjectName, o *Object) error {
 	var errs error
 	for _, collision := range rpCollisions {
 		errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-			"permission name '%[1]s:%[2]s' conflicts with '%[1]s:%[2]s' relation", on, collision),
+			"permission name '%[1]s:%[2]s' conflicts with relation '%[1]s:%[2]s'", on, collision),
 		)
 	}
 
