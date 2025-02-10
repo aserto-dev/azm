@@ -1,30 +1,15 @@
 # yaml-language-server: $schema=https://www.topaz.sh/schema/manifest.json
 ---
-
-### filename: manifest.yaml ###
-### datetime: 2023-10-22T14:37:25-07:00 ###
-### description: Google Drive manifest ###
-
-### model ###
 model:
   version: 3
 
-### object type definitions ###
 types:
-  ### display_name: User ###
+  identity:
+
   user:
     relations:
+      identifier: identity
       manager: user
-      friend: group#member
-    permissions:
-      in_management_chain: manager | manager->in_management_chain
-      unfriendly_manager: in_management_chain - friend
-
-  ### display_name: Identity ###
-  identity:
-    relations:
-      ### display_name: identity#identifier ###
-      identifier: user
 
   team:
     relations:

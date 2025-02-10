@@ -8,6 +8,7 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
+	"github.com/pkg/errors"
 
 	"github.com/samber/lo"
 )
@@ -100,7 +101,11 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 
 func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
-	steps := c.m.StepRelation(r, params.st)
+	subjectTypes := []model.ObjectName{}
+	if params.tail == "" {
+		subjectTypes = append(subjectTypes, params.st)
+	}
+	steps := c.m.StepRelation(r, subjectTypes...)
 
 	// Reuse the same slice in all steps.
 	relsPtr := c.pool.GetSlice()
@@ -117,7 +122,7 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 		}
 
 		switch {
-		case step.IsDirect():
+		case step.IsDirect() && (params.tail == "" || params.tail == params.rel):
 			req.SubjectId = params.sid.String()
 		case step.IsWildcard():
 			req.SubjectId = "*"
@@ -129,42 +134,77 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 			return checkStatusFalse, err
 		}
 
-		switch {
-		case step.IsDirect():
-			for _, rel := range *relsPtr {
-				if rel.SubjectId == params.sid.String() {
-					return checkStatusTrue, nil
-				}
-			}
-
-		case step.IsWildcard():
-			if len(*relsPtr) > 0 {
-				// We have a wildcard match.
-				return checkStatusTrue, nil
-			}
-
-		case step.IsSubject():
-			for _, rel := range *relsPtr {
-				if status, err := c.check(&relation{
-					ot:  step.Object,
-					oid: ObjectID(rel.SubjectId),
-					rel: step.Relation,
-					st:  params.st,
-					sid: params.sid,
-				}); err != nil {
-					return checkStatusFalse, err
-				} else if status == checkStatusTrue {
-					return status, nil
-				}
-			}
+		if status, err := c.checkRelationStep(params, step, *relsPtr); err != nil || status == checkStatusTrue {
+			return status, err
 		}
+
 	}
 
 	return checkStatusFalse, nil
 }
 
+func (c *Checker) checkRelationStep(params *relation, step *model.RelationRef, rels []*dsc.RelationIdentifier) (checkStatus, error) {
+	switch {
+	case step.IsDirect():
+		for _, rel := range rels {
+			if status, err := c.checkDirectRelation(params, rel); err != nil || status == checkStatusTrue {
+				return status, err
+			}
+		}
+
+	case step.IsWildcard():
+		if len(rels) > 0 {
+			// We have a wildcard match.
+			return checkStatusTrue, nil
+		}
+
+	case step.IsSubject():
+		for _, rel := range rels {
+			check := &relation{
+				ot:   step.Object,
+				oid:  ObjectID(rel.SubjectId),
+				rel:  step.Relation,
+				st:   params.st,
+				sid:  params.sid,
+				tail: params.tail,
+			}
+			if status, err := c.check(check); err != nil || status == checkStatusTrue {
+				return status, err
+			}
+		}
+	}
+
+	return checkStatusPending, nil
+}
+
+func (c *Checker) checkDirectRelation(params *relation, rel *dsc.RelationIdentifier) (checkStatus, error) {
+	if params.tail == "" && rel.SubjectId == params.sid.String() {
+		return checkStatusTrue, nil
+	}
+
+	if params.tail != "" {
+		check := &relation{
+			ot:  model.ObjectName(rel.SubjectType),
+			oid: ObjectID(rel.SubjectId),
+			rel: params.tail,
+			st:  params.st,
+			sid: params.sid,
+		}
+		if status, err := c.check(check); err != nil {
+			return checkStatusFalse, err
+		} else if status == checkStatusTrue {
+			return status, nil
+		}
+	}
+
+	return checkStatusPending, nil
+}
+
 func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 	p := c.m.Objects[params.ot].Permissions[params.rel]
+	if p == nil {
+		return checkStatusFalse, errors.Errorf("invalid permission check [%s]", params)
+	}
 
 	if !lo.Contains(p.SubjectTypes, params.st) {
 		// The subject type cannot have this permission.
@@ -226,12 +266,13 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 
 		expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 			return &relation{
-				ot:   model.ObjectName(rel.SubjectType),
-				oid:  ObjectID(rel.SubjectId),
-				rel:  pt.RelOrPerm,
-				st:   params.st,
-				sid:  params.sid,
-				srel: model.RelationName(rel.SubjectRelation),
+				ot:  model.ObjectName(rel.SubjectType),
+				oid: ObjectID(rel.SubjectId),
+				rel: lo.Ternary(rel.SubjectRelation == "", pt.RelOrPerm, model.RelationName(rel.SubjectRelation)),
+				st:  params.st,
+				sid: params.sid,
+
+				tail: lo.Ternary(rel.SubjectRelation == "", "", pt.RelOrPerm),
 			}
 		})
 

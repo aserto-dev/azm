@@ -216,12 +216,23 @@ func (v *validator) validatePermission(on ObjectName, pn RelationName, p *Permis
 			if o.HasPermission(term.Base) {
 				if !v.opts.allowPermissionInArrowBase {
 					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references permission '%s', which is not allowed in arrow base. only relations can be used.", on, pn, term.Base),
-					)
+						"permission '%s:%s' references permission '%s', which is not allowed in arrow base. only relations can be used.",
+						on, pn, term.Base,
+					))
 				}
 				continue
 			}
 			r := o.Relations[term.Base]
+
+			for _, ref := range r.Union {
+				if ref.IsWildcard() {
+					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+						"wildcard relation '%s:%s' not allowed in the base of an arrow operator '%s->%s' in permission '%s:%s'",
+						on, term.Base, term.Base, term.RelOrPerm, on, pn,
+					))
+				}
+			}
+
 			for _, st := range r.SubjectTypes {
 				if !v.Objects[st].HasRelOrPerm(term.RelOrPerm) {
 					arrow := fmt.Sprintf("%s->%s", term.Base, term.RelOrPerm)

@@ -22,6 +22,23 @@ func TestComputedSet(t *testing.T) {
 		expected bool
 	}{
 		{"resource:album#can_view@identity:zappa", true},
+		{"resource:album#can_view@user:frank", true},
+
+		{"component:guitar#can_repair@identity:zappa", true},
+		{"component:guitar#can_repair@user:frank", true},
+		{"component:coil#can_repair@identity:zappa", false},
+		{"component:coil#can_repair@user:frank", false},
+		{"component:pickup#can_repair@identity:zappa", false},
+		{"component:pickup#can_repair@user:frank", false},
+
+		{"component:guitar#can_repair@identity:duncan", true},
+		{"component:guitar#can_repair@user:seymour", true},
+		{"component:pickup#can_repair@identity:duncan", true},
+		{"component:pickup#can_repair@user:seymour", true},
+		{"component:coil#can_repair@identity:duncan", true},
+		{"component:coil#can_repair@user:seymour", true},
+		{"component:magnet#can_repair@identity:duncan", false},
+		{"component:magnet#can_repair@user:seymour", false},
 	}
 
 	pool := mempool.NewRelationsPool()
@@ -45,4 +62,12 @@ var csRels = NewRelationsReader(
 	"group:guitarists#member@user:frank",
 	"group:musicians#member@group:guitarists#member",
 	"resource:album#viewer@group:musicians#member",
+
+	"user:seymour#identifier@identity:duncan",
+	"component:coil#maintainer@user:seymour",
+	"component:string#maintainer@group:guitarists#member",
+	"component:pickup#part@component:magnet",
+	"component:pickup#part@component:coil",
+	"component:guitar#part@component:pickup#part",
+	"component:guitar#part@component:string",
 )
