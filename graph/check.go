@@ -101,10 +101,12 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 
 func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
+
 	subjectTypes := []model.ObjectName{}
 	if params.tail == "" {
 		subjectTypes = append(subjectTypes, params.st)
 	}
+
 	steps := c.m.StepRelation(r, subjectTypes...)
 
 	// Reuse the same slice in all steps.
@@ -259,8 +261,7 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 		relsPtr := c.pool.GetSlice()
 
 		// Resolve the base of the arrow.
-		err := c.getRels(query, c.pool, relsPtr)
-		if err != nil {
+		if err := c.getRels(query, c.pool, relsPtr); err != nil {
 			return relations{}, err
 		}
 
