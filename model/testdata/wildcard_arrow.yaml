@@ -17,14 +17,14 @@ types:
 
   resource:
     relations:
-      viewer: user | group#member
+      viewer: user | group#member | user:*
     permissions:
       can_view: viewer | viewer->identifier
 
   component:
     relations:
-      part: component | component#part
+      part: component | component#part | component:*
       maintainer: user | group#member
 
     permissions:
-      can_repair: maintainer | maintainer->identifier | part->can_repair
+      can_repair: maintainer | part->can_repair
