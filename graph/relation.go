@@ -15,6 +15,8 @@ type relation struct {
 	st   model.ObjectName
 	sid  ObjectID
 	srel model.RelationName
+
+	tail model.RelationName
 }
 
 type relations []*relation

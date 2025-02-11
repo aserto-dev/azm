@@ -153,36 +153,36 @@ func TestModel(t *testing.T) {
 	}
 }
 
-func TestValidation(t *testing.T) {
+func TestValidation(t *testing.T) { //nolint:funlen
 	tests := []struct {
 		name           string
 		manifest       string
 		expectedErrors []string
 	}{
-		// {
-		// 	"valid manifest",
-		// 	"./testdata/valid.yaml",
-		// 	[]string{},
-		// },
-		// {
-		// 	"relation/permission collision",
-		// 	"./testdata/rel_perm_collision.yaml",
-		// 	[]string{
-		// 		"permission name 'file:writer' conflicts with 'file:writer' relation",
-		// 		"relation 'file:bad' has no definition",
-		// 	},
-		// },
-		// {
-		// 	"relations to undefined targets",
-		// 	"./testdata/undefined_rel_targets.yaml",
-		// 	[]string{
-		// 		"relation 'file:owner' references undefined object type 'person'",
-		// 		"relation 'file:reader' references undefined object type 'team'",
-		// 		"relation 'file:reader' references undefined object type 'project'",
-		// 		"relation 'file:writer' references undefined object type 'team'",
-		// 		"relation 'file:admin' references undefined relation type 'group#admin'",
-		// 	},
-		// },
+		{
+			"valid manifest",
+			"./testdata/valid.yaml",
+			[]string{},
+		},
+		{
+			"relation/permission collision",
+			"./testdata/rel_perm_collision.yaml",
+			[]string{
+				"permission name 'file:writer' conflicts with relation 'file:writer'",
+				"relation 'file:bad' has no definition",
+			},
+		},
+		{
+			"relations to undefined targets",
+			"./testdata/undefined_rel_targets.yaml",
+			[]string{
+				"relation 'file:owner' references undefined object type 'person'",
+				"relation 'file:reader' references undefined object type 'team'",
+				"relation 'file:reader' references undefined object type 'project'",
+				"relation 'file:writer' references undefined object type 'team'",
+				"relation 'file:admin' references undefined relation type 'group#admin'",
+			},
+		},
 		{
 			"permissions to undefined targets",
 			"./testdata/undefined_perm_targets.yaml",
@@ -208,6 +208,15 @@ func TestValidation(t *testing.T) {
 			[]string{
 				"permission 'file:write' references 'owner->write', which can resolve to undefined relation or permission 'user:write'",
 				"permission 'file:update' references 'parent->write', which can resolve to undefined relation or permission 'folder:write'",
+			},
+		},
+		{
+			"arrow permissions with wildcard at arrow base",
+			"./testdata/wildcard_arrow.yaml",
+			[]string{
+				"wildcard relation 'resource:viewer' not allowed in the base of an arrow operator 'viewer->identifier' in permission 'resource:can_view'",
+				"wildcard relation 'component:part' not allowed in the base of an arrow operator 'part->can_repair' in " +
+					"permission 'component:can_repair'",
 			},
 		},
 	}
