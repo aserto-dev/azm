@@ -5,9 +5,15 @@ model:
   version: 3
 
 types:
-  identity: {}
+  identity:
+    relations:
+      identifier: identity
 
   user:
+    relations:
+      identifier: identity
+
+  machine:
     relations:
       identifier: identity
 
@@ -17,7 +23,7 @@ types:
 
   resource:
     relations:
-      viewer: user | group#member
+      viewer: user | machine | identity | group#member
     permissions:
       can_view: viewer | viewer->identifier
 
@@ -27,4 +33,6 @@ types:
       maintainer: user | group#member
 
     permissions:
-      can_repair: maintainer | maintainer->identifier | part->can_repair
+      is_maintainer: maintainer | maintainer->identifier
+      can_repair: is_maintainer | part->can_repair
+      is_part_maintainer: part->can_repair - is_maintainer

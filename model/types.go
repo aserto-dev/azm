@@ -101,6 +101,14 @@ func (r *Relation) AddRef(rr *RelationRef) {
 	}
 }
 
+func (r *Relation) TypesContain(rr RelationRef) bool {
+	if rr.IsSubject() {
+		return lo.Contains(r.Intermediates, rr)
+	}
+
+	return lo.Contains(r.SubjectTypes, rr.Object)
+}
+
 type RelationRefs []RelationRef
 
 type RelationRef struct {
@@ -216,6 +224,14 @@ func (p *Permission) AddTerm(pt *PermissionTerm) {
 
 func (p *Permission) Types() RelationRefs {
 	return append(objectNamesToRelationRefs(p.SubjectTypes), p.Intermediates...)
+}
+
+func (p *Permission) TypesContain(rr RelationRef) bool {
+	if rr.IsSubject() {
+		return lo.Contains(p.Intermediates, rr)
+	}
+
+	return lo.Contains(p.SubjectTypes, rr.Object)
 }
 
 type PermissionTerm struct {

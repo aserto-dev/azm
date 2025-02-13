@@ -28,6 +28,8 @@ types:
       parent: folder
       viewer: user | user:* | group#member
     permissions:
+      in_parent_chain: parent | parent->in_parent_chain
+
       is_owner: owner | parent->is_owner
       can_create_file: is_owner
       can_read: viewer | owner | parent->can_read
@@ -41,6 +43,8 @@ types:
       viewer: user | user:* | group#member
       auditor: user#manager
     permissions:
+      in_parent_chain: parent | parent->in_parent_chain
+
       can_view: viewer
       can_change_owner: owner | parent->is_owner
       can_write: owner | parent->is_owner

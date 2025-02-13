@@ -9,9 +9,15 @@ import (
 	"github.com/samber/lo"
 )
 
+type termRef struct {
+	perm *RelationRef
+	term *PermissionTerm
+}
+
 type validator struct {
 	*Model
-	opts *validationOptions
+	opts     *validationOptions
+	deferred []termRef
 }
 
 func newValidator(m *Model, opts *validationOptions) *validator {
@@ -295,13 +301,21 @@ func (v *validator) resolveRelation(r *Relation, seen relSet) ([]ObjectName, Rel
 }
 
 func (v *validator) resolvePermissions() error {
-	var errs error
-
 	seen := set.NewSet[RelationRef]()
 	for on, o := range v.Objects {
 		for pn := range o.Permissions {
-			subjs, _ := v.resolvePermission(&RelationRef{on, pn}, seen)
-			if subjs.IsEmpty() {
+			v.resolvePermission(&RelationRef{on, pn}, seen)
+		}
+	}
+
+	// resolve subject types of cyclic permission terms.
+	v.resolveCyclicTerms()
+
+	var errs error
+
+	for on, o := range v.Objects {
+		for pn, p := range o.Permissions {
+			if len(p.SubjectTypes) == 0 {
 				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 					"permission '%s:%s' cannot be satisfied by any type", on, pn),
 				)
@@ -332,7 +346,7 @@ func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, re
 	seen.Add(*ref)
 
 	for _, term := range p.Terms() {
-		term.SubjectTypes, term.Intermediates = v.resolvePermissionTerm(ref.Object, term, seen)
+		term.SubjectTypes, term.Intermediates = v.resolvePermissionTerm(termRef{ref, term}, seen)
 	}
 
 	// filter out terms that have no subject types. They represent cycles that are still being resolved.
@@ -387,47 +401,100 @@ func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, re
 	return subjTypes, intermediates
 }
 
-func (v *validator) resolvePermissionTerm(on ObjectName, term *PermissionTerm, seen relSet) ([]ObjectName, RelationRefs) {
-	var refs set.Set[RelationRef]
+func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName, RelationRefs) {
+	term, perm := t.term, t.perm
+	base, tip := term.Base, term.RelOrPerm
+
+	var baseRefs set.Set[RelationRef]
 	intermediates := set.NewSet[RelationRef]()
 
 	switch {
 	case term.IsArrow():
-		o := v.Objects[on]
-		var (
-			sts []ObjectName
-		)
-		if o.HasRelation(term.Base) {
-			sts = o.Relations[term.Base].SubjectTypes
-			intermediates.Append(o.Relations[term.Base].Intermediates...)
+		var sts []ObjectName
+		o := v.Objects[perm.Object]
+
+		if o.HasRelation(base) {
+			sts = o.Relations[base].SubjectTypes
+			intermediates.Append(o.Relations[base].Intermediates...)
 		} else {
-			types, interims := v.resolvePermission(&RelationRef{Object: on, Relation: term.Base}, seen)
+			types, interims := v.resolvePermission(&RelationRef{Object: perm.Object, Relation: base}, seen)
 			sts = types.ToSlice()
 			intermediates.Append(interims.ToSlice()...)
 		}
-		refs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
-			return RelationRef{Object: st, Relation: term.RelOrPerm}
+		baseRefs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
+			return RelationRef{Object: st, Relation: tip}
 		})...)
 
 	default:
-		refs = set.NewSet(RelationRef{Object: on, Relation: term.RelOrPerm})
+		baseRefs = set.NewSet(RelationRef{Object: perm.Object, Relation: tip})
 	}
 
 	subjectTypes := set.NewSet[ObjectName]()
-	for ref := range refs.Iter() {
-		o := v.Objects[ref.Object]
+	for baseRef := range baseRefs.Iter() {
+		o := v.Objects[baseRef.Object]
 
-		if o.HasRelation(ref.Relation) {
+		if o.HasRelation(baseRef.Relation) {
 			// Relations are already resolved to a set of subject types.
-			subjectTypes.Append(o.Relations[ref.Relation].SubjectTypes...)
-			intermediates.Append(o.Relations[ref.Relation].Intermediates...)
+			subjectTypes.Append(o.Relations[baseRef.Relation].SubjectTypes...)
+			intermediates.Append(o.Relations[baseRef.Relation].Intermediates...)
 			continue
 		}
 
-		sts, interims := v.resolvePermission(&ref, seen)
+		sts, interims := v.resolvePermission(&baseRef, seen)
+		if sts.IsEmpty() {
+			v.deferred = append(v.deferred, t)
+		}
 		subjectTypes = subjectTypes.Union(sts)
 		intermediates.Append(interims.ToSlice()...)
 	}
 
 	return subjectTypes.ToSlice(), intermediates.ToSlice()
+}
+
+func (v *validator) resolveCyclicTerms() {
+	for _, t := range v.deferred {
+		perm, term := t.perm, t.term
+		base, tip := term.Base, term.RelOrPerm
+
+		var baseRefs set.Set[RelationRef]
+		intermediates := set.NewSet[RelationRef]()
+
+		if term.IsArrow() {
+			var subjTypes []ObjectName
+
+			o := v.Objects[perm.Object]
+			if o.HasRelation(base) {
+				rel := o.Relations[base]
+				subjTypes = rel.SubjectTypes
+				intermediates.Append(rel.Intermediates...)
+			} else {
+				perm := o.Permissions[base]
+				subjTypes = perm.SubjectTypes
+				intermediates.Append(perm.Intermediates...)
+			}
+
+			baseRefs = set.NewSet(
+				lo.Map(subjTypes, func(on ObjectName, _ int) RelationRef {
+					return RelationRef{Object: on, Relation: tip}
+				})...,
+			)
+		} else {
+			baseRefs = set.NewSet(RelationRef{Object: perm.Object, Relation: tip})
+		}
+
+		subjectTypes := set.NewSet[ObjectName]()
+
+		for baseRef := range baseRefs.Iter() {
+			o := v.Objects[baseRef.Object]
+			if o.HasRelation(baseRef.Relation) {
+				subjectTypes.Append(o.Relations[baseRef.Relation].SubjectTypes...)
+				intermediates.Append(o.Relations[baseRef.Relation].Intermediates...)
+			} else {
+				subjectTypes.Append(o.Permissions[baseRef.Relation].SubjectTypes...)
+				intermediates.Append(o.Permissions[baseRef.Relation].Intermediates...)
+			}
+		}
+
+		term.SubjectTypes, term.Intermediates = subjectTypes.ToSlice(), intermediates.ToSlice()
+	}
 }

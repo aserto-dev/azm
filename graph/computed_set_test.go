@@ -75,6 +75,12 @@ func TestComputedSetSearchSubjects(t *testing.T) {
 		{"component:guitar#can_repair@group:?#member", []object{{"group", "guitarists"}}},
 		{"component:pickup#can_repair@identity:?", []object{{"identity", "duncan"}}},
 		{"component:pickup#can_repair@user:?", []object{{"user", "seymour"}}},
+		{"component:coil#can_repair@user:?", []object{{"user", "seymour"}}},
+		{"component:magnet#can_repair@user:?", []object{}},
+		{"component:pickup#is_part_maintainer@user:?", []object{{"user", "seymour"}}},
+		{"component:pickup#is_part_maintainer@identity:?", []object{{"identity", "duncan"}}},
+		{"component:guitar#is_part_maintainer@user:?", []object{{"user", "seymour"}, {"user", "frank"}}},
+		{"component:guitar#is_part_maintainer@identity:?", []object{{"identity", "duncan"}, {"identity", "zappa"}}},
 	}
 
 	pool := mempool.NewRelationsPool()
@@ -106,7 +112,6 @@ func TestComputedSetSearchSubjects(t *testing.T) {
 }
 
 func TestComputedSetSearchObjects(t *testing.T) {
-	t.Skip("FIXME: this doesn't work yet")
 	require := rq.New(t)
 	m, err := v3.LoadFile("./computed_set.yaml")
 	require.NoError(err)
@@ -124,7 +129,15 @@ func TestComputedSetSearchObjects(t *testing.T) {
 		im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase),
 	)
 
-	tests := []searchTest{}
+	tests := []searchTest{
+		{"user:?#identifier@identity:zappa", []object{{"user", "frank"}}},
+		{"resource:?#can_view@user:frank", []object{{"resource", "album"}}},
+		{"resource:?#can_view@identity:zappa", []object{{"resource", "album"}}},
+		{"component:?#can_repair@user:seymour", []object{{"component", "guitar"}, {"component", "pickup"}, {"component", "coil"}}},
+		{"component:?#can_repair@identity:duncan", []object{{"component", "guitar"}, {"component", "pickup"}, {"component", "coil"}}},
+		{"component:?#can_repair@user:frank", []object{{"component", "guitar"}, {"component", "string"}}},
+		{"component:?#can_repair@identity:zappa", []object{{"component", "guitar"}, {"component", "string"}}},
+	}
 
 	pool := mempool.NewRelationsPool()
 	for _, test := range tests {
