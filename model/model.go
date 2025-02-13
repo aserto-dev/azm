@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-const ModelVersion int = 4
+const ModelVersion int = 5
 
 type Model struct {
 	Version  int                    `json:"version"`
