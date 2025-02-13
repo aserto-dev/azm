@@ -8,7 +8,6 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	"github.com/pkg/errors"
 
 	"github.com/samber/lo"
 )
@@ -102,7 +101,7 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 	r := c.m.Objects[params.ot].Relations[params.rel]
 
-	subjectTypes := []model.ObjectName{}
+	var subjectTypes []model.ObjectName
 	if params.tail == "" {
 		subjectTypes = append(subjectTypes, params.st)
 	}
@@ -204,9 +203,6 @@ func (c *Checker) checkDirectRelation(params *relation, rel *dsc.RelationIdentif
 
 func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 	p := c.m.Objects[params.ot].Permissions[params.rel]
-	if p == nil {
-		return checkStatusFalse, errors.Errorf("invalid permission check [%s]", params)
-	}
 
 	if !lo.Contains(p.SubjectTypes, params.st) {
 		// The subject type cannot have this permission.

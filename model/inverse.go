@@ -284,18 +284,6 @@ func kindOf(p *Permission) permissionKind {
 	panic("unknown permission kind")
 }
 
-func relationOrNew(o *Object, rn RelationName) *Relation {
-	r := o.Relations[rn]
-	if r != nil {
-		return r
-	}
-
-	r = &Relation{}
-	o.Relations[rn] = r
-
-	return r
-}
-
 func permissionOrNew(o *Object, pn RelationName, kind permissionKind) *Permission {
 	p := o.Permissions[pn]
 	if p != nil {

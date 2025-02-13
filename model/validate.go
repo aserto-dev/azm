@@ -451,6 +451,9 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 	return subjectTypes.ToSlice(), intermediates.ToSlice()
 }
 
+// resolvedCyclicTerms fills in the set of subject and intermediate types on
+// self-referential permission terms (i.e. type cycles) that can only be
+// resolved once all other terms have been resolved.
 func (v *validator) resolveCyclicTerms() {
 	for _, t := range v.deferred {
 		perm, term := t.perm, t.term
