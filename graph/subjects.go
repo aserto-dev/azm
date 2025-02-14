@@ -83,7 +83,13 @@ func (s *SubjectSearch) search(params *relation) (searchResults, error) {
 
 func (s *SubjectSearch) searchRelation(params *relation) (searchResults, error) {
 	r := s.m.Objects[params.ot].Relations[params.rel]
-	steps := s.m.StepRelation(r, params.st)
+
+	subjectTypes := []model.ObjectName{}
+	if params.tail == "" {
+		subjectTypes = append(subjectTypes, params.st)
+	}
+
+	steps := s.m.StepRelation(r, subjectTypes...)
 
 	results := searchResults{}
 
@@ -131,10 +137,6 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 	}
 
 	for _, rel := range *relsPtr {
-		if rel.SubjectId != "*" && params.oid != ObjectID(rel.ObjectId) {
-			continue
-		}
-
 		edge := relation{
 			ot:  model.ObjectName(rel.ObjectType),
 			oid: ObjectID(rel.ObjectId),
@@ -143,14 +145,32 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 			sid: ObjectID(rel.SubjectId),
 		}
 
-		subj := edge.subject()
+		var matches searchResults
 
-		var path []searchPath
-		if s.explain {
-			path = append(results[*subj], searchPath{&edge}) //nolint: gocritic
+		if params.tail != "" {
+			search := &relation{
+				ot:  model.ObjectName(rel.SubjectType),
+				oid: ObjectID(rel.SubjectId),
+				rel: params.tail,
+				st:  params.st,
+			}
+
+			if res, err := s.search(search); err != nil {
+				return results, err
+			} else {
+				matches = res
+			}
+		} else {
+			subj := edge.subject()
+			matches = searchResults{*subj: nil}
 		}
 
-		results[*subj] = path
+		for leaf, path := range matches {
+			if s.explain {
+				path = append(path, searchPath{&edge})
+			}
+			results[leaf] = path
+		}
 	}
 
 	s.pool.PutSlice(relsPtr)
@@ -197,6 +217,7 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 			st:   params.st,
 			sid:  params.sid,
 			srel: params.srel,
+			tail: params.tail,
 		}
 
 		res, err := s.search(check)
@@ -291,14 +312,14 @@ func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, pa
 	return []*relation{{ot: params.ot, oid: params.oid, rel: pt.RelOrPerm, st: params.st, sid: params.sid, srel: params.srel}}, nil
 }
 
-func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) ([]*relation, error) {
-	relsPtr := s.pool.GetSlice()
-
+func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *relation) (relations, error) {
 	req := &dsc.RelationIdentifier{
 		ObjectType: params.ot.String(),
 		ObjectId:   params.oid.String(),
 		Relation:   pt.Base.String(),
 	}
+
+	relsPtr := s.pool.GetSlice()
 
 	// Resolve the base of the arrow.
 	if err := s.getRels(req, s.pool, relsPtr); err != nil {
@@ -309,10 +330,12 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 		return &relation{
 			ot:   model.ObjectName(rel.SubjectType),
 			oid:  ObjectID(rel.SubjectId),
-			rel:  pt.RelOrPerm,
+			rel:  lo.Ternary(rel.SubjectRelation == "", pt.RelOrPerm, model.RelationName(rel.SubjectRelation)),
 			st:   params.st,
 			sid:  params.sid,
 			srel: params.srel,
+
+			tail: lo.Ternary(rel.SubjectRelation == "", "", pt.RelOrPerm),
 		}
 	})
 

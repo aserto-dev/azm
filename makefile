@@ -41,7 +41,7 @@ lint:
 .PHONY: test
 test:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- -count=1 -parallel=1 -v -coverprofile=cover.out -coverpkg=./... ./...;
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- -count=1 -coverprofile=cover.out -coverpkg=./... ./...;
 
 .PHONY: write-version
 write-version:

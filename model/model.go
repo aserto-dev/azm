@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-const ModelVersion int = 4
+const ModelVersion int = 5
 
 type Model struct {
 	Version  int                    `json:"version"`
@@ -145,8 +145,12 @@ func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, s
 		return derr.ErrInvalidRelation.Msgf("[%s] subject type '%s' is not valid for relation '%s:%s'", rel, rel.sn, on, rn)
 	}
 
+	assignment := RelationRef{Object: sn, Relation: srn}
+
 	if rel.sid.IsWildcard() {
 		// Wildcard assignment.
+		assignment.Relation = "*"
+
 		if rel.srn != "" {
 			return derr.ErrInvalidRelation.Msgf("[%s] wildcard assignment cannot include subject relation", rel)
 		}
@@ -159,7 +163,6 @@ func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, s
 		}
 	}
 
-	assignment := RelationRef{Object: sn, Relation: srn}
 	if !lo.ContainsBy(refs, func(rr *RelationRef) bool { return *rr == assignment }) {
 		return derr.ErrInvalidRelation.Msgf("[%s] invalid assignment", rel)
 	}
