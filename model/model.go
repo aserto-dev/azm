@@ -13,7 +13,12 @@ import (
 	"github.com/samber/lo"
 )
 
-const ModelVersion int = 5
+const (
+	ModelVersion int = 5
+
+	ArrowSymbol    = "->"
+	WildcardSymbol = "*"
+)
 
 type Model struct {
 	Version  int                    `json:"version"`
@@ -45,7 +50,7 @@ func (id ObjectID) String() string {
 }
 
 func (id ObjectID) IsWildcard() bool {
-	return id == "*"
+	return id == WildcardSymbol
 }
 
 type relation struct {
@@ -149,7 +154,7 @@ func (m *Model) ValidateRelation(on ObjectName, oid ObjectID, rn RelationName, s
 
 	if rel.sid.IsWildcard() {
 		// Wildcard assignment.
-		assignment.Relation = "*"
+		assignment.Relation = WildcardSymbol
 
 		if rel.srn != "" {
 			return derr.ErrInvalidRelation.Msgf("[%s] wildcard assignment cannot include subject relation", rel)

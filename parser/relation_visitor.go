@@ -36,7 +36,7 @@ func (v *RelationVisitor) VisitDirectRel(c *DirectRelContext) interface{} {
 func (v *RelationVisitor) VisitWildcardRel(c *WildcardRelContext) interface{} {
 	return &model.RelationRef{
 		Object:   model.ObjectName(c.Wildcard().ID().GetText()),
-		Relation: "*",
+		Relation: model.WildcardSymbol,
 	}
 }
 

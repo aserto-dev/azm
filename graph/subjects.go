@@ -118,7 +118,7 @@ func (s *SubjectSearch) searchRelation(params *relation) (searchResults, error) 
 func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) (searchResults, error) {
 	sid := params.sid.String()
 	if step.IsWildcard() {
-		sid = "*"
+		sid = model.WildcardSymbol
 	}
 
 	req := &dsc.RelationIdentifier{

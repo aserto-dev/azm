@@ -236,8 +236,21 @@ func (ti *termInverter) invertRelation() {
 	typeRefs := set.NewSet(ti.obj.Relations[ti.term.RelOrPerm].Types()...)
 	typeRefs.Intersect(ti.typeSet).Each(func(rr RelationRef) bool {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
-		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
-		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
+		io := ti.inv.im.Objects[rr.Object]
+
+		relOrPerm := ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)
+		if !io.HasRelOrPerm(relOrPerm) {
+			// If the relation/permission doesn't exist it may only be defined
+			// for wildcards.
+			relOrPerm = ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, WildcardSymbol)
+		}
+
+		if io.HasRelOrPerm(relOrPerm) {
+			// Only add the term if the object type has the relation/permission.
+			ip := permissionOrNew(io, iName, ti.kind)
+			ip.AddTerm(&PermissionTerm{RelOrPerm: relOrPerm})
+		}
+
 		return false // resume iteration
 	})
 }

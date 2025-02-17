@@ -123,7 +123,7 @@ func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation 
 
 func wildcardParams(params *relation) *relation {
 	wildcard := *params
-	wildcard.oid = "*"
+	wildcard.oid = model.WildcardSymbol
 	return &wildcard
 }
 
@@ -156,7 +156,7 @@ func uninvertRelation(m *model.Model, r *relation) *relation {
 	relSplit := strings.SplitN(objSplit[1], model.SubjectRelationSeparator, 2)
 	rel := relSplit[0]
 	srel := ""
-	if len(relSplit) > 1 {
+	if len(relSplit) > 1 && relSplit[1] != model.WildcardSymbol {
 		srel = relSplit[1]
 	}
 
