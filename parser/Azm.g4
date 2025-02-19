@@ -61,6 +61,6 @@ COLON:
 ASTERISK:
     '*';
 
-ID: [a-z][a-z0-9._-]*[a-z0-9] ;
+ID: [a-zA-Z][a-zA-Z0-9._-]*[a-zA-Z0-9] ;
 
 WS: [ \t\n\r\f]+ -> skip ;
