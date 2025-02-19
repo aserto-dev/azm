@@ -126,7 +126,7 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 		case step.IsDirect() && (params.tail == "" || params.tail == params.rel):
 			req.SubjectId = params.sid.String()
 		case step.IsWildcard():
-			req.SubjectId = "*"
+			req.SubjectId = model.WildcardSymbol
 		case step.IsSubject():
 			req.SubjectRelation = step.Relation.String()
 		}

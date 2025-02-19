@@ -24,8 +24,9 @@ types:
   resource:
     relations:
       viewer: user | machine | identity | group#member
+      public_viewer: user:* | identity:*
     permissions:
-      can_view: viewer | viewer->identifier
+      can_view: viewer | viewer->identifier | public_viewer
 
   component:
     relations:

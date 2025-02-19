@@ -148,7 +148,7 @@ func (rr *RelationRef) Assignment() RelationAssignment {
 	}
 
 	switch {
-	case rr.Relation == "*":
+	case rr.Relation == WildcardSymbol:
 		return RelationAssignmentWildcard
 	case rr.Relation != "":
 		return RelationAssignmentSubject
@@ -248,7 +248,7 @@ func (pr *PermissionTerm) String() string {
 	}
 	s := string(pr.RelOrPerm)
 	if pr.Base != "" {
-		s = string(pr.Base) + "->" + s
+		s = string(pr.Base) + ArrowSymbol + s
 	}
 	return s
 }

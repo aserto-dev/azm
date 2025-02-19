@@ -103,8 +103,9 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#viewer@user:f1_owner", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#viewer@user:user2", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#viewer@user:*", []object{{"doc", "doc2"}}},
+	{"doc:?#viewer@user:some_user", []object{{"doc", "doc2"}}},
 
-	// // Permissions
+	// Permissions
 	{"folder:?#is_owner@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_create_file@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
 	{"folder:?#can_read@user:f1_owner", []object{{"folder", "folder1"}, {"folder", "folder2"}}},
@@ -180,6 +181,7 @@ var searchObjectsTests = []searchTest{
 	{"doc:?#can_read@user:user3", []object{{"doc", "doc1"}, {"doc", "doc2"}}},
 	{"doc:?#can_share@user:user3", []object{}},
 	{"doc:?#can_invite@user:user3", []object{}},
+	{"doc:?#can_view@user:some_user", []object{{"doc", "doc2"}}},
 }
 
 func relations() RelationsReader {
