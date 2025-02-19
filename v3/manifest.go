@@ -9,10 +9,6 @@ import (
 
 const SupportedSchemaVersion int = 3
 
-const (
-	ArrowIdentifier string = "->"
-)
-
 type Manifest struct {
 	ModelInfo   *ModelInfo                     `yaml:"model"`
 	ObjectTypes map[ObjectTypeName]*ObjectType `yaml:"types"`
