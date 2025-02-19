@@ -24,7 +24,11 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
 	return &model.Permission{
 		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
-			return perm.Accept(v).(*model.PermissionTerm)
+			if term, ok := perm.Accept(v).(*model.PermissionTerm); ok {
+				return term
+			}
+
+			return &model.PermissionTerm{}
 		}),
 	}
 }
