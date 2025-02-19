@@ -24,7 +24,6 @@ func TestPermissionParser(t *testing.T) {
 			test.validate(perm, assert.New(tt))
 		})
 	}
-
 }
 
 type relationTest struct {
@@ -111,6 +110,16 @@ var relationTests = []relationTest{
 			assert.True(rel[3].IsSubject())
 			assert.Equal(model.ObjectName("group"), rel[3].Object)
 			assert.Equal(model.RelationName("member"), rel[3].Relation)
+		},
+	},
+	{
+		"IDENTITY",
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
+			assert.Len(rel, 1)
+			term := rel[0]
+			assert.True(term.IsDirect())
+			assert.Equal(model.ObjectName("IDENTITY"), term.Object)
+			assert.Empty(term.Relation)
 		},
 	},
 }
