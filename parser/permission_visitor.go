@@ -51,9 +51,12 @@ func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interfac
 }
 
 func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
-	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.Direct().ID().GetText())}
+	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.ID().GetText())}
 }
 
 func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
-	return &model.PermissionTerm{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: model.RelationName(c.Arrow().ID(1).GetText())}
+	return &model.PermissionTerm{
+		Base:      model.RelationName(c.ID(0).GetText()),
+		RelOrPerm: model.RelationName(c.ID(1).GetText()),
+	}
 }

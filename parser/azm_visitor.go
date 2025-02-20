@@ -42,16 +42,4 @@ type AzmVisitor interface {
 
 	// Visit a parse tree produced by AzmParser#ArrowPerm.
 	VisitArrowPerm(ctx *ArrowPermContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#direct.
-	VisitDirect(ctx *DirectContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#subject.
-	VisitSubject(ctx *SubjectContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#wildcard.
-	VisitWildcard(ctx *WildcardContext) interface{}
-
-	// Visit a parse tree produced by AzmParser#arrow.
-	VisitArrow(ctx *ArrowContext) interface{}
 }

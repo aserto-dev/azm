@@ -31,6 +31,10 @@ func Load(r io.Reader) (*model.Model, error) {
 		return nil, err
 	}
 
+	if err := manifest.ValidateNames(); err != nil {
+		return nil, derr.ErrInvalidArgument.Err(err)
+	}
+
 	var errs error
 
 	for on, o := range manifest.ObjectTypes {
@@ -88,7 +92,7 @@ func parseRelations(on ObjectTypeName, o *ObjectType) (model.Relations, []error)
 
 		rel, err := parser.ParseRelation(rd)
 		if err != nil {
-			errs = append(errs, derr.ErrInvalidRelationType.Err(err).Msgf("%s:%s", on, rn))
+			errs = append(errs, derr.ErrInvalidRelationType.Err(err).Msgf("'%s:%s'", on, rn))
 		}
 
 		return rn, rel

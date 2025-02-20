@@ -1,10 +1,9 @@
-package model_test
+package v3_test
 
 import (
 	"testing"
 
-	"github.com/aserto-dev/azm/model"
-	"github.com/stretchr/testify/assert"
+	v3 "github.com/aserto-dev/azm/v3"
 )
 
 var isValidIdentifierTests = []struct {
@@ -127,22 +126,8 @@ var isValidIdentifierTests = []struct {
 func TestIsValidateIdentifier(t *testing.T) {
 	for _, tc := range isValidIdentifierTests {
 		t.Run(tc.Name, func(t *testing.T) {
-			if tc.Valid != model.IsValidIdentifier(tc.Input) {
+			if tc.Valid != v3.ValidIdentifier(tc.Input) {
 				t.Fail()
-			}
-		})
-	}
-}
-
-func TestNormalizeIdentifier(t *testing.T) {
-	for _, tc := range isValidIdentifierTests {
-		t.Run(tc.Name, func(t *testing.T) {
-			normalized, err := model.NormalizeIdentifier(tc.Input)
-			t.Logf("[%s] -> [%s]", tc.Input, normalized)
-			if tc.Valid {
-				assert.NoError(t, err)
-			} else {
-				assert.Error(t, err)
 			}
 		})
 	}

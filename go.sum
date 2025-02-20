@@ -4,6 +4,8 @@ github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYW
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/aserto-dev/errors v0.0.14 h1:dcNiIwtdsxmxdOQj2xzrPp0a3spEERb3O5VcHxd93pw=
 github.com/aserto-dev/errors v0.0.14/go.mod h1:WntQkFRb4j41tp4ObRXTdhu/VZKIzIRTReLHjLLMWyc=
+github.com/aserto-dev/errors v0.0.15-0.20250220181113-0375086d197b h1:5w+2q5HhsVbrxmPpQyGkMAgKZUg/fm79CVj1GQo+T4E=
+github.com/aserto-dev/errors v0.0.15-0.20250220181113-0375086d197b/go.mod h1:WntQkFRb4j41tp4ObRXTdhu/VZKIzIRTReLHjLLMWyc=
 github.com/aserto-dev/go-directory v0.33.5 h1:ucLq3OQS8imgYt6346JvQyJW91/P7YWXJa2VN1S1t7o=
 github.com/aserto-dev/go-directory v0.33.5/go.mod h1:p0wsjtpBBW2huPDgi6I8OqfhwJWyMRqJHlwPVb3kTSM=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

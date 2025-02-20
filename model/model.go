@@ -91,16 +91,10 @@ func (m *Model) Write(w io.Writer) error {
 }
 
 type validationOptions struct {
-	// don't validate that object/relation/permission names are valid identifiers.
-	skipNameValidation         bool
 	allowPermissionInArrowBase bool
 }
 
 type ValidationOption func(*validationOptions)
-
-func SkipNameValidation(opts *validationOptions) {
-	opts.skipNameValidation = true
-}
 
 func AllowPermissionInArrowBase(opts *validationOptions) {
 	opts.allowPermissionInArrowBase = true

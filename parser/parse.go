@@ -3,10 +3,20 @@ package parser
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/aserto-dev/azm/model"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+)
+
+var (
+	ErrIdentifierExpected = errors.New("identifier expected")
+	ErrInvalidExpression  = errors.New("invalid expression")
+	ErrParse              = errors.New("parse error")
 )
 
 func ParseRelation(input string) ([]*model.RelationRef, error) {
@@ -70,5 +80,28 @@ func (l *errorListener) SyntaxError(
 	msg string,
 	e antlr.RecognitionException,
 ) {
-	l.err = errors.Wrap(model.ErrInvalidIdentifier, fmt.Sprintf("%s in '%s'", msg, l.input))
+	if e != nil {
+		// lexer recognition error
+		matches := recognitionErrorRegexp().FindStringSubmatch(msg)
+		if len(matches) == 3 {
+			actual, expected := matches[1], matches[2]
+			message := fmt.Sprintf("unexpected %s in '%s'. expected %s", actual, l.input, expected)
+			l.err = multierror.Append(l.err, errors.Wrap(ErrInvalidExpression, message))
+			return
+		}
+	}
+
+	if e == nil && strings.HasPrefix(msg, "extraneous input") {
+		// extraneous input parser error
+		symbol := l.input[column : column+1]
+		message := fmt.Sprintf("unexpected '%s' in '%s'", symbol, l.input)
+		l.err = multierror.Append(l.err, errors.Wrap(ErrIdentifierExpected, message))
+		return
+	}
+
+	l.err = multierror.Append(l.err, errors.Wrap(ErrParse, msg))
 }
+
+var recognitionErrorRegexp = sync.OnceValue(func() *regexp.Regexp {
+	return regexp.MustCompile(`^mismatched input ('.+') expecting (.+)$`)
+})
