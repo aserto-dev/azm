@@ -11,7 +11,8 @@ import (
 func TestRelationParser(t *testing.T) {
 	for _, test := range relationTests {
 		t.Run(test.input, func(tt *testing.T) {
-			rel := parser.ParseRelation(test.input)
+			rel, err := parser.ParseRelation(test.input)
+			assert.NoError(t, err)
 			test.validate(rel, assert.New(tt))
 		})
 	}
@@ -20,7 +21,8 @@ func TestRelationParser(t *testing.T) {
 func TestPermissionParser(t *testing.T) {
 	for _, test := range permissionTests {
 		t.Run(test.input, func(tt *testing.T) {
-			perm := parser.ParsePermission(test.input)
+			perm, err := parser.ParsePermission(test.input)
+			assert.NoError(t, err)
 			test.validate(perm, assert.New(tt))
 		})
 	}

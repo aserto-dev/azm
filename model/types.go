@@ -26,15 +26,18 @@ func (rn RelationName) String() string {
 	return string(rn)
 }
 
+type Relations map[RelationName]*Relation
+type Permissions map[RelationName]*Permission
+
 type Object struct {
-	Relations   map[RelationName]*Relation   `json:"relations,omitempty"`
-	Permissions map[RelationName]*Permission `json:"permissions,omitempty"`
+	Relations   Relations   `json:"relations,omitempty"`
+	Permissions Permissions `json:"permissions,omitempty"`
 }
 
 func NewObject() *Object {
 	return &Object{
-		Relations:   map[RelationName]*Relation{},
-		Permissions: map[RelationName]*Permission{},
+		Relations:   Relations{},
+		Permissions: Permissions{},
 	}
 }
 

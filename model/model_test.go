@@ -169,7 +169,7 @@ func TestValidation(t *testing.T) { //nolint:funlen
 			"./testdata/rel_perm_collision.yaml",
 			[]string{
 				"permission name 'file:writer' conflicts with relation 'file:writer'",
-				"relation 'file:bad' has no definition",
+				"relation 'file:bad' has empty definition",
 			},
 		},
 		{

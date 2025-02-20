@@ -83,41 +83,13 @@ func (v *validator) validateReferences() error {
 	var errs error
 
 	for on, o := range v.Objects {
-		validatePerms := true
-		if err := v.validateUniqueNames(on, o); err != nil {
-			errs = multierror.Append(errs, err)
-			validatePerms = false
-		}
-
 		if err := v.validateObjectRels(on, o); err != nil {
 			errs = multierror.Append(errs, err)
 		}
 
-		if validatePerms {
-			if err := v.validateObjectPerms(on, o); err != nil {
-				errs = multierror.Append(errs, err)
-			}
+		if err := v.validateObjectPerms(on, o); err != nil {
+			errs = multierror.Append(errs, err)
 		}
-	}
-
-	return errs
-}
-
-func (v *validator) validateUniqueNames(on ObjectName, o *Object) error {
-	rels := lo.Map(lo.Keys(o.Relations), func(rn RelationName, _ int) string {
-		return string(rn)
-	})
-	perms := lo.Map(lo.Keys(o.Permissions), func(pn RelationName, _ int) string {
-		return string(pn)
-	})
-
-	rpCollisions := lo.Intersect(rels, perms)
-
-	var errs error
-	for _, collision := range rpCollisions {
-		errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-			"permission name '%[1]s:%[2]s' conflicts with relation '%[1]s:%[2]s'", on, collision),
-		)
 	}
 
 	return errs
@@ -127,13 +99,6 @@ func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 	var errs error
 	for rn, rs := range o.Relations {
 		for _, r := range rs.Union {
-			if r.Assignment() == RelationAssignmentUnknown {
-				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
-					"relation '%s:%s' has no definition", on, rn),
-				)
-				continue
-			}
-
 			o := v.Objects[r.Object]
 			if o == nil {
 				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
