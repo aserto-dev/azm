@@ -7,19 +7,11 @@ import (
 	"github.com/samber/lo"
 )
 
-type ObjectName Identifier
-type RelationName Identifier
-
-func (on ObjectName) Valid() bool {
-	return Identifier(on).Valid()
-}
+type ObjectName string
+type RelationName string
 
 func (on ObjectName) String() string {
 	return string(on)
-}
-
-func (rn RelationName) Valid() bool {
-	return Identifier(rn).Valid()
 }
 
 func (rn RelationName) String() string {

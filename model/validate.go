@@ -25,13 +25,6 @@ func newValidator(m *Model, opts *validationOptions) *validator {
 }
 
 func (v *validator) validate() error {
-	if !v.opts.skipNameValidation {
-		// validate that all object/relation/permission names are valid identifiers.
-		if err := v.validateNames(); err != nil {
-			return derr.ErrInvalidArgument.Err(err)
-		}
-	}
-
 	// Pass 1 (syntax): ensure no name collisions and all relations reference existing objects/relations.
 	if err := v.validateReferences(); err != nil {
 		return derr.ErrInvalidArgument.Err(err)
@@ -53,30 +46,6 @@ func (v *validator) validate() error {
 	}
 
 	return nil
-}
-
-func (v *validator) validateNames() error {
-	var errs error
-
-	for on, o := range v.Objects {
-		if !on.Valid() {
-			errs = multierror.Append(errs, derr.ErrInvalidObjectType.Msgf("invalid type name '%s': %s", on, msgInvalidIdentifier))
-		}
-
-		for rn := range o.Relations {
-			if !rn.Valid() {
-				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf("invalid relation name '%s': %s", rn, msgInvalidIdentifier))
-			}
-		}
-
-		for pn := range o.Permissions {
-			if !pn.Valid() {
-				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf("invalid permission name '%s': %s", pn, msgInvalidIdentifier))
-			}
-		}
-	}
-
-	return errs
 }
 
 func (v *validator) validateReferences() error {
