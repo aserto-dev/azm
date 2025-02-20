@@ -7,7 +7,7 @@ go 1.23.5
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.13
-	github.com/aserto-dev/go-directory v0.33.5-0.20250219151104-69a476b1e7c1
+	github.com/aserto-dev/go-directory v0.33.5
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
