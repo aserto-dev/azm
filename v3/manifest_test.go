@@ -36,6 +36,7 @@ func TestLoadModel(t *testing.T) {
 
 	b1, err := json.Marshal(m1)
 	require.NoError(t, err)
+	t.Logf("model:\n%s\n", b1)
 
 	b2, err := os.ReadFile("../model/testdata/model.json")
 	require.NoError(t, err)
@@ -46,7 +47,7 @@ func TestLoadModel(t *testing.T) {
 	}
 
 	opts := jsondiff.DefaultJSONOptions()
-	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
+	if diff, str := jsondiff.Compare(b2, b1, &opts); diff != jsondiff.FullMatch {
 		require.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 }
