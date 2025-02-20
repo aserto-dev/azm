@@ -83,7 +83,7 @@ func parseRelations(on ObjectTypeName, o *ObjectType) (model.Relations, []error)
 
 		if rd == "" {
 			errs = append(errs, derr.ErrInvalidRelationType.Msgf("relation '%s:%s' has empty definition", on, rn))
-			return model.RelationName(rn), nil
+			return rn, nil
 		}
 
 		rel, err := parser.ParseRelation(rd)
@@ -91,7 +91,7 @@ func parseRelations(on ObjectTypeName, o *ObjectType) (model.Relations, []error)
 			errs = append(errs, derr.ErrInvalidRelationType.Err(err).Msgf("%s:%s", on, rn))
 		}
 
-		return model.RelationName(rn), rel
+		return rn, rel
 	})
 
 	relations := lo.MapEntries(relationTerms, func(rn model.RelationName, rts []*model.RelationRef) (model.RelationName, *model.Relation) {
@@ -116,7 +116,7 @@ func parsePermissions(on ObjectTypeName, o *ObjectType, relations model.Relation
 
 		if pd == "" {
 			errs = append(errs, derr.ErrInvalidPermission.Msgf("permission '%s:%s' has empty definition", on, pn))
-			return model.RelationName(pn), nil
+			return pn, nil
 		}
 
 		perm, err := parser.ParsePermission(pd)
@@ -124,7 +124,7 @@ func parsePermissions(on ObjectTypeName, o *ObjectType, relations model.Relation
 			errs = append(errs, derr.ErrInvalidPermission.Err(err).Msgf("%s:%s", on, pn))
 		}
 
-		return model.RelationName(pn), perm
+		return pn, perm
 	})
 
 	return permissions, errs
