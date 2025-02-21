@@ -33,7 +33,7 @@ func TestSearchObjects(t *testing.T) {
 	t.Logf("inverted model:\n%s\n", b)
 
 	require.NoError(
-		im.Validate(model.SkipNameValidation, model.AllowPermissionInArrowBase),
+		im.Validate(model.AllowPermissionInArrowBase),
 	)
 
 	pool := mempool.NewRelationsPool()

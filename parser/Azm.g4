@@ -23,34 +23,18 @@ exclusion
     ;
 
 rel
-    :   direct      #DirectRel
-    |   wildcard    #WildcardRel
-    |   subject     #SubjectRel
+    :   ID                  #DirectRel
+    |   ID COLON ASTERISK   #WildcardRel
+    |   ID HASH ID          #SubjectRel
     ;
 
 perm
-    :   direct      #DirectPerm
-    |   arrow       #ArrowPerm
-    ;
-
-direct
-    :   ID
-    ;
-
-subject
-    :   ID HASH ID
-    ;
-
-wildcard
-    :   ID COLON ASTERISK
-    ;
-
-arrow
-    :   ID ARROW ID
+    :   ID            #DirectPerm
+    |   ID ARROW ID   #ArrowPerm
     ;
 
 ARROW:
-    '-''>' ;
+    '->' ;
 
 HASH:
     '#' ;
@@ -59,8 +43,10 @@ COLON:
     ':' ;
 
 ASTERISK:
-    '*';
+    '*' ;
 
-ID: [a-z][a-z0-9._-]*[a-z0-9] ;
+ID: [a-zA-Z][a-zA-Z0-9._-]*[a-zA-Z0-9] ;
 
 WS: [ \t\n\r\f]+ -> skip ;
+
+ERROR: . ;

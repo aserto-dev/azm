@@ -165,11 +165,49 @@ func TestValidation(t *testing.T) { //nolint:funlen
 			[]string{},
 		},
 		{
+			"invalid names",
+			"./testdata/invalid_names.yaml",
+			[]string{
+				"invalid relation type: invalid name 'resource:_reader'",
+				"invalid relation type: invalid name 'resource:reader.'",
+				"invalid relation type: invalid name 'resource:1reader'",
+				"invalid relation type: invalid name 'resource:r)e(d*e&r'",
+				"invalid permission: invalid name 'resource:_can_read_'",
+				"invalid permission: invalid name 'resource:Can+Reader'",
+				"invalid permission: invalid name 'resource:@!#'",
+				"invalid object type: invalid name '_user'",
+				"invalid object type: invalid name '12user'",
+				"invalid object type: invalid name 'u!s@e#r'",
+			},
+		},
+		{
+			"invalid definitions",
+			"./testdata/invalid_terms.yaml",
+			[]string{
+				"unexpected '->' in 'user->user'",
+				"unexpected '|' in '| user'",
+				"relation 'resource:empty' has empty definition",
+				"unexpected '$' in '$#@!'",
+				"unexpected '!' in 'us!!er'",
+				"unexpected '1' in '123user'",
+				"unexpected '<EOF>' in 'user |'",
+				"unexpected '|' in 'user | | user",
+				"* unexpected '-' in '-user | user$ | _._': identifier expected\n" +
+					"\t* unexpected '$' in '-user | user$ | _._': identifier expected\n" +
+					"\t* unexpected '_' in '-user | user$ | _._'. expected ID: invalid expression",
+				"unexpected '-' in '-user'",
+				"unexpected '$' in 'user$'",
+				"no viable alternative at input 'this*': parse error",
+				"no viable alternative at input 'bad@': parse error",
+				"no viable alternative at input 'base->bad$': parse error",
+			},
+		},
+		{
 			"relation/permission collision",
 			"./testdata/rel_perm_collision.yaml",
 			[]string{
 				"permission name 'file:writer' conflicts with relation 'file:writer'",
-				"relation 'file:bad' has no definition",
+				"relation 'file:bad' has empty definition",
 			},
 		},
 		{

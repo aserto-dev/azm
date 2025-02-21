@@ -1,3 +1,4 @@
+---
 name: ci
 
 on:
@@ -10,9 +11,7 @@ on:
       - release-*
   # Run tests for PRs
   pull_request:
-    branches:
-      - main
-      - release-*
+
 env:
   PRE_RELEASE: ${{ github.ref == 'refs/heads/main' && 'development' || '' }}
   GO_VERSION: "1.23"

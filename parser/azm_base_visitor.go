@@ -1,4 +1,4 @@
-// Code generated from Azm.g4 by ANTLR 4.13.1. DO NOT EDIT.
+// Code generated from Azm.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parser // Azm
 import "github.com/antlr4-go/antlr/v4"
@@ -52,21 +52,5 @@ func (v *BaseAzmVisitor) VisitDirectPerm(ctx *DirectPermContext) interface{} {
 }
 
 func (v *BaseAzmVisitor) VisitArrowPerm(ctx *ArrowPermContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitDirect(ctx *DirectContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitSubject(ctx *SubjectContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitWildcard(ctx *WildcardContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseAzmVisitor) VisitArrow(ctx *ArrowContext) interface{} {
 	return v.VisitChildren(ctx)
 }

@@ -7,34 +7,29 @@ import (
 	"github.com/samber/lo"
 )
 
-type ObjectName Identifier
-type RelationName Identifier
-
-func (on ObjectName) Valid() bool {
-	return Identifier(on).Valid()
-}
+type ObjectName string
+type RelationName string
 
 func (on ObjectName) String() string {
 	return string(on)
-}
-
-func (rn RelationName) Valid() bool {
-	return Identifier(rn).Valid()
 }
 
 func (rn RelationName) String() string {
 	return string(rn)
 }
 
+type Relations map[RelationName]*Relation
+type Permissions map[RelationName]*Permission
+
 type Object struct {
-	Relations   map[RelationName]*Relation   `json:"relations,omitempty"`
-	Permissions map[RelationName]*Permission `json:"permissions,omitempty"`
+	Relations   Relations   `json:"relations,omitempty"`
+	Permissions Permissions `json:"permissions,omitempty"`
 }
 
 func NewObject() *Object {
 	return &Object{
-		Relations:   map[RelationName]*Relation{},
-		Permissions: map[RelationName]*Permission{},
+		Relations:   Relations{},
+		Permissions: Permissions{},
 	}
 }
 

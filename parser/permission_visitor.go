@@ -24,7 +24,11 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
 	return &model.Permission{
 		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
-			return perm.Accept(v).(*model.PermissionTerm)
+			if term, ok := perm.Accept(v).(*model.PermissionTerm); ok {
+				return term
+			}
+
+			return &model.PermissionTerm{}
 		}),
 	}
 }
@@ -47,9 +51,12 @@ func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interfac
 }
 
 func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
-	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.Direct().ID().GetText())}
+	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.ID().GetText())}
 }
 
 func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
-	return &model.PermissionTerm{Base: model.RelationName(c.Arrow().ID(0).GetText()), RelOrPerm: model.RelationName(c.Arrow().ID(1).GetText())}
+	return &model.PermissionTerm{
+		Base:      model.RelationName(c.ID(0).GetText()),
+		RelOrPerm: model.RelationName(c.ID(1).GetText()),
+	}
 }

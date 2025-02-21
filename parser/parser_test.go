@@ -11,7 +11,8 @@ import (
 func TestRelationParser(t *testing.T) {
 	for _, test := range relationTests {
 		t.Run(test.input, func(tt *testing.T) {
-			rel := parser.ParseRelation(test.input)
+			rel, err := parser.ParseRelation(test.input)
+			assert.NoError(t, err)
 			test.validate(rel, assert.New(tt))
 		})
 	}
@@ -20,11 +21,11 @@ func TestRelationParser(t *testing.T) {
 func TestPermissionParser(t *testing.T) {
 	for _, test := range permissionTests {
 		t.Run(test.input, func(tt *testing.T) {
-			perm := parser.ParsePermission(test.input)
+			perm, err := parser.ParsePermission(test.input)
+			assert.NoError(t, err)
 			test.validate(perm, assert.New(tt))
 		})
 	}
-
 }
 
 type relationTest struct {
@@ -111,6 +112,16 @@ var relationTests = []relationTest{
 			assert.True(rel[3].IsSubject())
 			assert.Equal(model.ObjectName("group"), rel[3].Object)
 			assert.Equal(model.RelationName("member"), rel[3].Relation)
+		},
+	},
+	{
+		"IDENTITY",
+		func(rel []*model.RelationRef, assert *assert.Assertions) {
+			assert.Len(rel, 1)
+			term := rel[0]
+			assert.True(term.IsDirect())
+			assert.Equal(model.ObjectName("IDENTITY"), term.Object)
+			assert.Empty(term.Relation)
 		},
 	},
 }
