@@ -6,7 +6,7 @@ go 1.23.5
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
-	github.com/aserto-dev/errors v0.0.15-0.20250220181113-0375086d197b
+	github.com/aserto-dev/errors v0.0.15
 	github.com/aserto-dev/go-directory v0.33.5
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -14,7 +14,7 @@ require (
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
-	github.com/samber/lo v1.47.0
+	github.com/samber/lo v1.49.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
