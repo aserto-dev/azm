@@ -25,3 +25,8 @@ types:
 
       log_writer: machine#owner
       data_reader: machine#owner
+    permissions:
+      can_administer: owner | admin
+      can_view: can_administer | viewer
+
+      can_write_logs: admin | log_writer

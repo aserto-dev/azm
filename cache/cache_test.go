@@ -64,3 +64,32 @@ func TestAssignableRelations(t *testing.T) {
 		})
 	}
 }
+
+func TestAvailablePermissions(t *testing.T) {
+	m, err := v3.LoadFile("./cache_test.yaml")
+	require.NoError(t, err)
+	require.NotNil(t, m)
+
+	c := cache.New(m)
+
+	tests := []*testCase{
+		{"machine", "user", nil, nil},
+		{"machine", "tenant", nil, nil},
+		{"group", "group", []RN{"member"}, nil},
+		{"group", "user", nil, nil},
+		{"tenant", "user", nil, []RN{"can_administer", "can_view", "can_write_logs"}},
+		{"tenant", "group", nil, nil},
+		{"tenant", "machine", nil, nil},
+		{"tenant", "machine", []RN{"owner"}, []RN{"can_write_logs"}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name(), func(tt *testing.T) {
+			assert := require.New(tt)
+			actual, err := c.AvailablePermissions(test.on, test.sn, test.sr...)
+			assert.NoError(err)
+			assert.Equal(len(test.expected), len(actual))
+			assert.Subset(test.expected, actual)
+		})
+	}
+}
