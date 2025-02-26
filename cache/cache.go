@@ -96,16 +96,8 @@ func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
 //
 // Then AssignableRelations("tenant", "group", "member", "guest") returns ["admin", "guest"].
 func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]RelationName, error) {
-	if !c.ObjectExists(on) {
-		return nil, derr.ErrObjectNotFound.Msg(on.String())
-	}
-	if !c.ObjectExists(sn) {
-		return nil, derr.ErrObjectNotFound.Msg(sn.String())
-	}
-	for _, srel := range sr {
-		if !c.RelationExists(sn, srel) {
-			return nil, derr.ErrRelationNotFound.Msgf("%s#%s", sn, sr)
-		}
+	if err := c.validateTypes(on, sn, sr...); err != nil {
+		return nil, err
 	}
 
 	matches := lo.PickBy(c.model.Load().Objects[on].Relations, func(rn RelationName, r *model.Relation) bool {
@@ -128,4 +120,48 @@ func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]Re
 	})
 
 	return lo.Keys(matches), nil
+}
+
+// AvailablePermissions returns the set of permissions that a given subject type can have on an object type,
+// optionally with a subject relation.
+//
+// If more than one subject relation is provided, AvailablePermissions returns permissions that match any
+// of the given relations.
+func (c *Cache) AvailablePermissions(on, sn ObjectName, sr ...RelationName) ([]RelationName, error) {
+	if err := c.validateTypes(on, sn, sr...); err != nil {
+		return nil, err
+	}
+
+	matches := lo.PickBy(c.model.Load().Objects[on].Permissions, func(pn RelationName, p *model.Permission) bool {
+		if len(sr) == 0 {
+			return lo.Contains(p.SubjectTypes, sn)
+		}
+
+		for _, srn := range sr {
+			if lo.Contains(p.Intermediates, model.RelationRef{Object: sn, Relation: srn}) {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	return lo.Keys(matches), nil
+
+}
+
+func (c *Cache) validateTypes(on, sn ObjectName, sr ...RelationName) error {
+	if !c.ObjectExists(on) {
+		return derr.ErrObjectNotFound.Msg(on.String())
+	}
+	if !c.ObjectExists(sn) {
+		return derr.ErrObjectNotFound.Msg(sn.String())
+	}
+	for _, srel := range sr {
+		if !c.RelationExists(sn, srel) {
+			return derr.ErrRelationNotFound.Msgf("%s#%s", sn, sr)
+		}
+	}
+
+	return nil
 }
