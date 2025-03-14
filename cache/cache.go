@@ -152,14 +152,14 @@ func (c *Cache) AvailablePermissions(on, sn ObjectName, sr ...RelationName) ([]R
 
 func (c *Cache) validateTypes(on, sn ObjectName, sr ...RelationName) error {
 	if !c.ObjectExists(on) {
-		return derr.ErrObjectNotFound.Msg(on.String())
+		return derr.ErrObjectTypeNotFound.Msg(on.String())
 	}
 	if !c.ObjectExists(sn) {
-		return derr.ErrObjectNotFound.Msg(sn.String())
+		return derr.ErrObjectTypeNotFound.Msg(sn.String())
 	}
 	for _, srel := range sr {
 		if !c.RelationExists(sn, srel) {
-			return derr.ErrRelationNotFound.Msgf("%s#%s", sn, sr)
+			return derr.ErrRelationTypeNotFound.Msgf("%s#%s", sn, sr)
 		}
 	}
 

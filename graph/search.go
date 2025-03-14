@@ -113,7 +113,7 @@ func validate(m *model.Model, params *relation) error {
 	}
 
 	if !o.HasRelOrPerm(params.rel) {
-		return derr.ErrRelationNotFound.Msg(params.rel.String())
+		return derr.ErrRelationTypeNotFound.Msg(params.rel.String())
 	}
 
 	if _, ok := m.Objects[params.st]; !ok {
