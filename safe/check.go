@@ -37,11 +37,11 @@ func (i *SafeCheck) Validate(mc *cache.Cache) error {
 	}
 
 	if err := ObjectIdentifier(i.Object()).Validate(mc); err != nil {
-		return derr.ErrObjectNotFound.Err(err).Msg("object_type")
+		return err.Msg("object_type")
 	}
 
 	if err := ObjectIdentifier(i.Subject()).Validate(mc); err != nil {
-		return derr.ErrObjectNotFound.Err(err).Msg("subject_type")
+		return err.Msg("subject_type")
 	}
 
 	rr := &model.RelationRef{

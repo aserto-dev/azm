@@ -7,6 +7,7 @@ import (
 
 	"github.com/aserto-dev/azm/cache"
 	"github.com/aserto-dev/azm/model"
+	cerr "github.com/aserto-dev/errors"
 	dsc3 "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
@@ -41,8 +42,8 @@ func (i *SafeObject) Validate(mc *cache.Cache) error {
 		i.Properties = pb.NewStruct()
 	}
 
-	if mc != nil && !mc.ObjectExists(model.ObjectName(i.Object.Type)) {
-		return derr.ErrObjectTypeNotFound.Msg(i.Object.Type)
+	if mc != nil && !mc.ObjectExists(model.ObjectName(i.Type)) {
+		return derr.ErrObjectTypeNotFound.Msg(i.Type)
 	}
 
 	return nil
@@ -89,7 +90,7 @@ func ObjectIdentifier(i *dsc3.ObjectIdentifier) *SafeObjectIdentifier {
 	return &SafeObjectIdentifier{i}
 }
 
-func (i *SafeObjectIdentifier) Validate(mc *cache.Cache) error {
+func (i *SafeObjectIdentifier) Validate(mc *cache.Cache) *cerr.AsertoError {
 	if i.ObjectIdentifier == nil {
 		return derr.ErrInvalidObjectIdentifier.Msg(objectIdentifierNil)
 	}
@@ -105,15 +106,15 @@ func (i *SafeObjectIdentifier) Validate(mc *cache.Cache) error {
 	}
 
 	// #3 check if type exists.
-	if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectIdentifier.ObjectType)) {
-		return derr.ErrObjectTypeNotFound.Msg(i.ObjectIdentifier.ObjectType)
+	if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectType)) {
+		return derr.ErrObjectTypeNotFound.Msg(i.ObjectType)
 	}
 
 	return nil
 }
 
 func (i *SafeObjectIdentifier) Equal(n *dsc3.ObjectIdentifier) bool {
-	return strings.EqualFold(i.ObjectIdentifier.GetObjectId(), n.GetObjectId()) && strings.EqualFold(i.ObjectIdentifier.GetObjectType(), n.GetObjectType())
+	return strings.EqualFold(i.GetObjectId(), n.GetObjectId()) && strings.EqualFold(i.GetObjectType(), n.GetObjectType())
 }
 
 func (i *SafeObjectIdentifier) IsComplete() bool {
@@ -140,8 +141,8 @@ func (i *SafeObjectSelector) Validate(mc *cache.Cache) error {
 	switch {
 	case IsSet(i.GetObjectType()):
 		// check if type exists.
-		if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectIdentifier.ObjectType)) {
-			return derr.ErrObjectTypeNotFound.Msg(i.ObjectIdentifier.ObjectType)
+		if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectType)) {
+			return derr.ErrObjectTypeNotFound.Msg(i.ObjectType)
 		}
 	case IsSet(i.GetObjectId()):
 		// can't have id without type.

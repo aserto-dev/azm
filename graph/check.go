@@ -44,7 +44,7 @@ func (c *Checker) Check() (bool, error) {
 	}
 
 	if !o.HasRelOrPerm(c.params.rel) {
-		return false, derr.ErrRelationNotFound.Msg(c.params.rel.String())
+		return false, derr.ErrRelationTypeNotFound.Msg(c.params.rel.String())
 	}
 
 	status, err := c.check(c.params)

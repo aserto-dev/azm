@@ -100,12 +100,12 @@ func (i *SafeRelation) Validate(mc *cache.Cache) error {
 	}
 
 	if !mc.RelationExists(model.ObjectName(i.GetObjectType()), model.RelationName(i.GetRelation())) {
-		return derr.ErrRelationNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
+		return derr.ErrRelationTypeNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
 	}
 
 	if IsSet(i.GetSubjectRelation()) {
 		if !mc.RelationExists(model.ObjectName(i.GetSubjectType()), model.RelationName(i.GetSubjectRelation())) {
-			return derr.ErrRelationNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
+			return derr.ErrRelationTypeNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
 		}
 	}
 
@@ -113,7 +113,7 @@ func (i *SafeRelation) Validate(mc *cache.Cache) error {
 }
 
 func (i *SafeRelations) Validate(mc *cache.Cache) error {
-	if i == nil || i.SafeRelation.RelationIdentifier == nil {
+	if i == nil || i.RelationIdentifier == nil {
 		return derr.ErrInvalidRelation.Msg("relation not set (nil)")
 	}
 
@@ -131,7 +131,7 @@ func (i *SafeRelations) Validate(mc *cache.Cache) error {
 		}
 
 		if mc != nil && !mc.RelationExists(model.ObjectName(i.GetObjectType()), model.RelationName(i.GetRelation())) {
-			return derr.ErrRelationNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
+			return derr.ErrRelationTypeNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
 		}
 	}
 
@@ -141,7 +141,7 @@ func (i *SafeRelations) Validate(mc *cache.Cache) error {
 		}
 
 		if mc != nil && !mc.RelationExists(model.ObjectName(i.GetSubjectType()), model.RelationName(i.GetSubjectRelation())) {
-			return derr.ErrRelationNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
+			return derr.ErrRelationTypeNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
 		}
 	}
 
@@ -204,7 +204,7 @@ func (r *SafeRelationIdentifier) Validate(scope RelationScope, mc *cache.Cache) 
 	switch scope {
 	case AsRelation:
 		if !mc.RelationExists(r.Object, r.Relation) {
-			return derr.ErrRelationNotFound.Msgf("relation: %s", r)
+			return derr.ErrRelationTypeNotFound.Msgf("relation: %s", r)
 		}
 	case AsPermission:
 		if !mc.PermissionExists(r.Object, r.Relation) {
@@ -212,7 +212,7 @@ func (r *SafeRelationIdentifier) Validate(scope RelationScope, mc *cache.Cache) 
 		}
 	case AsEither:
 		if !mc.RelationExists(r.Object, r.Relation) && !mc.PermissionExists(r.Object, r.Relation) {
-			return derr.ErrRelationNotFound.Msgf("relation: %s", r)
+			return derr.ErrRelationTypeNotFound.Msgf("relation: %s", r)
 		}
 	}
 
