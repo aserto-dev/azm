@@ -1,13 +1,18 @@
 package graph
 
 import (
-	"github.com/aserto-dev/azm/mempool"
-	"github.com/aserto-dev/azm/model"
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
+
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	"github.com/samber/lo"
+
+	"github.com/aserto-dev/azm/mempool"
+	"github.com/aserto-dev/azm/model"
 )
+
+var errCycle = errors.New("cycle detected")
 
 type SubjectSearch struct {
 	graphSearch
@@ -28,8 +33,8 @@ func NewSubjectSearch(
 		m:       m,
 		params:  params,
 		getRels: reader,
-		memo:    newSearchMemo(req.Trace),
-		explain: req.Explain,
+		memo:    newSearchMemo(req.GetTrace()),
+		explain: req.GetExplain(),
 		pool:    pool,
 	}}, nil
 }
@@ -60,7 +65,7 @@ func (s *SubjectSearch) search(params *relation) (searchResults, error) {
 		return s.memo.visited[*params], nil
 	case searchStatusPending:
 		// We have a cycle.
-		return nil, nil
+		return nil, errCycle
 	case searchStatusNew:
 	}
 
@@ -98,6 +103,7 @@ func (s *SubjectSearch) searchRelation(params *relation) (searchResults, error) 
 			res searchResults
 			err error
 		)
+
 		switch {
 		case step.IsDirect(), step.IsWildcard():
 			res, err = s.findNeighbor(step, params)
@@ -138,27 +144,30 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 
 	for _, rel := range *relsPtr {
 		edge := relation{
-			ot:  model.ObjectName(rel.ObjectType),
-			oid: ObjectID(rel.ObjectId),
-			rel: model.RelationName(rel.Relation),
-			st:  model.ObjectName(rel.SubjectType),
-			sid: ObjectID(rel.SubjectId),
+			ot:  model.ObjectName(rel.GetObjectType()),
+			oid: ObjectID(rel.GetObjectId()),
+			rel: model.RelationName(rel.GetRelation()),
+			st:  model.ObjectName(rel.GetSubjectType()),
+			sid: ObjectID(rel.GetSubjectId()),
 		}
 
 		var matches searchResults
 
 		if params.tail != "" {
 			search := &relation{
-				ot:  model.ObjectName(rel.SubjectType),
-				oid: ObjectID(rel.SubjectId),
+				ot:  model.ObjectName(rel.GetSubjectType()),
+				oid: ObjectID(rel.GetSubjectId()),
 				rel: params.tail,
 				st:  params.st,
 			}
 
-			if res, err := s.search(search); err != nil {
-				return results, err
-			} else {
+			res, err := s.search(search)
+
+			switch {
+			case err == nil:
 				matches = res
+			case !errors.Is(err, errCycle):
+				return results, err
 			}
 		} else {
 			subj := edge.subject()
@@ -169,6 +178,7 @@ func (s *SubjectSearch) findNeighbor(step *model.RelationRef, params *relation) 
 			if s.explain {
 				path = append(path, searchPath{&edge})
 			}
+
 			results[leaf] = path
 		}
 	}
@@ -198,21 +208,21 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 	for _, rel := range *relsPtr {
 		current := relationFromProto(rel)
 
-		if params.srel == model.RelationName(rel.SubjectRelation) && params.st == model.ObjectName(rel.SubjectType) {
+		if params.srel == model.RelationName(rel.GetSubjectRelation()) && params.st == model.ObjectName(rel.GetSubjectType()) {
 			// We're searching for a subject relation (not a Check call) and we have a match.
-
 			subj := current.subject()
 
 			var path []searchPath
 			if s.explain {
 				path = append(results[*subj], searchPath{current}) //nolint: gocritic
 			}
+
 			results[*subj] = path
 		}
 
 		check := &relation{
 			ot:   step.Object,
-			oid:  ObjectID(rel.SubjectId),
+			oid:  ObjectID(rel.GetSubjectId()),
 			rel:  step.Relation,
 			st:   params.st,
 			sid:  params.sid,
@@ -221,7 +231,11 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 		}
 
 		res, err := s.search(check)
-		if err != nil {
+
+		switch {
+		case errors.Is(err, errCycle):
+			continue
+		case err != nil:
 			return results, err
 		}
 
@@ -241,6 +255,7 @@ func (s *SubjectSearch) searchSubjectRelation(step *model.RelationRef, params *r
 
 func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error) {
 	o := s.m.Objects[params.ot]
+
 	p := o.Permissions[params.rel]
 	if p == nil {
 		// This permission isn't defined on the object type.
@@ -249,13 +264,7 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 
 	results := searchResults{}
 
-	subjTypes := []model.ObjectName{}
-	if params.srel == "" {
-		subjTypes = append(subjTypes, params.st)
-	} else {
-		subjTypes = s.m.Objects[params.st].Relations[params.srel].SubjectTypes
-	}
-
+	subjTypes := s.possibleSubjects(params)
 	if len(lo.Intersect(subjTypes, p.SubjectTypes)) == 0 {
 		// The subject type cannot have this permission.
 		return results, nil
@@ -263,12 +272,14 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 
 	terms := p.Terms()
 	termChecks := make([][]*relation, 0, len(terms))
+
 	for _, pt := range terms {
 		// expand arrow operators.
 		expanded, err := s.expandTerm(o, pt, params)
 		if err != nil {
 			return results, err
 		}
+
 		termChecks = append(termChecks, expanded)
 	}
 
@@ -279,12 +290,13 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 		return s.intersection(termChecks)
 	case p.IsExclusion():
 		include, err := s.union(termChecks[:1])
+
 		switch {
 		case err != nil:
 			return results, err
 		case include == nil:
 			// We have a cycle.
-			return nil, nil
+			return nil, errCycle
 		case len(include) == 0:
 			// Short-circuit: The include term is false, so the permission is false.
 			return results, nil
@@ -301,11 +313,20 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 	return results, derr.ErrUnknown.Msg("unknown permission operator")
 }
 
+func (s *SubjectSearch) possibleSubjects(params *relation) []model.ObjectName {
+	if params.srel == "" {
+		return []model.ObjectName{params.st}
+	}
+
+	return s.m.Objects[params.st].Relations[params.srel].SubjectTypes
+}
+
 func (s *SubjectSearch) expandTerm(o *model.Object, pt *model.PermissionTerm, params *relation) ([]*relation, error) {
 	if pt.IsArrow() {
 		if o.HasRelation(pt.Base) {
 			return s.expandRelationArrow(pt, params)
 		}
+
 		return s.expandPermissionArrow(o, pt, params)
 	}
 
@@ -328,14 +349,14 @@ func (s *SubjectSearch) expandRelationArrow(pt *model.PermissionTerm, params *re
 
 	expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 		return &relation{
-			ot:   model.ObjectName(rel.SubjectType),
-			oid:  ObjectID(rel.SubjectId),
-			rel:  lo.Ternary(rel.SubjectRelation == "", pt.RelOrPerm, model.RelationName(rel.SubjectRelation)),
+			ot:   model.ObjectName(rel.GetSubjectType()),
+			oid:  ObjectID(rel.GetSubjectId()),
+			rel:  lo.Ternary(rel.GetSubjectRelation() == "", pt.RelOrPerm, model.RelationName(rel.GetSubjectRelation())),
 			st:   params.st,
 			sid:  params.sid,
 			srel: params.srel,
 
-			tail: lo.Ternary(rel.SubjectRelation == "", "", pt.RelOrPerm),
+			tail: lo.Ternary(rel.GetSubjectRelation() == "", "", pt.RelOrPerm),
 		}
 	})
 
@@ -370,11 +391,9 @@ func (s *SubjectSearch) expandPermissionArrow(o *model.Object, pt *model.Permiss
 			st:  subjType,
 		}
 		res, err := s.search(baseSearch)
-		if err != nil {
-			return nil, err
-		}
 
-		if res == nil {
+		switch {
+		case errors.Is(err, errCycle):
 			// We have a cycle.
 			// We can't expand the permission arrow until we have the results of the base.
 			// We leave the object ID empty to indicate that we need to defer the check.
@@ -385,7 +404,10 @@ func (s *SubjectSearch) expandPermissionArrow(o *model.Object, pt *model.Permiss
 				sid:  params.sid,
 				srel: params.srel,
 			})
+
 			continue
+		case err != nil:
+			return nil, err
 		}
 
 		expanded = append(expanded, lo.Map(lo.Keys(res), func(subj object, _ int) *relation {
@@ -430,11 +452,11 @@ func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
 		}
 
 		switch {
-		case err != nil:
-			return res, err
-		case res == nil:
+		case errors.Is(err, errCycle):
 			// We have a cycle.
 			continue
+		case err != nil:
+			return res, err
 		}
 
 		results = lo.Assign(results, res)
@@ -461,6 +483,7 @@ func (s *SubjectSearch) union(checks [][]*relation) (searchResults, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		results = lo.Assign(results, res)
 	}
 
@@ -476,6 +499,7 @@ func (s *SubjectSearch) intersection(checks [][]*relation) (searchResults, error
 		// if the base of an arrow operator resolves to multiple objects (e.g. multiple "parents")
 		// then a match on any of them is sufficient.
 		result, err := s.union([][]*relation{check})
+
 		switch {
 		case err != nil:
 			return searchResults{}, err
@@ -486,13 +510,13 @@ func (s *SubjectSearch) intersection(checks [][]*relation) (searchResults, error
 			return result, nil
 		}
 
-		status = searchStatusComplete
 		results = append(results, result)
+		status = searchStatusComplete
 	}
 
 	if status == searchStatusPending {
 		// All checks result in a cycle.
-		return nil, nil
+		return nil, errCycle
 	}
 
 	intersection := lo.Reduce(results, func(agg searchResults, item searchResults, i int) searchResults {

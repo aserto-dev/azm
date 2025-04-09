@@ -25,6 +25,7 @@ type testCase struct {
 
 func (t *testCase) name() string {
 	name := fmt.Sprintf("%s#?@%s", t.on, t.sn)
+
 	switch len(t.sr) {
 	case 0:
 		return name
@@ -59,7 +60,7 @@ func TestAssignableRelations(t *testing.T) {
 			assert := require.New(tt)
 			actual, err := c.AssignableRelations(test.on, test.sn, test.sr...)
 			assert.NoError(err)
-			assert.Equal(len(test.expected), len(actual))
+			assert.Len(test.expected, len(actual))
 			assert.Subset(test.expected, actual)
 		})
 	}
@@ -88,7 +89,7 @@ func TestAvailablePermissions(t *testing.T) {
 			assert := require.New(tt)
 			actual, err := c.AvailablePermissions(test.on, test.sn, test.sr...)
 			assert.NoError(err)
-			assert.Equal(len(test.expected), len(actual))
+			assert.Len(test.expected, len(actual))
 			assert.Subset(test.expected, actual)
 		})
 	}

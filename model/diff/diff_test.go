@@ -150,7 +150,11 @@ func errorCount(err error) int {
 		return 1
 	}
 
-	merr := aerr.Unwrap().(*multierror.Error)
+	var merr *multierror.Error
+	if !errors.As(aerr.Unwrap(), &merr) {
+		return 1
+	}
+
 	return len(merr.Errors)
 }
 

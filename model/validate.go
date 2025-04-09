@@ -66,6 +66,7 @@ func (v *validator) validateReferences() error {
 
 func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 	var errs error
+
 	for rn, rs := range o.Relations {
 		for _, r := range rs.Union {
 			o := v.Objects[r.Object]
@@ -73,6 +74,7 @@ func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
 					"relation '%s:%s' references undefined object type '%s'", on, rn, r.Object),
 				)
+
 				continue
 			}
 
@@ -91,12 +93,14 @@ func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 
 func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 	var errs error
+
 	for pn, p := range o.Permissions {
 		terms := p.Terms()
 		if len(terms) == 0 {
 			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 				"permission '%s:%s' has no definition", on, pn),
 			)
+
 			continue
 		}
 
@@ -105,8 +109,10 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
 					"permission '%s:%s' has an empty term", on, pn),
 				)
+
 				continue
 			}
+
 			switch {
 			case term.IsArrow():
 				// this is an arrow operator.
@@ -126,7 +132,6 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 					)
 				}
 			}
-
 		}
 	}
 
@@ -135,6 +140,7 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 
 func (v *validator) validatePermissions() error {
 	var errs error
+
 	for on, o := range v.Objects {
 		for pn, p := range o.Permissions {
 			if err := v.validatePermission(on, pn, p); err != nil {
@@ -142,6 +148,7 @@ func (v *validator) validatePermissions() error {
 			}
 		}
 	}
+
 	return errs
 }
 
@@ -149,40 +156,43 @@ func (v *validator) validatePermission(on ObjectName, pn RelationName, p *Permis
 	o := v.Objects[on]
 
 	var errs error
+
 	for _, term := range p.Terms() {
-		if term.IsArrow() {
-			// given a reference base->rel_or_perm, validate that all object types that `base` can resolve to
-			// have a permission or relation named `rel_or_perm`.
-			if o.HasPermission(term.Base) {
-				if !v.opts.allowPermissionInArrowBase {
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references permission '%s', which is not allowed in arrow base. only relations can be used.",
-						on, pn, term.Base,
-					))
-				}
-				continue
-			}
-			r := o.Relations[term.Base]
-
-			for _, ref := range r.Union {
-				if ref.IsWildcard() {
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"wildcard relation '%s:%s' not allowed in the base of an arrow operator '%s%s%s' in permission '%s:%s'",
-						on, term.Base, term.Base, ArrowSymbol, term.RelOrPerm, on, pn,
-					))
-				}
+		if !term.IsArrow() {
+			continue
+		}
+		// given a reference base->rel_or_perm, validate that all object types that `base` can resolve to
+		// have a permission or relation named `rel_or_perm`.
+		if o.HasPermission(term.Base) {
+			if !v.opts.allowPermissionInArrowBase {
+				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+					"permission '%s:%s' references permission '%s', which is not allowed in arrow base. only relations can be used.",
+					on, pn, term.Base,
+				))
 			}
 
-			for _, st := range r.SubjectTypes {
-				if !v.Objects[st].HasRelOrPerm(term.RelOrPerm) {
-					arrow := fmt.Sprintf("%s%s%s", term.Base, ArrowSymbol, term.RelOrPerm)
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
-						on, pn, arrow, st, term.RelOrPerm,
-					))
-				}
-			}
+			continue
+		}
 
+		r := o.Relations[term.Base]
+
+		for _, ref := range r.Union {
+			if ref.IsWildcard() {
+				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+					"wildcard relation '%s:%s' not allowed in the base of an arrow operator '%s%s%s' in permission '%s:%s'",
+					on, term.Base, term.Base, ArrowSymbol, term.RelOrPerm, on, pn,
+				))
+			}
+		}
+
+		for _, st := range r.SubjectTypes {
+			if !v.Objects[st].HasRelOrPerm(term.RelOrPerm) {
+				arrow := fmt.Sprintf("%s%s%s", term.Base, ArrowSymbol, term.RelOrPerm)
+				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
+					"permission '%s:%s' references '%s', which can resolve to undefined relation or permission '%s:%s' ",
+					on, pn, arrow, st, term.RelOrPerm,
+				))
+			}
 		}
 	}
 
@@ -191,10 +201,12 @@ func (v *validator) validatePermission(on ObjectName, pn RelationName, p *Permis
 
 func (v *validator) resolveRelations() error {
 	var errs error
+
 	for on, o := range v.Objects {
 		for rn, r := range o.Relations {
 			seen := set.NewSet(RelationRef{Object: on, Relation: rn})
 			subs, intermediates := v.resolveRelation(r, seen)
+
 			switch len(subs) {
 			case 0:
 				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
@@ -218,9 +230,11 @@ func (v *validator) resolveRelation(r *Relation, seen relSet) ([]ObjectName, Rel
 
 	subjectTypes := set.NewSet[ObjectName]()
 	intermediateTypes := set.NewSet[RelationRef]()
+
 	for _, rr := range r.Union {
 		if rr.IsSubject() {
 			intermediateTypes.Add(*rr)
+
 			if !seen.Contains(*rr) {
 				seen.Add(*rr)
 				subs, intermediates := v.resolveRelation(v.Objects[rr.Object].Relations[rr.Relation], seen)
@@ -231,11 +245,13 @@ func (v *validator) resolveRelation(r *Relation, seen relSet) ([]ObjectName, Rel
 			subjectTypes.Add(rr.Object)
 		}
 	}
+
 	return subjectTypes.ToSlice(), intermediateTypes.ToSlice()
 }
 
 func (v *validator) resolvePermissions() error {
 	seen := set.NewSet[RelationRef]()
+
 	for on, o := range v.Objects {
 		for pn := range o.Permissions {
 			v.resolvePermission(&RelationRef{on, pn}, seen)
@@ -277,6 +293,7 @@ func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, re
 		// cycle detected
 		return set.NewSet[ObjectName](), set.NewSet[RelationRef]()
 	}
+
 	seen.Add(*ref)
 
 	for _, term := range p.Terms() {
@@ -311,7 +328,6 @@ func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, re
 			}
 
 			return acc.Intersect(subjs)
-
 		}, nil)
 		intermediates = lo.Reduce(resolvedTerms, func(acc relSet, term *PermissionTerm, i int) relSet {
 			subjs := set.NewSet(term.Intermediates...)
@@ -321,7 +337,6 @@ func (v *validator) resolvePermission(ref *RelationRef, seen relSet) (objSet, re
 			}
 
 			return acc.Intersect(subjs)
-
 		}, nil)
 
 	case p.IsExclusion():
@@ -340,13 +355,14 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 	base, tip := term.Base, term.RelOrPerm
 
 	var baseRefs set.Set[RelationRef]
+
 	intermediates := set.NewSet[RelationRef]()
 
 	switch {
 	case term.IsArrow():
 		var sts []ObjectName
-		o := v.Objects[perm.Object]
 
+		o := v.Objects[perm.Object]
 		if o.HasRelation(base) {
 			sts = o.Relations[base].SubjectTypes
 			intermediates.Append(o.Relations[base].Intermediates...)
@@ -355,6 +371,7 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 			sts = types.ToSlice()
 			intermediates.Append(interims.ToSlice()...)
 		}
+
 		baseRefs = set.NewSet(lo.Map(sts, func(st ObjectName, _ int) RelationRef {
 			return RelationRef{Object: st, Relation: tip}
 		})...)
@@ -364,6 +381,7 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 	}
 
 	subjectTypes := set.NewSet[ObjectName]()
+
 	for baseRef := range baseRefs.Iter() {
 		o := v.Objects[baseRef.Object]
 
@@ -371,6 +389,7 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 			// Relations are already resolved to a set of subject types.
 			subjectTypes.Append(o.Relations[baseRef.Relation].SubjectTypes...)
 			intermediates.Append(o.Relations[baseRef.Relation].Intermediates...)
+
 			continue
 		}
 
@@ -378,8 +397,10 @@ func (v *validator) resolvePermissionTerm(t termRef, seen relSet) ([]ObjectName,
 		if sts.IsEmpty() {
 			v.deferred = append(v.deferred, t)
 		}
-		subjectTypes = subjectTypes.Union(sts)
+
 		intermediates.Append(interims.ToSlice()...)
+
+		subjectTypes = subjectTypes.Union(sts)
 	}
 
 	return subjectTypes.ToSlice(), intermediates.ToSlice()
@@ -394,6 +415,7 @@ func (v *validator) resolveCyclicTerms() {
 		base, tip := term.Base, term.RelOrPerm
 
 		var baseRefs set.Set[RelationRef]
+
 		intermediates := set.NewSet[RelationRef]()
 
 		if term.IsArrow() {

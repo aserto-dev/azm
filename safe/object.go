@@ -55,22 +55,22 @@ func (i *SafeObject) Hash() string {
 
 	if i.Properties != nil {
 		v := i.Properties.AsMap()
-		hash, err := hashstructure.Hash(
+
+		if _, err := hashstructure.Hash(
 			v,
 			hashstructure.FormatV2,
 			&hashstructure.HashOptions{
 				Hasher: h,
 			},
-		)
-		if err != nil {
+		); err != nil {
 			return DefaultHash
 		}
-		_ = hash
 	}
 
 	if _, err := h.Write([]byte(i.GetType())); err != nil {
 		return DefaultHash
 	}
+
 	if _, err := h.Write([]byte(i.GetId())); err != nil {
 		return DefaultHash
 	}

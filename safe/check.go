@@ -48,5 +48,6 @@ func (i *SafeCheck) Validate(mc *cache.Cache) error {
 		Object:   model.ObjectName(i.ObjectType),
 		Relation: model.RelationName(i.Relation),
 	}
+
 	return RelationIdentifier(rr).Validate(AsEither, mc)
 }

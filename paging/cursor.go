@@ -54,7 +54,9 @@ func DecodeCursor(encoded string) (*Cursor, error) {
 
 	reader := bytes.NewReader(bin)
 	dec := gob.NewDecoder(reader)
+
 	var cursor Cursor
+
 	if err := dec.Decode(&cursor); err != nil {
 		return nil, derr.ErrInvalidCursor
 	}
@@ -65,6 +67,7 @@ func DecodeCursor(encoded string) (*Cursor, error) {
 func (c *Cursor) Encode() (string, error) {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
+
 	if err := enc.Encode(c); err != nil {
 		return "", err
 	}

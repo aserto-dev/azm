@@ -8,7 +8,7 @@ import (
 	"github.com/aserto-dev/azm/mempool"
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/require"
 )
 
 type cycle bool
@@ -112,18 +112,20 @@ func BenchmarkCheck(b *testing.B) {
 	pool := mempool.NewRelationsPool()
 
 	b.ResetTimer()
+
 	for _, test := range tests {
 		assert := assert.New(b)
 
 		b.StopTimer()
+
 		checker := azmgraph.NewCheck(m, checkReq(test.check, false), rels.GetRelations, pool)
+
 		b.StartTimer()
 
 		res, err := checker.Check()
 		assert.NoError(err)
 		assert.Equal(test.expected, res)
 	}
-
 }
 
 var rels = NewRelationsReader(

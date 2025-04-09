@@ -24,12 +24,12 @@ type relations []*relation
 // converts a dsc.RelationIdentifier to a relation.
 func relationFromProto(rel *dsc.RelationIdentifier) *relation {
 	return &relation{
-		ot:   model.ObjectName(rel.ObjectType),
-		oid:  ObjectID(rel.ObjectId),
-		rel:  model.RelationName(rel.Relation),
-		st:   model.ObjectName(rel.SubjectType),
-		sid:  ObjectID(rel.SubjectId),
-		srel: model.RelationName(rel.SubjectRelation),
+		ot:   model.ObjectName(rel.GetObjectType()),
+		oid:  ObjectID(rel.GetObjectId()),
+		rel:  model.RelationName(rel.GetRelation()),
+		st:   model.ObjectName(rel.GetSubjectType()),
+		sid:  ObjectID(rel.GetSubjectId()),
+		srel: model.RelationName(rel.GetSubjectRelation()),
 	}
 }
 
@@ -49,6 +49,7 @@ func (r *relation) String() string {
 	if r.srel != "" {
 		str += fmt.Sprintf("#%s", r.srel)
 	}
+
 	return str
 }
 
@@ -63,5 +64,6 @@ func displayID(id ObjectID) string {
 	if id == "" {
 		return "?"
 	}
+
 	return id.String()
 }

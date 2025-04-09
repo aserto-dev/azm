@@ -36,6 +36,7 @@ func parseRelation(r string) *relation {
 	if len(matches) < 7 {
 		return nil
 	}
+
 	rel := &relation{
 		ObjectType:  model.ObjectName(matches[1]),
 		ObjectID:    model.ObjectID(lo.Ternary(matches[2] == "?", "", matches[2])),
@@ -43,6 +44,7 @@ func parseRelation(r string) *relation {
 		SubjectType: model.ObjectName(matches[4]),
 		SubjectID:   model.ObjectID(lo.Ternary(matches[5] == "?", "", matches[5])),
 	}
+
 	if matches[6] != "" {
 		rel.SubjectRelation = model.RelationName(matches[6][1:])
 	}
@@ -58,6 +60,7 @@ func (r *relation) proto(pool graph.MessagePool[*dsc.RelationIdentifier]) *dsc.R
 	rel.SubjectType = r.SubjectType.String()
 	rel.SubjectId = r.SubjectID.String()
 	rel.SubjectRelation = r.SubjectRelation.String()
+
 	return rel
 }
 
@@ -93,17 +96,18 @@ func NewRelationsReader(rels ...string) RelationsReader {
 		if r == nil {
 			panic("invalid relation: " + rel)
 		}
+
 		return r
 	})
 }
 
 func (r RelationsReader) GetRelations(req *dsc.RelationIdentifier, pool graph.MessagePool[*dsc.RelationIdentifier], out *graph.Relations) error {
-	ot := model.ObjectName(req.ObjectType)
-	oid := model.ObjectID(req.ObjectId)
-	rn := model.RelationName(req.Relation)
-	st := model.ObjectName(req.SubjectType)
-	sid := model.ObjectID(req.SubjectId)
-	sr := model.RelationName(req.SubjectRelation)
+	ot := model.ObjectName(req.GetObjectType())
+	oid := model.ObjectID(req.GetObjectId())
+	rn := model.RelationName(req.GetRelation())
+	st := model.ObjectName(req.GetSubjectType())
+	sid := model.ObjectID(req.GetSubjectId())
+	sr := model.RelationName(req.GetSubjectRelation())
 
 	matches := lo.Filter(r, func(rel *relation, _ int) bool {
 		return (ot == "" || rel.ObjectType == ot) &&
@@ -114,9 +118,7 @@ func (r RelationsReader) GetRelations(req *dsc.RelationIdentifier, pool graph.Me
 			(sr == "" || rel.SubjectRelation == sr)
 	})
 
-	for _, rel := range matches {
-		*out = append(*out, rel.proto(pool))
-	}
+	*out = append(*out, lo.Map(matches, func(rel *relation, _ int) *dsc.RelationIdentifier { return rel.proto(pool) })...)
 
 	return nil
 }

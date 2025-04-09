@@ -96,11 +96,12 @@ func TestProgrammaticModel(t *testing.T) {
 
 	w, err := os.Create("./model_test.json")
 	stretch.NoError(t, err)
-	defer w.Close()
+	t.Cleanup(func() { _ = w.Close() })
 
 	enc := json.NewEncoder(w)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
+
 	if err := enc.Encode(m1); err != nil {
 		stretch.NoError(t, err)
 	}
@@ -141,15 +142,15 @@ func TestModel(t *testing.T) {
 
 	opts := jsondiff.DefaultConsoleOptions()
 	if diff, str := jsondiff.Compare(buf, b1, &opts); diff != jsondiff.FullMatch {
-		stretch.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
+		stretch.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 
 	if diff, str := jsondiff.Compare(buf, b2, &opts); diff != jsondiff.FullMatch {
-		stretch.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
+		stretch.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 
 	if diff, str := jsondiff.Compare(b1, b2, &opts); diff != jsondiff.FullMatch {
-		stretch.Equal(t, diff, jsondiff.FullMatch, "diff: %s", str)
+		stretch.Equal(t, jsondiff.FullMatch, diff, "diff: %s", str)
 	}
 }
 
@@ -283,8 +284,9 @@ func TestValidation(t *testing.T) { //nolint:funlen
 			assert.ErrorAs(err, &aerr)
 			assert.Equal("E20015", aerr.Code)
 
-			merr := aerr.Unwrap().(*multierror.Error)
-			assert.NotNil(merr)
+			var merr *multierror.Error
+
+			assert.ErrorAs(aerr.Unwrap(), &merr)
 
 			for _, expected := range test.expectedErrors {
 				assert.ErrorContains(merr, expected)
@@ -324,5 +326,4 @@ func TestResolution(t *testing.T) {
 	assert.Subset(m.Objects["group"].Permissions["delete"].SubjectTypes, []model.ObjectName{"user", "team"})
 
 	assert.Equal([]model.ObjectName{"team"}, m.Objects["group"].Permissions["purge"].SubjectTypes)
-
 }

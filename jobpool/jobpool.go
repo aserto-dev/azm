@@ -58,6 +58,7 @@ func (jp *JobPool[IN, OUT]) Produce(in IN) error {
 	}
 
 	jp.inbox <- job[IN]{jp.producedCount, in}
+
 	jp.producedCount++
 
 	return nil
@@ -67,6 +68,7 @@ func (jp *JobPool[IN, OUT]) Produce(in IN) error {
 func (jp *JobPool[IN, OUT]) Start() {
 	for range jp.consumerCount {
 		jp.wg.Add(1)
+
 		go func() {
 			defer jp.wg.Done()
 

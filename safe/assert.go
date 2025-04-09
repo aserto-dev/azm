@@ -22,21 +22,23 @@ func (i *SafeAssert) Validate(mc *cache.Cache) error {
 		return Check(m.Check).Validate(mc)
 	case *dsa3.Assert_CheckRelation:
 		c := &dsr3.CheckRequest{
-			ObjectType:  m.CheckRelation.ObjectType,
-			ObjectId:    m.CheckRelation.ObjectId,
-			Relation:    m.CheckRelation.Relation,
-			SubjectType: m.CheckRelation.SubjectType,
-			SubjectId:   m.CheckRelation.SubjectId,
+			ObjectType:  m.CheckRelation.GetObjectType(),
+			ObjectId:    m.CheckRelation.GetObjectId(),
+			Relation:    m.CheckRelation.GetRelation(),
+			SubjectType: m.CheckRelation.GetSubjectType(),
+			SubjectId:   m.CheckRelation.GetSubjectId(),
 		}
+
 		return Check(c).Validate(mc)
 	case *dsa3.Assert_CheckPermission:
 		c := &dsr3.CheckRequest{
-			ObjectType:  m.CheckPermission.ObjectType,
-			ObjectId:    m.CheckPermission.ObjectId,
-			Relation:    m.CheckPermission.Permission,
-			SubjectType: m.CheckPermission.SubjectType,
-			SubjectId:   m.CheckPermission.SubjectId,
+			ObjectType:  m.CheckPermission.GetObjectType(),
+			ObjectId:    m.CheckPermission.GetObjectId(),
+			Relation:    m.CheckPermission.GetPermission(),
+			SubjectType: m.CheckPermission.GetSubjectType(),
+			SubjectId:   m.CheckPermission.GetSubjectId(),
 		}
+
 		return Check(c).Validate(mc)
 	default:
 		return derr.ErrInvalidRequest.Msg("msg")

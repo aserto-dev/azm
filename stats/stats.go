@@ -61,23 +61,33 @@ func (s *Stats) RelationRefCount(on model.ObjectName, rn model.RelationName) int
 }
 
 func (s *Stats) RelationSubjectCount(on model.ObjectName, rn model.RelationName, sn model.ObjectName, sr model.RelationName) int32 {
-	if ot, ok := s.ObjectTypes[on]; ok {
-		if rt, ok := ot.Relations[rn]; ok {
-			if st, ok := rt.SubjectTypes[sn]; ok {
-				switch {
-				case sr != "":
-					if srt, ok := st.SubjectRelations[sr]; ok {
-						return srt.Count
-					}
-				default:
-					subjCount := int32(0)
-					for _, subj := range st.SubjectRelations {
-						subjCount += subj.Count
-					}
-					return st.Count - subjCount
-				}
-			}
+	ot, ok := s.ObjectTypes[on]
+	if !ok {
+		return 0
+	}
+
+	rt, ok := ot.Relations[rn]
+	if !ok {
+		return 0
+	}
+
+	st, ok := rt.SubjectTypes[sn]
+	if !ok {
+		return 0
+	}
+
+	switch {
+	case sr != "":
+		if srt, ok := st.SubjectRelations[sr]; ok {
+			return srt.Count
 		}
+	default:
+		subjCount := int32(0)
+		for _, subj := range st.SubjectRelations {
+			subjCount += subj.Count
+		}
+
+		return st.Count - subjCount
 	}
 
 	return 0

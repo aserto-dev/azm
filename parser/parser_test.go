@@ -5,15 +5,15 @@ import (
 
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/parser"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRelationParser(t *testing.T) {
 	for _, test := range relationTests {
 		t.Run(test.input, func(tt *testing.T) {
 			rel, err := parser.ParseRelation(test.input)
-			assert.NoError(t, err)
-			test.validate(rel, assert.New(tt))
+			require.NoError(t, err)
+			test.validate(rel, require.New(tt))
 		})
 	}
 }
@@ -22,26 +22,26 @@ func TestPermissionParser(t *testing.T) {
 	for _, test := range permissionTests {
 		t.Run(test.input, func(tt *testing.T) {
 			perm, err := parser.ParsePermission(test.input)
-			assert.NoError(t, err)
-			test.validate(perm, assert.New(tt))
+			require.NoError(t, err)
+			test.validate(perm, require.New(tt))
 		})
 	}
 }
 
 type relationTest struct {
 	input    string
-	validate func([]*model.RelationRef, *assert.Assertions)
+	validate func([]*model.RelationRef, *require.Assertions)
 }
 
 type permissionTest struct {
 	input    string
-	validate func(*model.Permission, *assert.Assertions)
+	validate func(*model.Permission, *require.Assertions)
 }
 
 var relationTests = []relationTest{
 	{
 		"user",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
@@ -51,7 +51,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"name-with-dashes",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
@@ -61,7 +61,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"group#member",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsSubject())
@@ -71,7 +71,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user:*",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsWildcard())
@@ -81,7 +81,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user | group",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 2)
 
 			assert.True(rel[0].IsDirect())
@@ -95,7 +95,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"user | group | user:* | group#member",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 4)
 
 			assert.True(rel[0].IsDirect())
@@ -116,7 +116,7 @@ var relationTests = []relationTest{
 	},
 	{
 		"IDENTITY",
-		func(rel []*model.RelationRef, assert *assert.Assertions) {
+		func(rel []*model.RelationRef, assert *require.Assertions) {
 			assert.Len(rel, 1)
 			term := rel[0]
 			assert.True(term.IsDirect())
@@ -129,7 +129,7 @@ var relationTests = []relationTest{
 var permissionTests = []permissionTest{
 	{
 		"can_write",
-		func(perm *model.Permission, assert *assert.Assertions) {
+		func(perm *model.Permission, assert *require.Assertions) {
 			assert.Equal(model.RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
 			assert.Empty(perm.Intersection)
@@ -138,7 +138,7 @@ var permissionTests = []permissionTest{
 	},
 	{
 		"can_write | parent->can_read",
-		func(perm *model.Permission, assert *assert.Assertions) {
+		func(perm *model.Permission, assert *require.Assertions) {
 			assert.Len(perm.Union, 2)
 			assert.Equal(model.RelationName("can_write"), perm.Union[0].RelOrPerm)
 			assert.Empty(perm.Union[0].Base)
@@ -148,7 +148,7 @@ var permissionTests = []permissionTest{
 	},
 	{
 		"can_write & can_read",
-		func(perm *model.Permission, assert *assert.Assertions) {
+		func(perm *model.Permission, assert *require.Assertions) {
 			assert.Len(perm.Intersection, 2)
 			assert.Equal(model.RelationName("can_write"), perm.Intersection[0].RelOrPerm)
 			assert.Empty(perm.Intersection[0].Base)
@@ -158,7 +158,7 @@ var permissionTests = []permissionTest{
 	},
 	{
 		"can_write - can_read",
-		func(perm *model.Permission, assert *assert.Assertions) {
+		func(perm *model.Permission, assert *require.Assertions) {
 			assert.Equal(model.RelationName("can_write"), perm.Exclusion.Include.RelOrPerm)
 			assert.Empty(perm.Exclusion.Include.Base)
 			assert.Equal(model.RelationName("can_read"), perm.Exclusion.Exclude.RelOrPerm)
@@ -167,7 +167,7 @@ var permissionTests = []permissionTest{
 	},
 	{
 		"parent->can_read - parent->can_write",
-		func(perm *model.Permission, assert *assert.Assertions) {
+		func(perm *model.Permission, assert *require.Assertions) {
 			assert.Equal(model.RelationName("parent"), perm.Exclusion.Include.Base)
 			assert.Equal(model.RelationName("can_read"), perm.Exclusion.Include.RelOrPerm)
 			assert.Equal(model.RelationName("parent"), perm.Exclusion.Exclude.Base)

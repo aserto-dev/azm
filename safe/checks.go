@@ -12,7 +12,7 @@ type SafeChecks struct {
 }
 
 func Checks(i *dsr3.ChecksRequest) *SafeChecks {
-	if i.Default == nil {
+	if i.GetDefault() == nil {
 		i.Default = &dsr3.CheckRequest{}
 	}
 
@@ -23,20 +23,20 @@ func Checks(i *dsr3.ChecksRequest) *SafeChecks {
 func (c *SafeChecks) CheckRequests() iter.Seq[SafeCheck] {
 	return func(yield func(SafeCheck) bool) {
 		defaults := &dsc3.RelationIdentifier{
-			ObjectType:  c.Default.ObjectType,
-			ObjectId:    c.Default.ObjectId,
-			Relation:    c.Default.Relation,
-			SubjectType: c.Default.SubjectType,
-			SubjectId:   c.Default.SubjectId,
+			ObjectType:  c.GetDefault().GetObjectType(),
+			ObjectId:    c.GetDefault().GetObjectId(),
+			Relation:    c.GetDefault().GetRelation(),
+			SubjectType: c.GetDefault().GetSubjectType(),
+			SubjectId:   c.GetDefault().GetSubjectId(),
 		}
 
 		for _, check := range c.Checks {
 			req := &dsr3.CheckRequest{
-				ObjectType:  fallback(check.ObjectType, defaults.ObjectType),
-				ObjectId:    fallback(check.ObjectId, defaults.ObjectId),
-				Relation:    fallback(check.Relation, defaults.Relation),
-				SubjectType: fallback(check.SubjectType, defaults.SubjectType),
-				SubjectId:   fallback(check.SubjectId, defaults.SubjectId),
+				ObjectType:  fallback(check.GetObjectType(), defaults.GetObjectType()),
+				ObjectId:    fallback(check.GetObjectId(), defaults.GetObjectId()),
+				Relation:    fallback(check.GetRelation(), defaults.GetRelation()),
+				SubjectType: fallback(check.GetSubjectType(), defaults.GetSubjectType()),
+				SubjectId:   fallback(check.GetSubjectId(), defaults.GetSubjectId()),
 			}
 			if !yield(SafeCheck{req}) {
 				break
@@ -50,6 +50,6 @@ func fallback[T comparable](val, fallback T) T {
 	if val == def {
 		return fallback
 	}
-	return val
 
+	return val
 }

@@ -11,7 +11,8 @@ type Pool[T any] struct {
 }
 
 func (p *Pool[T]) Get() T {
-	return p.Pool.Get().(T)
+	t, _ := p.Pool.Get().(T)
+	return t
 }
 
 func (p *Pool[T]) Put(x T) {
@@ -21,7 +22,7 @@ func (p *Pool[T]) Put(x T) {
 func NewPool[T any](newF func() T) *Pool[T] {
 	return &Pool[T]{
 		Pool: sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return newF()
 			},
 		},
@@ -37,7 +38,7 @@ func NewSlicePool[T any](capacity int) *Pool[*[]T] {
 
 type Allocator[T any] interface {
 	New() T
-	Reset(T)
+	Reset(m T)
 }
 
 type CollectionPool[T any] struct {
@@ -70,10 +71,9 @@ func (p *CollectionPool[T]) PutSlice(s *[]T) {
 	p.slicePool.Put(s)
 }
 
-// nolint: gocritic // commentedOutCode
 func (p *CollectionPool[T]) Get() T {
-	return p.msgPool.New().(T)
-	// return p.msgPool.Get()
+	t, _ := p.msgPool.New().(T)
+	return t
 }
 
 func (p *CollectionPool[T]) Put(t T) {

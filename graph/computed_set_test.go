@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
 	rq "github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -105,29 +106,7 @@ func TestComputedSetSearchSubjects(t *testing.T) {
 
 	pool := mempool.NewRelationsPool()
 	for _, test := range tests {
-		t.Run(test.search, func(tt *testing.T) {
-			require := rq.New(tt)
-			subjSearch, err := azmgraph.NewSubjectSearch(m, graphReq(test.search), csRels.GetRelations, pool)
-			require.NoError(err)
-
-			res, err := subjSearch.Search()
-			require.NoError(err)
-			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
-			tt.Logf("trace: +%v\n", res.Trace)
-
-			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
-				return object{
-					Type: model.ObjectName(s.ObjectType),
-					ID:   model.ObjectID(s.ObjectId),
-				}
-			})
-
-			for _, e := range test.expected {
-				require.Contains(subjects, e)
-			}
-
-			require.Equal(len(test.expected), len(subjects), subjects)
-		})
+		t.Run(test.search, testRunner(m, azmgraph.NewSubjectSearch, pool, &test))
 	}
 }
 
@@ -165,30 +144,45 @@ func TestComputedSetSearchObjects(t *testing.T) {
 
 	pool := mempool.NewRelationsPool()
 	for _, test := range tests {
-		t.Run(test.search, func(tt *testing.T) {
-			require := rq.New(tt)
+		t.Run(test.search, testRunner(m, azmgraph.NewObjectSearch, pool, &test))
+	}
+}
 
-			objSearch, err := azmgraph.NewObjectSearch(m, graphReq(test.search), csRels.GetRelations, pool)
-			require.NoError(err)
+type searchable interface {
+	Search() (*dsr.GetGraphResponse, error)
+}
 
-			res, err := objSearch.Search()
-			require.NoError(err)
-			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
-			tt.Logf("trace: +%v\n", res.Trace)
+type searchFactory[T searchable] func(
+	m *model.Model,
+	req *dsr.GetGraphRequest,
+	reader azmgraph.RelationReader,
+	pool *mempool.RelationsPool,
+) (T, error)
 
-			objects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
-				return object{
-					Type: model.ObjectName(s.ObjectType),
-					ID:   model.ObjectID(s.ObjectId),
-				}
-			})
+func testRunner[T searchable](m *model.Model, factory searchFactory[T], pool *mempool.RelationsPool, test *searchTest) func(*testing.T) {
+	return func(tt *testing.T) {
+		require := rq.New(tt)
 
-			for _, e := range test.expected {
-				require.Contains(objects, e)
+		search, err := factory(m, graphReq(test.search), csRels.GetRelations, pool)
+		require.NoError(err)
+
+		res, err := search.Search()
+		require.NoError(err)
+		tt.Logf("explanation: +%v\n", res.GetExplanation().AsMap())
+		tt.Logf("trace: +%v\n", res.GetTrace())
+
+		subjects := lo.Map(res.GetResults(), func(s *dsc.ObjectIdentifier, _ int) object {
+			return object{
+				Type: model.ObjectName(s.GetObjectType()),
+				ID:   model.ObjectID(s.GetObjectId()),
 			}
-
-			require.Equal(len(test.expected), len(objects), objects)
 		})
+
+		for _, e := range test.expected {
+			require.Contains(subjects, e)
+		}
+
+		require.Len(test.expected, len(subjects), subjects)
 	}
 }
 

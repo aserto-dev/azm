@@ -31,7 +31,7 @@ type (
 
 type MessagePool[T any] interface {
 	Get() T
-	Put(T)
+	Put(message T)
 }
 
 type RelationPool = MessagePool[*dsc.RelationIdentifier]
@@ -125,12 +125,12 @@ func validate(m *model.Model, params *relation) error {
 
 func searchParams(req *dsr.GetGraphRequest) *relation {
 	return &relation{
-		ot:   model.ObjectName(req.ObjectType),
-		oid:  ObjectID(req.ObjectId),
-		rel:  model.RelationName(req.Relation),
-		st:   model.ObjectName(req.SubjectType),
-		sid:  ObjectID(req.SubjectId),
-		srel: model.RelationName(req.SubjectRelation),
+		ot:   model.ObjectName(req.GetObjectType()),
+		oid:  ObjectID(req.GetObjectId()),
+		rel:  model.RelationName(req.GetRelation()),
+		st:   model.ObjectName(req.GetSubjectType()),
+		sid:  ObjectID(req.GetSubjectId()),
+		srel: model.RelationName(req.GetSubjectRelation()),
 	}
 }
 
@@ -153,10 +153,12 @@ func newSearchMemo(trace bool) *searchMemo {
 
 func (m *searchMemo) MarkVisited(params *relation) searchStatus {
 	results, ok := m.visited[*params]
+
 	switch {
 	case !ok:
 		m.visited[*params] = nil
 		m.trace(params, searchStatusPending)
+
 		return searchStatusNew
 	case results == nil:
 		return searchStatusPending
@@ -172,6 +174,7 @@ func (m *searchMemo) MarkComplete(params *relation, results searchResults) {
 
 func (m *searchMemo) Status(params *relation) searchStatus {
 	results, ok := m.visited[*params]
+
 	switch {
 	case !ok:
 		return searchStatusNew

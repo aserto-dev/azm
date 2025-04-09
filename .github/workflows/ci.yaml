@@ -8,15 +8,14 @@ on:
     # Publish `main` as Docker `latest` image.
     branches:
       - main
-      - release-*
   # Run tests for PRs
   pull_request:
 
 env:
   PRE_RELEASE: ${{ github.ref == 'refs/heads/main' && 'development' || '' }}
-  GO_VERSION: "1.23"
-  GO_LANGCI_LINT_VERSION: "v1.61.0"
-  GO_TESTSUM_VERSION: "1.11.0"
+  GO_VERSION: 1.24
+  GO_LANGCI_LINT_VERSION: v2.0.2
+  GO_TESTSUM_VERSION: 1.12.1
 
 jobs:
   test:
@@ -25,8 +24,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       -
         name: Setup Go
         uses: actions/setup-go@v5
@@ -34,7 +31,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       -
         name: Lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v7
         with:
           version: ${{ env.GO_LANGCI_LINT_VERSION }}
       -

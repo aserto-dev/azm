@@ -18,6 +18,7 @@ import (
 
 var ErrInvalidIdentifier = errors.New("invalid identifier (" + msgInvalidIdentifier + ")")
 
+//nolint:lll
 var (
 	reIdentifier         = regexp.MustCompile(`(?m)^[a-zA-Z][a-zA-Z0-9._-]{1,62}[a-zA-Z0-9]$`)
 	msgInvalidIdentifier = "must start with a letter, can contain mixed case letters, digits, dots, underscores, and dashes, and must end with a letter or digit"

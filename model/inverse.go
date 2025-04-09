@@ -17,8 +17,10 @@ const (
 func (m *Model) Invert() *Model {
 	if m.inverted == nil {
 		fmt.Fprintln(os.Stderr, "load inverted model")
+
 		m.inverted = newInverter(m).invert()
 	}
+
 	return m.inverted
 }
 
@@ -67,7 +69,7 @@ func (i *inverter) invert() *Model {
 			}
 
 			if p.Exclusion.Exclude == nil {
-				// It is possible for the 'Exclude' term to be empty in in inverted model if the object type
+				// It is possible for the 'Exclude' term to be empty in inverted model if the object type
 				// cannot have the relation/permission being excluded.
 				// In this case, the exclusion permission becomes a single-term union.
 				p.Union = PermissionTerms{p.Exclusion.Include}
@@ -85,6 +87,7 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 	for _, rr := range r.Union {
 		irn := InverseRelation(on, rn, rr.Relation)
 		i.addInvertedRelation(on, rr.Object, irn)
+
 		if rr.IsSubject() {
 			// add a synthetic permission to reverse the expansion of the subject relation
 			srel := i.m.Objects[rr.Object].Relations[rr.Relation]
@@ -94,11 +97,13 @@ func (i *inverter) invertRelation(on ObjectName, rn RelationName, r *Relation) {
 				ipn := PermForRel(ipr)
 				p := permissionOrNew(i.im.Objects[subj.Object], ipn, permissionKindUnion)
 				i.addSubstitution(ipr, ipn)
+
 				if _, ok := unionObjs[subj.Object]; ok {
 					if i.im.Objects[subj.Object].HasRelOrPerm(ipr) {
 						p.AddTerm(&PermissionTerm{RelOrPerm: ipr})
 					}
 				}
+
 				p.AddTerm(&PermissionTerm{Base: InverseRelation(rr.Object, rr.Relation, subj.Relation), RelOrPerm: irn})
 			}
 		}
@@ -123,6 +128,7 @@ func (i *inverter) applySubstitutions(o *Object) {
 			if !pt.IsArrow() && PermForRel(pt.RelOrPerm) == pn {
 				continue
 			}
+
 			pt.Base = i.sub(pt.Base)
 			pt.RelOrPerm = i.sub(pt.RelOrPerm)
 		}
@@ -141,9 +147,11 @@ func (i *inverter) invertPermission(on ObjectName, pn RelationName, o *Object, p
 			if i == 0 {
 				return s
 			}
+
 			if s.IsEmpty() {
 				return acc
 			}
+
 			return acc.Intersect(s)
 		}, nil)
 	case p.IsExclusion():
@@ -261,18 +269,20 @@ func (ti *termInverter) invertPermission() {
 		iName := InverseRelation(ti.objName, ti.permName, rr.Relation)
 		ip := permissionOrNew(ti.inv.im.Objects[rr.Object], iName, ti.kind)
 		ip.AddTerm(&PermissionTerm{RelOrPerm: ti.inv.irelSub(ti.objName, ti.term.RelOrPerm, rr.Relation)})
+
 		return false // resume iteration
 	})
 }
 
 type RelOrPerm interface {
-	TypesContain(RelationRef) bool
+	TypesContain(rel RelationRef) bool
 }
 
-func relOrPerm(o *Object, rn RelationName) RelOrPerm {
+func relOrPerm(o *Object, rn RelationName) RelOrPerm { //nolint:ireturn  // abstraction over relations and permissions
 	if o.HasRelation(rn) {
 		return o.Relations[rn]
 	}
+
 	return o.Permissions[rn]
 }
 
@@ -305,6 +315,7 @@ func permissionOrNew(o *Object, pn RelationName, kind permissionKind) *Permissio
 
 	p = &Permission{}
 	terms := PermissionTerms{}
+
 	switch kind {
 	case permissionKindUnion:
 		p.Union = terms

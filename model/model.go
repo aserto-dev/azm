@@ -36,10 +36,13 @@ func New(r io.Reader) (*Model, error) {
 	m := Model{}
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
+
 	if err := dec.Decode(&m); err != nil {
 		return nil, err
 	}
+
 	m.inverted = newInverter(&m).invert()
+
 	return &m, nil
 }
 
@@ -79,9 +82,11 @@ type (
 func (m *Model) Reader() (io.Reader, error) {
 	b := bytes.Buffer{}
 	enc := json.NewEncoder(&b)
+
 	if err := enc.Encode(m); err != nil {
 		return nil, err
 	}
+
 	return bytes.NewReader(b.Bytes()), nil
 }
 
@@ -115,6 +120,7 @@ func (m *Model) Validate(opts ...ValidationOption) error {
 	}
 
 	validator := newValidator(m, &vOpts)
+
 	return validator.validate()
 }
 

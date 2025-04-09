@@ -17,7 +17,8 @@ func (c *Cache) Check(req *dsr.CheckRequest, relReader graph.RelationReader) (*d
 	checker := graph.NewCheck(c.model.Load(), req, relReader, c.relationsPool())
 
 	ctx := pb.NewStruct()
-	reason := ""
+
+	var reason string
 
 	ok, err := checker.Check()
 	if err != nil {
@@ -43,7 +44,7 @@ func (c *Cache) GetGraph(req *dsr.GetGraphRequest, relReader graph.RelationReade
 		err    error
 	)
 
-	if req.ObjectId == "" {
+	if req.GetObjectId() == "" {
 		search, err = graph.NewObjectSearch(c.model.Load(), req, relReader, c.relationsPool())
 	} else {
 		search, err = graph.NewSubjectSearch(c.model.Load(), req, relReader, c.relationsPool())

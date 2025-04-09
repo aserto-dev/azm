@@ -62,6 +62,7 @@ func newCheckMemo(trace bool) *checkMemo {
 func (m *checkMemo) MarkVisited(params *relation) checkStatus {
 	prior := m.memo[*params]
 	current := prior
+
 	switch prior {
 	case checkStatusNew:
 		current = checkStatusPending
