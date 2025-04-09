@@ -21,23 +21,27 @@ var (
 
 func ParseRelation(input string) ([]*model.RelationRef, error) {
 	p := newParser(input)
+
 	rTree, err := p.Relation(), p.Error()
 	if err != nil {
 		return nil, err
 	}
 
 	var v RelationVisitor
+
 	return v.Visit(rTree).([]*model.RelationRef), nil
 }
 
 func ParsePermission(input string) (*model.Permission, error) {
 	p := newParser(input)
+
 	pTree, err := p.Permission(), p.Error()
 	if err != nil {
 		return nil, err
 	}
 
 	var v PermissionVisitor
+
 	return v.Visit(pTree).(*model.Permission), nil
 }
 
@@ -48,9 +52,11 @@ func newParser(input string) *parser {
 
 	p := NewAzmParser(stream)
 	p.AddErrorListener(listener)
+
 	if os.Getenv("AZM_DIAGNOSTICS") == "1" {
 		p.AddErrorListener(antlr.NewDiagnosticErrorListener(true))
 	}
+
 	return &parser{AzmParser: p, listener: listener}
 }
 
@@ -83,10 +89,11 @@ func (l *errorListener) SyntaxError(
 	if e != nil {
 		// lexer recognition error
 		matches := recognitionErrorRegexp().FindStringSubmatch(msg)
-		if len(matches) == 3 {
+		if len(matches) == recognitionRegexpMatches {
 			actual, expected := matches[1], matches[2]
 			message := fmt.Sprintf("unexpected %s in '%s'. expected %s", actual, l.input, expected)
 			l.err = multierror.Append(l.err, errors.Wrap(ErrInvalidExpression, message))
+
 			return
 		}
 	}
@@ -96,6 +103,7 @@ func (l *errorListener) SyntaxError(
 		symbol := l.input[column : column+1]
 		message := fmt.Sprintf("unexpected '%s' in '%s'", symbol, l.input)
 		l.err = multierror.Append(l.err, errors.Wrap(ErrIdentifierExpected, message))
+
 		return
 	}
 
@@ -105,3 +113,5 @@ func (l *errorListener) SyntaxError(
 var recognitionErrorRegexp = sync.OnceValue(func() *regexp.Regexp {
 	return regexp.MustCompile(`^mismatched input ('.+') expecting (.+)$`)
 })
+
+const recognitionRegexpMatches = 3

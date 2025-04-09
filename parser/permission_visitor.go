@@ -10,7 +10,7 @@ type PermissionVisitor struct {
 	BaseAzmVisitor
 }
 
-func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
+func (v *PermissionVisitor) Visit(tree antlr.ParseTree) any {
 	switch t := tree.(type) {
 	case *UnionPermContext, *IntersectionPermContext, *ExclusionPermContext:
 		return t.Accept(v)
@@ -21,7 +21,7 @@ func (v *PermissionVisitor) Visit(tree antlr.ParseTree) interface{} {
 	}
 }
 
-func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
+func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) any {
 	return &model.Permission{
 		Union: lo.Map(c.Union().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
 			if term, ok := perm.Accept(v).(*model.PermissionTerm); ok {
@@ -33,7 +33,7 @@ func (v *PermissionVisitor) VisitUnionPerm(c *UnionPermContext) interface{} {
 	}
 }
 
-func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) interface{} {
+func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) any {
 	return &model.Permission{
 		Intersection: lo.Map(c.Intersection().AllPerm(), func(perm IPermContext, _ int) *model.PermissionTerm {
 			return perm.Accept(v).(*model.PermissionTerm)
@@ -41,7 +41,7 @@ func (v *PermissionVisitor) VisitIntersectionPerm(c *IntersectionPermContext) in
 	}
 }
 
-func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interface{} {
+func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) any {
 	return &model.Permission{
 		Exclusion: &model.ExclusionPermission{
 			Include: c.Exclusion().Perm(0).Accept(v).(*model.PermissionTerm),
@@ -50,11 +50,11 @@ func (v *PermissionVisitor) VisitExclusionPerm(c *ExclusionPermContext) interfac
 	}
 }
 
-func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) interface{} {
+func (v *PermissionVisitor) VisitDirectPerm(c *DirectPermContext) any {
 	return &model.PermissionTerm{RelOrPerm: model.RelationName(c.ID().GetText())}
 }
 
-func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) interface{} {
+func (v *PermissionVisitor) VisitArrowPerm(c *ArrowPermContext) any {
 	return &model.PermissionTerm{
 		Base:      model.RelationName(c.ID(0).GetText()),
 		RelOrPerm: model.RelationName(c.ID(1).GetText()),

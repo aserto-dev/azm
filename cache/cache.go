@@ -29,6 +29,7 @@ func New(m *model.Model) *Cache {
 	}
 
 	cache.model.Store(m)
+
 	return cache
 }
 
@@ -54,6 +55,7 @@ func (c *Cache) RelationExists(on ObjectName, rn RelationName) bool {
 		_, ok := obj.Relations[rn]
 		return ok
 	}
+
 	return false
 }
 
@@ -63,6 +65,7 @@ func (c *Cache) PermissionExists(on ObjectName, pn RelationName) bool {
 		_, ok := obj.Permissions[pn]
 		return ok
 	}
+
 	return false
 }
 
@@ -72,12 +75,12 @@ func (c *Cache) Metadata() *model.Metadata {
 
 func (c *Cache) ValidateRelation(relation *dsc.RelationIdentifier) error {
 	return c.model.Load().ValidateRelation(
-		ObjectName(relation.ObjectType),
-		model.ObjectID(relation.ObjectId),
-		RelationName(relation.Relation),
-		ObjectName(relation.SubjectType),
-		model.ObjectID(relation.SubjectId),
-		RelationName(relation.SubjectRelation),
+		ObjectName(relation.GetObjectType()),
+		model.ObjectID(relation.GetObjectId()),
+		RelationName(relation.GetRelation()),
+		ObjectName(relation.GetSubjectType()),
+		model.ObjectID(relation.GetSubjectId()),
+		RelationName(relation.GetSubjectRelation()),
 	)
 }
 
@@ -116,6 +119,7 @@ func (c *Cache) AssignableRelations(on, sn ObjectName, sr ...RelationName) ([]Re
 				return true
 			}
 		}
+
 		return false
 	})
 
@@ -147,16 +151,17 @@ func (c *Cache) AvailablePermissions(on, sn ObjectName, sr ...RelationName) ([]R
 	})
 
 	return lo.Keys(matches), nil
-
 }
 
 func (c *Cache) validateTypes(on, sn ObjectName, sr ...RelationName) error {
 	if !c.ObjectExists(on) {
 		return derr.ErrObjectTypeNotFound.Msg(on.String())
 	}
+
 	if !c.ObjectExists(sn) {
 		return derr.ErrObjectTypeNotFound.Msg(sn.String())
 	}
+
 	for _, srel := range sr {
 		if !c.RelationExists(sn, srel) {
 			return derr.ErrRelationTypeNotFound.Msgf("%s#%s", sn, sr)

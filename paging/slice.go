@@ -6,8 +6,10 @@ import (
 	"github.com/samber/lo"
 )
 
-type KeyComparer[T any] func([]string, T) bool
-type KeyMapper[T any] func(T) []string
+type (
+	KeyComparer[T any] func([]string, T) bool
+	KeyMapper[T any]   func(T) []string
+)
 
 type Result[T any] struct {
 	Items     []T
@@ -25,6 +27,7 @@ func PaginateSlice[T any](
 	result := &Result[T]{}
 
 	start := 0
+
 	if token != "" {
 		cursor, err := DecodeCursor(token)
 		if err != nil {
@@ -48,12 +51,15 @@ func PaginateSlice[T any](
 	end := start + pageSize
 
 	var next *string
+
 	if end < len(s) {
 		cursor := &Cursor{Keys: mapper(s[end])}
+
 		n, err := cursor.Encode()
 		if err != nil {
 			return result, errors.Wrap(err, "failed to encode cursor")
 		}
+
 		next = &n
 	}
 

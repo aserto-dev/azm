@@ -39,16 +39,16 @@ func NewObjectSearch(m *model.Model, req *dsr.GetGraphRequest, reader RelationRe
 			m:       im,
 			params:  iParams,
 			getRels: invertedRelationReader(im, reader),
-			memo:    newSearchMemo(req.Trace),
-			explain: req.Explain,
+			memo:    newSearchMemo(req.GetTrace()),
+			explain: req.GetExplain(),
 			pool:    pool,
 		}},
 		wildcardSearch: &SubjectSearch{graphSearch{
 			m:       im,
 			params:  wildcardParams(iParams),
 			getRels: invertedRelationReader(im, reader),
-			memo:    newSearchMemo(req.Trace),
-			explain: req.Explain,
+			memo:    newSearchMemo(req.GetTrace()),
+			explain: req.GetExplain(),
 			pool:    pool,
 		}},
 	}, nil
@@ -96,24 +96,34 @@ func (s *ObjectSearch) Search() (*dsr.GetGraphResponse, error) {
 }
 
 func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation {
-	rel := model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation), model.RelationName(req.SubjectRelation))
+	rel := model.InverseRelation(
+		model.ObjectName(req.GetObjectType()),
+		model.RelationName(req.GetRelation()),
+		model.RelationName(req.GetSubjectRelation()),
+	)
 	relPerm := model.PermForRel(rel)
-	if im.Objects[model.ObjectName(req.SubjectType)].HasPermission(relPerm) {
+
+	if im.Objects[model.ObjectName(req.GetSubjectType())].HasPermission(relPerm) {
 		rel = relPerm
-	} else if req.SubjectRelation != "" {
-		rel = model.InverseRelation(model.ObjectName(req.ObjectType), model.RelationName(req.Relation), model.RelationName(req.SubjectRelation))
+	} else if req.GetSubjectRelation() != "" {
+		rel = model.InverseRelation(
+			model.ObjectName(req.GetObjectType()),
+			model.RelationName(req.GetRelation()),
+			model.RelationName(req.GetSubjectRelation()),
+		)
 	}
 
 	iReq := &relation{
-		ot:  model.ObjectName(req.SubjectType),
-		oid: ObjectID(req.SubjectId),
+		ot:  model.ObjectName(req.GetSubjectType()),
+		oid: ObjectID(req.GetSubjectId()),
 		rel: rel,
-		st:  model.ObjectName(req.ObjectType),
-		sid: ObjectID(req.ObjectId),
+		st:  model.ObjectName(req.GetObjectType()),
+		sid: ObjectID(req.GetObjectId()),
 	}
 
 	o := im.Objects[iReq.ot]
 	srPerm := model.GeneratedPermissionPrefix + iReq.rel
+
 	if o.HasRelation(iReq.rel) && o.HasPermission(srPerm) {
 		iReq.rel = srPerm
 	}
@@ -124,6 +134,7 @@ func invertGetGraphRequest(im *model.Model, req *dsr.GetGraphRequest) *relation 
 func wildcardParams(params *relation) *relation {
 	wildcard := *params
 	wildcard.oid = model.WildcardSymbol
+
 	return &wildcard
 }
 
@@ -137,11 +148,11 @@ func invertedRelationReader(m *model.Model, reader RelationReader) RelationReade
 		res := *out
 		for i, r := range res {
 			res[i] = &dsc.RelationIdentifier{
-				ObjectType:  r.SubjectType,
-				ObjectId:    r.SubjectId,
-				Relation:    r.Relation,
-				SubjectType: r.ObjectType,
-				SubjectId:   r.ObjectId,
+				ObjectType:  r.GetSubjectType(),
+				ObjectId:    r.GetSubjectId(),
+				Relation:    r.GetRelation(),
+				SubjectType: r.GetObjectType(),
+				SubjectId:   r.GetObjectId(),
 			}
 		}
 
@@ -150,18 +161,15 @@ func invertedRelationReader(m *model.Model, reader RelationReader) RelationReade
 }
 
 func uninvertRelation(m *model.Model, r *relation) *relation {
-	objSplit := strings.SplitN(r.rel.String(), model.ObjectNameSeparator, 2)
-	obj := model.ObjectName(objSplit[0])
+	obj, objRel, _ := strings.Cut(r.rel.String(), model.ObjectNameSeparator)
 
-	relSplit := strings.SplitN(objSplit[1], model.SubjectRelationSeparator, 2)
-	rel := relSplit[0]
-	srel := ""
-	if len(relSplit) > 1 && relSplit[1] != model.WildcardSymbol {
-		srel = relSplit[1]
+	rel, srel, found := strings.Cut(objRel, model.SubjectRelationSeparator)
+	if found && srel == model.WildcardSymbol {
+		srel = ""
 	}
 
 	perm := model.PermForRel(model.RelationName(rel))
-	if m.Objects[obj].HasPermission(perm) {
+	if m.Objects[model.ObjectName(obj)].HasPermission(perm) {
 		rel = perm.String()
 	}
 

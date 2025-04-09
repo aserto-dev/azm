@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
@@ -25,9 +26,10 @@ func Load(r io.Reader) (*model.Model, error) {
 
 	manifest := Manifest{}
 	if err := dec.Decode(&manifest); err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return &m, nil
 		}
+
 		return nil, err
 	}
 
@@ -68,12 +70,12 @@ func Load(r io.Reader) (*model.Model, error) {
 }
 
 func LoadFile(path string) (*model.Model, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec  // this is intended to parse a model from a user-provided path.
 	if err != nil {
 		return nil, err
 	}
 
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return Load(f)
 }

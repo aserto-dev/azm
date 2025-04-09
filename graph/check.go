@@ -25,14 +25,14 @@ func NewCheck(m *model.Model, req *dsr.CheckRequest, reader RelationReader, pool
 	return &Checker{
 		m: m,
 		params: &relation{
-			ot:  model.ObjectName(req.ObjectType),
-			oid: ObjectID(req.ObjectId),
-			rel: model.RelationName(req.Relation),
-			st:  model.ObjectName(req.SubjectType),
-			sid: ObjectID(req.SubjectId),
+			ot:  model.ObjectName(req.GetObjectType()),
+			oid: ObjectID(req.GetObjectId()),
+			rel: model.RelationName(req.GetRelation()),
+			st:  model.ObjectName(req.GetSubjectType()),
+			sid: ObjectID(req.GetSubjectId()),
 		},
 		getRels: reader,
-		memo:    newCheckMemo(req.Trace),
+		memo:    newCheckMemo(req.GetTrace()),
 		pool:    pool,
 	}
 }
@@ -65,6 +65,7 @@ func (c *Checker) Reason() string {
 	}
 
 	cycles := fmt.Sprintf("%v", c.memo.cycles)
+
 	return "cycles detected: " + cycles
 }
 
@@ -77,8 +78,7 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 	case checkStatusTrue, checkStatusFalse:
 		// We already checked this relation.
 		return prior, nil
-	case checkStatusNew:
-		// this is the first time we're running this check.
+	case checkStatusNew: // this is the first time we're running this check.
 	}
 
 	o := c.m.Objects[params.ot]
@@ -87,6 +87,7 @@ func (c *Checker) check(params *relation) (checkStatus, error) {
 		result checkStatus
 		err    error
 	)
+
 	if o.HasRelation(params.rel) {
 		result, err = c.checkRelation(params)
 	} else {
@@ -138,7 +139,6 @@ func (c *Checker) checkRelation(params *relation) (checkStatus, error) {
 		if status, err := c.checkRelationStep(params, step, *relsPtr); err != nil || status == checkStatusTrue {
 			return status, err
 		}
-
 	}
 
 	return checkStatusFalse, nil
@@ -163,7 +163,7 @@ func (c *Checker) checkRelationStep(params *relation, step *model.RelationRef, r
 		for _, rel := range rels {
 			check := &relation{
 				ot:   step.Object,
-				oid:  ObjectID(rel.SubjectId),
+				oid:  ObjectID(rel.GetSubjectId()),
 				rel:  step.Relation,
 				st:   params.st,
 				sid:  params.sid,
@@ -179,14 +179,14 @@ func (c *Checker) checkRelationStep(params *relation, step *model.RelationRef, r
 }
 
 func (c *Checker) checkDirectRelation(params *relation, rel *dsc.RelationIdentifier) (checkStatus, error) {
-	if params.tail == "" && rel.SubjectId == params.sid.String() {
+	if params.tail == "" && rel.GetSubjectId() == params.sid.String() {
 		return checkStatusTrue, nil
 	}
 
 	if params.tail != "" {
 		check := &relation{
-			ot:  model.ObjectName(rel.SubjectType),
-			oid: ObjectID(rel.SubjectId),
+			ot:  model.ObjectName(rel.GetSubjectType()),
+			oid: ObjectID(rel.GetSubjectId()),
 			rel: params.tail,
 			st:  params.st,
 			sid: params.sid,
@@ -211,12 +211,14 @@ func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 
 	terms := p.Terms()
 	termChecks := make([]relations, 0, len(terms))
+
 	for _, pt := range terms {
 		// expand arrow operators.
 		expanded, err := c.expandTerm(pt, params)
 		if err != nil {
 			return checkStatusFalse, err
 		}
+
 		termChecks = append(termChecks, expanded)
 	}
 
@@ -227,6 +229,7 @@ func (c *Checker) checkPermission(params *relation) (checkStatus, error) {
 		return c.checkAll(termChecks)
 	case p.IsExclusion():
 		include, err := c.checkAny(termChecks[:1])
+
 		switch {
 		case err != nil:
 			return checkStatusFalse, err
@@ -263,13 +266,13 @@ func (c *Checker) expandTerm(pt *model.PermissionTerm, params *relation) (relati
 
 		expanded := lo.Map(*relsPtr, func(rel *dsc.RelationIdentifier, _ int) *relation {
 			return &relation{
-				ot:  model.ObjectName(rel.SubjectType),
-				oid: ObjectID(rel.SubjectId),
-				rel: lo.Ternary(rel.SubjectRelation == "", pt.RelOrPerm, model.RelationName(rel.SubjectRelation)),
+				ot:  model.ObjectName(rel.GetSubjectType()),
+				oid: ObjectID(rel.GetSubjectId()),
+				rel: lo.Ternary(rel.GetSubjectRelation() == "", pt.RelOrPerm, model.RelationName(rel.GetSubjectRelation())),
 				st:  params.st,
 				sid: params.sid,
 
-				tail: lo.Ternary(rel.SubjectRelation == "", "", pt.RelOrPerm),
+				tail: lo.Ternary(rel.GetSubjectRelation() == "", "", pt.RelOrPerm),
 			}
 		})
 

@@ -1,6 +1,7 @@
 package safe
 
 import (
+	"hash"
 	"hash/fnv"
 	"strconv"
 
@@ -36,12 +37,12 @@ func GetRelation(i *dsr3.GetRelationRequest) *SafeRelations {
 	return &SafeRelations{
 		&SafeRelation{
 			RelationIdentifier: &dsc3.RelationIdentifier{
-				ObjectType:      i.ObjectType,
-				ObjectId:        i.ObjectId,
-				Relation:        i.Relation,
-				SubjectType:     i.SubjectType,
-				SubjectId:       i.SubjectId,
-				SubjectRelation: i.SubjectRelation,
+				ObjectType:      i.GetObjectType(),
+				ObjectId:        i.GetObjectId(),
+				Relation:        i.GetRelation(),
+				SubjectType:     i.GetSubjectType(),
+				SubjectId:       i.GetSubjectId(),
+				SubjectRelation: i.GetSubjectRelation(),
 			},
 			HasSubjectRelation: true,
 		},
@@ -52,14 +53,14 @@ func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
 	return &SafeRelations{
 		&SafeRelation{
 			RelationIdentifier: &dsc3.RelationIdentifier{
-				ObjectType:      i.ObjectType,
-				ObjectId:        i.ObjectId,
-				Relation:        i.Relation,
-				SubjectType:     i.SubjectType,
-				SubjectId:       i.SubjectId,
-				SubjectRelation: i.SubjectRelation,
+				ObjectType:      i.GetObjectType(),
+				ObjectId:        i.GetObjectId(),
+				Relation:        i.GetRelation(),
+				SubjectType:     i.GetSubjectType(),
+				SubjectId:       i.GetSubjectId(),
+				SubjectRelation: i.GetSubjectRelation(),
 			},
-			HasSubjectRelation: i.SubjectRelation != "" || i.WithEmptySubjectRelation,
+			HasSubjectRelation: i.GetSubjectRelation() != "" || i.GetWithEmptySubjectRelation(),
 		},
 	}
 }
@@ -125,24 +126,40 @@ func (i *SafeRelations) Validate(mc *cache.Cache) error {
 		return err
 	}
 
-	if IsSet(i.GetRelation()) {
-		if IsNotSet(i.GetObjectType()) {
-			return derr.ErrInvalidRelation.Msg("object type not set")
-		}
-
-		if mc != nil && !mc.RelationExists(model.ObjectName(i.GetObjectType()), model.RelationName(i.GetRelation())) {
-			return derr.ErrRelationTypeNotFound.Msg(i.GetObjectType() + ":" + i.GetRelation())
-		}
+	if err := i.validateRelation(mc); err != nil {
+		return err
 	}
 
-	if IsSet(i.GetSubjectRelation()) {
-		if IsNotSet(i.GetSubjectType()) {
-			return derr.ErrInvalidRelation.Msg("subject type not set")
-		}
+	return i.validateSubjectRelation(mc)
+}
 
-		if mc != nil && !mc.RelationExists(model.ObjectName(i.GetSubjectType()), model.RelationName(i.GetSubjectRelation())) {
-			return derr.ErrRelationTypeNotFound.Msg(i.GetSubjectType() + ":" + i.GetSubjectRelation())
-		}
+func (i *SafeRelation) validateRelation(mc *cache.Cache) error {
+	if !IsSet(i.GetRelation()) {
+		return nil
+	}
+
+	if IsNotSet(i.GetObjectType()) {
+		return derr.ErrInvalidRelation.Msg("object type not set")
+	}
+
+	return i.relationExists(i.GetObjectType(), i.GetRelation(), mc)
+}
+
+func (i *SafeRelation) validateSubjectRelation(mc *cache.Cache) error {
+	if !IsSet(i.GetSubjectRelation()) {
+		return nil
+	}
+
+	if IsNotSet(i.GetSubjectType()) {
+		return derr.ErrInvalidRelation.Msg("subject type not set")
+	}
+
+	return i.relationExists(i.GetSubjectType(), i.GetSubjectRelation(), mc)
+}
+
+func (i *SafeRelation) relationExists(objType, relation string, mc *cache.Cache) error {
+	if mc != nil && !mc.RelationExists(model.ObjectName(objType), model.RelationName(relation)) {
+		return derr.ErrRelationTypeNotFound.Msg(objType + ":" + relation)
 	}
 
 	return nil
@@ -152,28 +169,43 @@ func (i *SafeRelation) Hash() string {
 	h := fnv.New64a()
 	h.Reset()
 
-	if i != nil && i.RelationIdentifier != nil {
-		if _, err := h.Write([]byte(i.GetObjectId())); err != nil {
-			return DefaultHash
-		}
-		if _, err := h.Write([]byte(i.GetObjectType())); err != nil {
-			return DefaultHash
-		}
-		if _, err := h.Write([]byte(i.GetRelation())); err != nil {
-			return DefaultHash
-		}
-		if _, err := h.Write([]byte(i.GetSubjectId())); err != nil {
-			return DefaultHash
-		}
-		if _, err := h.Write([]byte(i.GetSubjectType())); err != nil {
-			return DefaultHash
-		}
-		if _, err := h.Write([]byte(i.GetSubjectRelation())); err != nil {
-			return DefaultHash
-		}
+	if err := i.writeHash(h); err != nil {
+		return DefaultHash
 	}
 
 	return strconv.FormatUint(h.Sum64(), 10)
+}
+
+func (i *SafeRelation) writeHash(h hash.Hash64) error {
+	if i == nil || i.RelationIdentifier == nil {
+		return nil
+	}
+
+	if _, err := h.Write([]byte(i.GetObjectId())); err != nil {
+		return err
+	}
+
+	if _, err := h.Write([]byte(i.GetObjectType())); err != nil {
+		return err
+	}
+
+	if _, err := h.Write([]byte(i.GetRelation())); err != nil {
+		return err
+	}
+
+	if _, err := h.Write([]byte(i.GetSubjectId())); err != nil {
+		return err
+	}
+
+	if _, err := h.Write([]byte(i.GetSubjectType())); err != nil {
+		return err
+	}
+
+	if _, err := h.Write([]byte(i.GetSubjectRelation())); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type RelationScope int
@@ -201,6 +233,10 @@ func (r *SafeRelationIdentifier) Validate(scope RelationScope, mc *cache.Cache) 
 		return nil
 	}
 
+	return r.validateExistence(scope, mc)
+}
+
+func (r *SafeRelationIdentifier) validateExistence(scope RelationScope, mc *cache.Cache) error {
 	switch scope {
 	case AsRelation:
 		if !mc.RelationExists(r.Object, r.Relation) {

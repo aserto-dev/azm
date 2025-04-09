@@ -9,7 +9,7 @@ import (
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/samber/lo"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/require"
 )
 
 func TestSearchSubjects(t *testing.T) {
@@ -30,13 +30,13 @@ func TestSearchSubjects(t *testing.T) {
 
 			res, err := subjSearch.Search()
 			assert.NoError(err)
-			tt.Logf("explanation: +%v\n", res.Explanation)
-			tt.Logf("trace: +%v\n", res.Trace)
+			tt.Logf("explanation: +%v\n", res.GetExplanation())
+			tt.Logf("trace: +%v\n", res.GetTrace())
 
-			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
+			subjects := lo.Map(res.GetResults(), func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
-					Type: model.ObjectName(s.ObjectType),
-					ID:   model.ObjectID(s.ObjectId),
+					Type: model.ObjectName(s.GetObjectType()),
+					ID:   model.ObjectID(s.GetObjectId()),
 				}
 			})
 
@@ -44,7 +44,7 @@ func TestSearchSubjects(t *testing.T) {
 				assert.Contains(subjects, e)
 			}
 
-			assert.Equal(len(test.expected), len(subjects), subjects)
+			assert.Len(test.expected, len(subjects), subjects)
 		})
 	}
 }
@@ -76,10 +76,20 @@ var searchSubjectsTests = []searchTest{
 	{"doc:doc1#can_change_owner@user:?", []object{{"user", "d1_owner"}, {"user", "f1_owner"}}},
 	{"doc:doc1#can_write@user:?", []object{{"user", "d1_owner"}, {"user", "f1_owner"}}},
 	{"doc:doc1#can_read@user:?", []object{
-		{"user", "d1_owner"}, {"user", "f1_owner"}, {"user", "f1_viewer"},
-		{"user", "user1"}, {"user", "user2"}, {"user", "user3"}, {"user", "user4"},
+		{"user", "d1_owner"},
+		{"user", "f1_owner"},
+		{"user", "f1_viewer"},
+		{"user", "user1"},
+		{"user", "user2"},
+		{"user", "user3"},
+		{"user", "user4"},
 	}},
-	{"doc:doc1#can_read@group:?#member", []object{{"group", "f1_viewers"}, {"group", "f1_subviewers"}, {"group", "d1_viewers"}, {"group", "d1_subviewers"}}},
+	{"doc:doc1#can_read@group:?#member", []object{
+		{"group", "f1_viewers"},
+		{"group", "f1_subviewers"},
+		{"group", "d1_viewers"},
+		{"group", "d1_subviewers"},
+	}},
 	{"doc:doc1#can_share@user:?", []object{{"user", "f1_owner"}}},
 	{"doc:doc1#can_invite@user:?", []object{{"user", "f1_viewer"}}},
 	{"doc:doc1#can_invite@group:?#member", []object{{"group", "f1_viewers"}, {"group", "f1_subviewers"}}},

@@ -22,6 +22,7 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 	}
 
 	var errs error
+
 	for on, rd := range d {
 		if len(rd) == 0 && stats.ObjectRefCount(on) > 0 {
 			// The object has been removed but there are still instances or relations.
@@ -42,6 +43,7 @@ func CanUpdateModel(cur, next *model.Model, stats *Stats) error {
 					sn += ":*"
 					sr = ""
 				}
+
 				if stats.RelationSubjectCount(on, rn, sn, sr) > 0 {
 					// The relation hasn't been removed, but some of its subjects have.
 					errs = multierror.Append(errs, derr.ErrRelationTypeInUse.Msgf("%s#%s@%s", on, rn, &ref))

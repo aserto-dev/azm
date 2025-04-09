@@ -24,6 +24,7 @@ func TestManifestUnmarshal(t *testing.T) {
 
 	enc := yaml.NewEncoder(os.Stderr)
 	enc.SetIndent(2)
+
 	if err := enc.Encode(&manifest); err != nil {
 		require.NoError(t, err)
 	}
@@ -62,7 +63,6 @@ func TestLoadEmptyManifest(t *testing.T) {
 	b1, err := json.Marshal(m1)
 	require.NoError(t, err)
 	require.NotNil(t, b1)
-
 }
 
 func TestLoadManifestWithNullObject(t *testing.T) {
@@ -70,7 +70,7 @@ func TestLoadManifestWithNullObject(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, m1)
 
-	require.Equal(t, len(m1.Objects), 2)
-	require.Equal(t, len(m1.Objects["user"].Permissions), 0)
-	require.Equal(t, len(m1.Objects["user"].Relations), 0)
+	require.Len(t, m1.Objects, 2)
+	require.Empty(t, m1.Objects["user"].Permissions)
+	require.Empty(t, m1.Objects["user"].Relations)
 }

@@ -10,7 +10,6 @@ import (
 	v3 "github.com/aserto-dev/azm/v3"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/samber/lo"
-	"github.com/stretchr/testify/assert"
 	req "github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -40,20 +39,20 @@ func TestSearchObjects(t *testing.T) {
 
 	for _, test := range searchObjectsTests {
 		t.Run(test.search, func(tt *testing.T) {
-			assert := assert.New(tt)
+			assert := req.New(tt)
 
 			objSearch, err := graph.NewObjectSearch(m, graphReq(test.search), rels.GetRelations, pool)
 			assert.NoError(err)
 
 			res, err := objSearch.Search()
 			assert.NoError(err)
-			tt.Logf("explanation: +%v\n", res.Explanation.AsMap())
-			tt.Logf("trace: +%v\n", res.Trace)
+			tt.Logf("explanation: +%v\n", res.GetExplanation().AsMap())
+			tt.Logf("trace: +%v\n", res.GetTrace())
 
-			subjects := lo.Map(res.Results, func(s *dsc.ObjectIdentifier, _ int) object {
+			subjects := lo.Map(res.GetResults(), func(s *dsc.ObjectIdentifier, _ int) object {
 				return object{
-					Type: model.ObjectName(s.ObjectType),
-					ID:   model.ObjectID(s.ObjectId),
+					Type: model.ObjectName(s.GetObjectType()),
+					ID:   model.ObjectID(s.GetObjectId()),
 				}
 			})
 
@@ -61,7 +60,7 @@ func TestSearchObjects(t *testing.T) {
 				assert.Contains(subjects, e)
 			}
 
-			assert.Equal(len(test.expected), len(subjects), subjects)
+			assert.Len(test.expected, len(subjects), subjects)
 		})
 	}
 }

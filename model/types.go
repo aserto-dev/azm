@@ -7,8 +7,10 @@ import (
 	"github.com/samber/lo"
 )
 
-type ObjectName string
-type RelationName string
+type (
+	ObjectName   string
+	RelationName string
+)
 
 func (on ObjectName) String() string {
 	return string(on)
@@ -18,8 +20,10 @@ func (rn RelationName) String() string {
 	return string(rn)
 }
 
-type Relations map[RelationName]*Relation
-type Permissions map[RelationName]*Permission
+type (
+	Relations   map[RelationName]*Relation
+	Permissions map[RelationName]*Permission
+)
 
 type Object struct {
 	Relations   Relations   `json:"relations,omitempty"`
@@ -45,6 +49,7 @@ func (o *Object) HasPermission(name RelationName) bool {
 	if o == nil {
 		return false
 	}
+
 	return o.Permissions[name] != nil
 }
 
@@ -241,10 +246,13 @@ func (pr *PermissionTerm) String() string {
 	if pr == nil {
 		return "<nil>"
 	}
+
 	s := string(pr.RelOrPerm)
+
 	if pr.Base != "" {
 		s = string(pr.Base) + ArrowSymbol + s
 	}
+
 	return s
 }
 
@@ -267,6 +275,7 @@ func (pts PermissionTerms) Contains(pt *PermissionTerm) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
