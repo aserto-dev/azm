@@ -96,29 +96,29 @@ func (i *SafeObjectIdentifier) Validate(mc *cache.Cache) *cerr.AsertoError {
 	}
 
 	// #1 check is type field is set.
-	if IsNotSet(i.GetObjectType()) {
+	if IsNotSet(i.GetType()) {
 		return derr.ErrInvalidObjectIdentifier.Msg(objectIdentifierType)
 	}
 
 	// #2 check if id field is set.
-	if IsNotSet(i.GetObjectId()) {
+	if IsNotSet(i.GetId()) {
 		return derr.ErrInvalidObjectIdentifier.Msg(objectIdentifierID)
 	}
 
 	// #3 check if type exists.
-	if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectType)) {
-		return derr.ErrObjectTypeNotFound.Msg(i.ObjectType)
+	if mc != nil && !mc.ObjectExists(model.ObjectName(i.Type)) {
+		return derr.ErrObjectTypeNotFound.Msg(i.Type)
 	}
 
 	return nil
 }
 
 func (i *SafeObjectIdentifier) Equal(n *dsc3.ObjectIdentifier) bool {
-	return strings.EqualFold(i.GetObjectId(), n.GetObjectId()) && strings.EqualFold(i.GetObjectType(), n.GetObjectType())
+	return strings.EqualFold(i.GetId(), n.GetId()) && strings.EqualFold(i.GetType(), n.GetType())
 }
 
 func (i *SafeObjectIdentifier) IsComplete() bool {
-	return i != nil && i.GetObjectType() != "" && i.GetObjectId() != ""
+	return i != nil && i.GetType() != "" && i.GetId() != ""
 }
 
 type SafeObjectSelector struct {
@@ -139,12 +139,12 @@ func (i *SafeObjectSelector) Validate(mc *cache.Cache) error {
 	}
 
 	switch {
-	case IsSet(i.GetObjectType()):
+	case IsSet(i.GetType()):
 		// check if type exists.
-		if mc != nil && !mc.ObjectExists(model.ObjectName(i.ObjectType)) {
-			return derr.ErrObjectTypeNotFound.Msg(i.ObjectType)
+		if mc != nil && !mc.ObjectExists(model.ObjectName(i.Type)) {
+			return derr.ErrObjectTypeNotFound.Msg(i.Type)
 		}
-	case IsSet(i.GetObjectId()):
+	case IsSet(i.GetId()):
 		// can't have id without type.
 		return derr.ErrInvalidObjectSelector.Msg(objectIdentifierType)
 	}
@@ -153,5 +153,5 @@ func (i *SafeObjectSelector) Validate(mc *cache.Cache) error {
 }
 
 func (i *SafeObjectSelector) IsComplete() bool {
-	return IsSet(i.GetObjectType()) && IsSet(i.GetObjectId())
+	return IsSet(i.GetType()) && IsSet(i.GetId())
 }

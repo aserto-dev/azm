@@ -43,8 +43,8 @@ type RelationReader func(*dsc.RelationIdentifier, RelationPool, *Relations) erro
 func (r searchResults) Objects() []*dsc.ObjectIdentifier {
 	return lo.MapToSlice(r, func(o object, _ []searchPath) *dsc.ObjectIdentifier {
 		return &dsc.ObjectIdentifier{
-			ObjectType: o.Type.String(),
-			ObjectId:   o.ID.String(),
+			Type: o.Type.String(),
+			Id:   o.ID.String(),
 		}
 	})
 }
@@ -53,8 +53,8 @@ func (r searchResults) Objects() []*dsc.ObjectIdentifier {
 func (r searchResults) Subjects() []*dsc.ObjectIdentifier {
 	return lo.MapToSlice(r, func(o object, _ []searchPath) *dsc.ObjectIdentifier {
 		return &dsc.ObjectIdentifier{
-			ObjectType: o.Type.String(),
-			ObjectId:   o.ID.String(),
+			Type: o.Type.String(),
+			Id:   o.ID.String(),
 		}
 	})
 }

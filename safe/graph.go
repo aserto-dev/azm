@@ -18,15 +18,15 @@ func GetGraph(i *dsr3.GetGraphRequest) *SafeGetGraph {
 
 func (i *SafeGetGraph) Object() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.ObjectType,
-		ObjectId:   i.ObjectId,
+		Type: i.ObjectType,
+		Id:   i.ObjectId,
 	}
 }
 
 func (i *SafeGetGraph) Subject() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.SubjectType,
-		ObjectId:   i.SubjectId,
+		Type: i.SubjectType,
+		Id:   i.SubjectId,
 	}
 }
 

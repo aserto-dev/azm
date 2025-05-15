@@ -173,8 +173,8 @@ func testRunner[T searchable](m *model.Model, factory searchFactory[T], pool *me
 
 		subjects := lo.Map(res.GetResults(), func(s *dsc.ObjectIdentifier, _ int) object {
 			return object{
-				Type: model.ObjectName(s.GetObjectType()),
-				ID:   model.ObjectID(s.GetObjectId()),
+				Type: model.ObjectName(s.GetType()),
+				ID:   model.ObjectID(s.GetId()),
 			}
 		})
 

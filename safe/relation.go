@@ -67,15 +67,15 @@ func GetRelations(i *dsr3.GetRelationsRequest) *SafeRelations {
 
 func (i *SafeRelation) Object() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.GetObjectType(),
-		ObjectId:   i.GetObjectId(),
+		Type: i.GetObjectType(),
+		Id:   i.GetObjectId(),
 	}
 }
 
 func (i *SafeRelation) Subject() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.GetSubjectType(),
-		ObjectId:   i.GetSubjectId(),
+		Type: i.GetSubjectType(),
+		Id:   i.GetSubjectId(),
 	}
 }
 

@@ -19,15 +19,15 @@ func Check(i *dsr3.CheckRequest) *SafeCheck {
 
 func (i *SafeCheck) Object() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.ObjectType,
-		ObjectId:   i.ObjectId,
+		Type: i.ObjectType,
+		Id:   i.ObjectId,
 	}
 }
 
 func (i *SafeCheck) Subject() *dsc3.ObjectIdentifier {
 	return &dsc3.ObjectIdentifier{
-		ObjectType: i.SubjectType,
-		ObjectId:   i.SubjectId,
+		Type: i.SubjectType,
+		Id:   i.SubjectId,
 	}
 }
 
