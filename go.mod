@@ -7,7 +7,7 @@ toolchain go1.24.3
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.17
-	github.com/aserto-dev/go-directory v0.33.11-0.20250514214727-69592be18e5d
+	github.com/aserto-dev/go-directory v0.33.11-0.20250519164731-cb08a67e9ca8
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
@@ -33,6 +33,6 @@ require (
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250512202823-5a2f75b736a9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250519155744-55703ea1f237 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250519155744-55703ea1f237 // indirect
 )
