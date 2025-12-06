@@ -136,6 +136,7 @@ func searchParams(req *dsr.GetGraphRequest) *relation {
 
 type searchCall struct {
 	*relation
+
 	status searchStatus
 }
 

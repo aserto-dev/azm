@@ -41,6 +41,7 @@ func (s checkStatus) String() string {
 
 type checkCall struct {
 	*relation
+
 	status checkStatus
 }
 

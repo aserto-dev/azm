@@ -15,6 +15,7 @@ import (
 // SafeRelation identifier.
 type SafeRelation struct {
 	*dsc3.RelationIdentifier
+
 	HasSubjectRelation bool
 }
 
@@ -28,7 +29,7 @@ func RelationIdentifier(i *model.RelationRef) *SafeRelationIdentifier {
 	return &SafeRelationIdentifier{i}
 }
 
-// Relation selector.
+// SafeRelations selector.
 type SafeRelations struct {
 	*SafeRelation
 }
@@ -133,38 +134,6 @@ func (i *SafeRelations) Validate(mc *cache.Cache) error {
 	return i.validateSubjectRelation(mc)
 }
 
-func (i *SafeRelation) validateRelation(mc *cache.Cache) error {
-	if !IsSet(i.GetRelation()) {
-		return nil
-	}
-
-	if IsNotSet(i.GetObjectType()) {
-		return derr.ErrInvalidRelation.Msg("object type not set")
-	}
-
-	return i.relationExists(i.GetObjectType(), i.GetRelation(), mc)
-}
-
-func (i *SafeRelation) validateSubjectRelation(mc *cache.Cache) error {
-	if !IsSet(i.GetSubjectRelation()) {
-		return nil
-	}
-
-	if IsNotSet(i.GetSubjectType()) {
-		return derr.ErrInvalidRelation.Msg("subject type not set")
-	}
-
-	return i.relationExists(i.GetSubjectType(), i.GetSubjectRelation(), mc)
-}
-
-func (i *SafeRelation) relationExists(objType, relation string, mc *cache.Cache) error {
-	if mc != nil && !mc.RelationExists(model.ObjectName(objType), model.RelationName(relation)) {
-		return derr.ErrRelationTypeNotFound.Msg(objType + ":" + relation)
-	}
-
-	return nil
-}
-
 func (i *SafeRelation) Hash() string {
 	h := fnv.New64a()
 	h.Reset()
@@ -174,6 +143,14 @@ func (i *SafeRelation) Hash() string {
 	}
 
 	return strconv.FormatUint(h.Sum64(), 10)
+}
+
+func (i *SafeRelation) relationExists(objType, relation string, mc *cache.Cache) error {
+	if mc != nil && !mc.RelationExists(model.ObjectName(objType), model.RelationName(relation)) {
+		return derr.ErrRelationTypeNotFound.Msg(objType + ":" + relation)
+	}
+
+	return nil
 }
 
 func (i *SafeRelation) writeHash(h hash.Hash64) error {
@@ -206,6 +183,30 @@ func (i *SafeRelation) writeHash(h hash.Hash64) error {
 	}
 
 	return nil
+}
+
+func (i *SafeRelation) validateRelation(mc *cache.Cache) error {
+	if !IsSet(i.GetRelation()) {
+		return nil
+	}
+
+	if IsNotSet(i.GetObjectType()) {
+		return derr.ErrInvalidRelation.Msg("object type not set")
+	}
+
+	return i.relationExists(i.GetObjectType(), i.GetRelation(), mc)
+}
+
+func (i *SafeRelation) validateSubjectRelation(mc *cache.Cache) error {
+	if !IsSet(i.GetSubjectRelation()) {
+		return nil
+	}
+
+	if IsNotSet(i.GetSubjectType()) {
+		return derr.ErrInvalidRelation.Msg("subject type not set")
+	}
+
+	return i.relationExists(i.GetSubjectType(), i.GetSubjectRelation(), mc)
 }
 
 type RelationScope int

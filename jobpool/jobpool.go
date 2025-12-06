@@ -46,7 +46,7 @@ func NewJobPool[IN any, OUT any](jobCount, maxConsumers int, consumer Consumer[I
 	}
 }
 
-// Produces adds a job the to pool.
+// Produce adds a job the to pool.
 //
 // Returns ErrJobPool if the pool was created with a non-zero jobCount
 // and all jobs have already been produced.
