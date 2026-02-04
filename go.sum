@@ -2,8 +2,8 @@ github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYW
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/aserto-dev/errors v0.0.17 h1:Jlb38zvMAEOhbl8SSt8pz0p4/r3wgRMNcnBtnhzhD2g=
 github.com/aserto-dev/errors v0.0.17/go.mod h1:42SHPNyCVOYYLgmz5KPvoc9GESAUuff0lN4S/hXLrz4=
-github.com/aserto-dev/go-directory v0.33.12-0.20260204143313-18b34a32187d h1:1HRd3vihsjfkZv/xHnzeIeGg2NoCzXLFv1nCKgcwrxs=
-github.com/aserto-dev/go-directory v0.33.12-0.20260204143313-18b34a32187d/go.mod h1:qsggY7bbeXcOttvIcTSa7wBsDt7JEh+xtuRtKtfo+TU=
+github.com/aserto-dev/go-directory v0.33.20 h1:WDFGsOJ0glu+2WV2PHsLpDKdGjd+luwyKOKOZmwijfQ=
+github.com/aserto-dev/go-directory v0.33.20/go.mod h1:qsggY7bbeXcOttvIcTSa7wBsDt7JEh+xtuRtKtfo+TU=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
