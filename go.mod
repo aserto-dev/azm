@@ -1,13 +1,13 @@
 module github.com/aserto-dev/azm
 
-go 1.24.12
+go 1.24.0
 
 toolchain go1.25.6
 
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.0.17
-	github.com/aserto-dev/go-directory v0.33.12-0.20260122124051-9c1a117813a6
+	github.com/aserto-dev/go-directory v0.33.12-0.20260204143313-18b34a32187d
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
@@ -34,6 +34,6 @@ require (
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260203192932-546029d2fa20 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect
 )
