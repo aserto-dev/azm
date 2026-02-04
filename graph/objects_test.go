@@ -241,10 +241,12 @@ func manifest(m *model.Model) *v3.Manifest {
 				}),
 				Permissions: lo.MapEntries(o.Permissions, func(pn model.RelationName, p *model.Permission) (v3.PermissionName, string) {
 					name := v3.PermissionName(pn)
+
 					var (
 						terms    []*model.PermissionTerm
 						operator string
 					)
+
 					switch {
 					case p.IsUnion():
 						terms = p.Union

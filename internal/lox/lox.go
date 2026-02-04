@@ -1,6 +1,6 @@
 package lox
 
-// Similar to lo.Contains for slices of pointers.
+// ContainsPtr similar to lo.Contains for slices of pointers.
 func ContainsPtr[T comparable](collection []*T, element *T) bool {
 	for _, item := range collection {
 		if *item == *element {
@@ -11,7 +11,7 @@ func ContainsPtr[T comparable](collection []*T, element *T) bool {
 	return false
 }
 
-// Similar to lo.Difference but for slices of pointers.
+// DifferencePtr similar to lo.Difference but for slices of pointers.
 func DifferencePtr[T comparable](list1, list2 []*T) ([]*T, []*T) {
 	left := []*T{}
 	right := []*T{}

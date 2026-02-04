@@ -267,6 +267,7 @@ func TestValidation(t *testing.T) { //nolint:funlen
 
 			// Log the model for debugging purposes.
 			var b bytes.Buffer
+
 			enc := json.NewEncoder(&b)
 			enc.SetIndent("", "  ")
 			assert.NoError(enc.Encode(m))

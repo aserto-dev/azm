@@ -62,6 +62,7 @@ func newParser(input string) *parser {
 
 type parser struct {
 	*AzmParser
+
 	listener *errorListener
 }
 

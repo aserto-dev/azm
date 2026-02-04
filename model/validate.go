@@ -16,6 +16,7 @@ type termRef struct {
 
 type validator struct {
 	*Model
+
 	opts     *validationOptions
 	deferred []termRef
 }
