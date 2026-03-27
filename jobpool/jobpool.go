@@ -67,16 +67,12 @@ func (jp *JobPool[IN, OUT]) Produce(in IN) error {
 // Start consuming jobs.
 func (jp *JobPool[IN, OUT]) Start() {
 	for range jp.consumerCount {
-		jp.wg.Add(1)
-
-		go func() {
-			defer jp.wg.Done()
-
+		jp.wg.Go(func() {
 			for job := range jp.inbox {
 				out := jp.consumer(job.task)
 				jp.outbox <- result[OUT]{job.index, out}
 			}
-		}()
+		})
 	}
 }
 
