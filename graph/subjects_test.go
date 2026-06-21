@@ -98,7 +98,8 @@ var searchSubjectsTests = []searchTest{
 	{"doc:doc2#can_write@user:?", []object{{"user", "f1_owner"}}},
 	{"doc:doc2#can_read@user:?", []object{{"user", "*"}, {"user", "user2"}, {"user", "f1_owner"}, {"user", "f1_viewer"}}},
 	{"doc:doc2#can_share@user:?", []object{{"user", "f1_owner"}}},
-	{"doc:doc2#can_invite@user:?", []object{{"user", "f1_owner"}, {"user", "f1_viewer"}}},
+	// doc2 has a wildcard viewer, so can_invite (parent->can_read - viewer) excludes everyone.
+	{"doc:doc2#can_invite@user:?", []object{}},
 	{"doc:doc2#can_read@group:?#member", []object{{"group", "f1_viewers"}, {"group", "f1_subviewers"}}},
 	{"doc:doc3#can_change_owner@user:?", []object{{"user", "f1_owner"}}},
 	{"doc:doc3#can_write@user:?", []object{{"user", "f1_owner"}}},

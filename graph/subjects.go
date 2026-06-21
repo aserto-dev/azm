@@ -307,7 +307,18 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 			return results, err
 		}
 
-		return lo.OmitByKeys(include, lo.Keys(exclude)), nil
+		result := lo.OmitByKeys(include, lo.Keys(exclude))
+
+		// A wildcard (type:*) in the exclude set excludes every subject of that type.
+		for k := range exclude {
+			if k.ID.String() == model.WildcardSymbol {
+				result = lo.OmitBy(result, func(rk object, _ []searchPath) bool {
+					return rk.Type == k.Type
+				})
+			}
+		}
+
+		return result, nil
 	}
 
 	return results, derr.ErrUnknown.Msg("unknown permission operator")
