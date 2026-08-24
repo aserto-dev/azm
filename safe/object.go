@@ -75,6 +75,7 @@ func (i *SafeObject) Hash() string {
 		return DefaultHash
 	}
 
+	//nolint:staticcheck // GetDisplayName is deprecated.
 	if _, err := h.Write([]byte(i.GetDisplayName())); err != nil {
 		return DefaultHash
 	}
