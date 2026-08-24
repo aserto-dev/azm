@@ -107,4 +107,5 @@ var searchSubjectsTests = []searchTest{
 	{"doc:doc3#can_share@user:?", []object{{"user", "f1_owner"}}},
 	{"doc:doc3#can_invite@user:?", []object{{"user", "f1_owner"}, {"user", "f1_viewer"}}},
 	{"doc:doc3#can_read@group:?#member", []object{{"group", "f1_viewers"}, {"group", "f1_subviewers"}}},
+	{"cycle:loop#can_edit@user:?", []object{}},
 }
