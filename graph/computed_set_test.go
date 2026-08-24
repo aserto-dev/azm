@@ -1,3 +1,4 @@
+//nolint:goconst
 package graph_test
 
 import (
