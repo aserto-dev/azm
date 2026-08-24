@@ -13,8 +13,7 @@ on:
 
 env:
   PRE_RELEASE: ${{ github.ref == 'refs/heads/main' && 'development' || '' }}
-  GO_VERSION: 1.26
-  GO_LANGCI_LINT_VERSION: v2.10.1
+  GO_LANGCI_LINT_VERSION: v2.13.1
 
 jobs:
   test:
