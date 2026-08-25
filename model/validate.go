@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	set "github.com/deckarep/golang-set/v2"
+	set "github.com/d5s-io/golang-set/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 )
@@ -72,8 +72,10 @@ func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 		for _, r := range rs.Union {
 			o := v.Objects[r.Object]
 			if o == nil {
-				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
-					"relation '%s:%s' references undefined object type '%s'", on, rn, r.Object),
+				errs = multierror.Append(
+					errs, derr.ErrInvalidRelationType.Msgf(
+						"relation '%s:%s' references undefined object type '%s'", on, rn, r.Object,
+					),
 				)
 
 				continue
@@ -81,8 +83,10 @@ func (v *validator) validateObjectRels(on ObjectName, o *Object) error {
 
 			if r.IsSubject() {
 				if _, ok := o.Relations[r.Relation]; !ok {
-					errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
-						"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Object, r.Relation),
+					errs = multierror.Append(
+						errs, derr.ErrInvalidRelationType.Msgf(
+							"relation '%s:%s' references undefined relation type '%s#%s'", on, rn, r.Object, r.Relation,
+						),
 					)
 				}
 			}
@@ -98,8 +102,10 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 	for pn, p := range o.Permissions {
 		terms := p.Terms()
 		if len(terms) == 0 {
-			errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-				"permission '%s:%s' has no definition", on, pn),
+			errs = multierror.Append(
+				errs, derr.ErrInvalidPermission.Msgf(
+					"permission '%s:%s' has no definition", on, pn,
+				),
 			)
 
 			continue
@@ -107,8 +113,10 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 
 		for _, term := range terms {
 			if term == nil {
-				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-					"permission '%s:%s' has an empty term", on, pn),
+				errs = multierror.Append(
+					errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' has an empty term", on, pn,
+					),
 				)
 
 				continue
@@ -120,16 +128,20 @@ func (v *validator) validateObjectPerms(on ObjectName, o *Object) error {
 				// validate that the base relation exists on this object type.
 				// at this stage we don't yet resolve the relation to a set of subject types.
 				if !o.HasRelOrPerm(term.Base) {
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, term.Base),
+					errs = multierror.Append(
+						errs, derr.ErrInvalidPermission.Msgf(
+							"permission '%s:%s' references undefined relation type '%s:%s'", on, pn, on, term.Base,
+						),
 					)
 				}
 
 			default:
 				// validate that the relation/permission exists on this object type.
 				if !o.HasRelOrPerm(term.RelOrPerm) {
-					errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-						"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, on, term.RelOrPerm),
+					errs = multierror.Append(
+						errs, derr.ErrInvalidPermission.Msgf(
+							"permission '%s:%s' references undefined relation or permission '%s:%s'", on, pn, on, term.RelOrPerm,
+						),
 					)
 				}
 			}
@@ -210,8 +222,10 @@ func (v *validator) resolveRelations() error {
 
 			switch len(subs) {
 			case 0:
-				errs = multierror.Append(errs, derr.ErrInvalidRelationType.Msgf(
-					"relation '%s:%s' is circular and does not resolve to any object types", on, rn),
+				errs = multierror.Append(
+					errs, derr.ErrInvalidRelationType.Msgf(
+						"relation '%s:%s' is circular and does not resolve to any object types", on, rn,
+					),
 				)
 			default:
 				r.SubjectTypes = subs
@@ -267,8 +281,10 @@ func (v *validator) resolvePermissions() error {
 	for on, o := range v.Objects {
 		for pn, p := range o.Permissions {
 			if len(p.SubjectTypes) == 0 {
-				errs = multierror.Append(errs, derr.ErrInvalidPermission.Msgf(
-					"permission '%s:%s' cannot be satisfied by any type", on, pn),
+				errs = multierror.Append(
+					errs, derr.ErrInvalidPermission.Msgf(
+						"permission '%s:%s' cannot be satisfied by any type", on, pn,
+					),
 				)
 			}
 		}

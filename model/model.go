@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	set "github.com/deckarep/golang-set/v2"
+	set "github.com/d5s-io/golang-set/v2"
 	"github.com/samber/lo"
 )
 
