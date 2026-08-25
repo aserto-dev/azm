@@ -8,8 +8,8 @@ import (
 	"sort"
 	"time"
 
+	set "github.com/aserto-dev/azm/internal/golang-set/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	set "github.com/deckarep/golang-set/v2"
 	"github.com/samber/lo"
 )
 
