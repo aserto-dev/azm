@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	set "github.com/d5s-io/golang-set/v2"
+	set "github.com/aserto-dev/azm/internal/golang-set/v2"
 	"github.com/samber/lo"
 )
 

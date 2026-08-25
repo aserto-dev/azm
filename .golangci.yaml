@@ -73,12 +73,14 @@ linters:
       branch-max-lines: 2 
 
   exclusions:
+    paths:
+      - internal/golang-set/
+
     rules:
       - path: parser/
         linters:
           - forcetypeassert
           - ireturn
-
 
 formatters:
   enable:

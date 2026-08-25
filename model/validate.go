@@ -3,8 +3,8 @@ package model
 import (
 	"fmt"
 
+	set "github.com/aserto-dev/azm/internal/golang-set/v2"
 	"github.com/aserto-dev/go-directory/pkg/derr"
-	set "github.com/d5s-io/golang-set/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 )
