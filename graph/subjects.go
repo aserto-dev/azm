@@ -289,28 +289,50 @@ func (s *SubjectSearch) searchPermission(params *relation) (searchResults, error
 	case p.IsIntersection():
 		return s.intersection(termChecks)
 	case p.IsExclusion():
-		include, err := s.union(termChecks[:1])
-
-		switch {
-		case err != nil:
-			return results, err
-		case include == nil:
-			// We have a cycle.
-			return nil, errCycle
-		case len(include) == 0:
-			// Short-circuit: The include term is false, so the permission is false.
-			return results, nil
-		}
-
-		exclude, err := s.union(termChecks[1:])
-		if err != nil {
-			return results, err
-		}
-
-		return lo.OmitByKeys(include, lo.Keys(exclude)), nil
+		return s.exclusion(termChecks)
 	}
 
 	return results, derr.ErrUnknown.Msg("unknown permission operator")
+}
+
+func (s *SubjectSearch) exclusion(termChecks [][]*relation) (searchResults, error) {
+	results := searchResults{}
+
+	include, err := s.union(termChecks[:1])
+
+	switch {
+	case err != nil:
+		return results, err
+	case include == nil:
+		// We have a cycle.
+		return nil, errCycle
+	case len(include) == 0:
+		// Short-circuit: The include term is false, so the permission is false.
+		return results, nil
+	}
+
+	exclude, err := s.union(termChecks[1:])
+
+	switch {
+	case err != nil:
+		return results, err
+	case exclude == nil:
+		// A cyclic exclude excludes everything, like Check's deny.
+		return searchResults{}, nil
+	}
+
+	result := lo.OmitByKeys(include, lo.Keys(exclude))
+
+	// A wildcard (type:*) in the exclude set excludes every subject of that type.
+	for k := range exclude {
+		if k.ID.String() == model.WildcardSymbol {
+			result = lo.OmitBy(result, func(rk object, _ []searchPath) bool {
+				return rk.Type == k.Type
+			})
+		}
+	}
+
+	return result, nil
 }
 
 func (s *SubjectSearch) possibleSubjects(params *relation) []model.ObjectName {

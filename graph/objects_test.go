@@ -224,6 +224,9 @@ func relations() RelationsReader {
 		// mutually recursive groups with no users
 		"group:alpha#member@group:omega#member",
 		"group:omega#member@group:alpha#member",
+
+		"cycle:loop#parent@cycle:loop",
+		"cycle:loop#owner@user:loop_owner",
 	)
 }
 

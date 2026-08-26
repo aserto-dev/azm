@@ -70,6 +70,7 @@ var tests = []struct {
 	// cycles
 	{"cycle:loop#can_delete@user:loop_owner", true, hasCycle},
 	{"cycle:loop#can_delete@user:user1", false, noCycle},
+	{"cycle:loop#can_edit@user:loop_owner", false, hasCycle},
 }
 
 func TestCheck(t *testing.T) {
