@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	set "github.com/deckarep/golang-set/v2"
+	set "github.com/deckarep/golang-set/v3"
 	"github.com/samber/lo"
 )
 
