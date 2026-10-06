@@ -42,6 +42,9 @@ func (i *SafeObject) Validate(mc *cache.Cache) error {
 		i.Properties = pb.NewStruct()
 	}
 
+	// object.Type is deprecated and replaced by object.ObjectType.
+	// During the transition both exist, object.ObjectType is authoritative
+	//nolint:staticcheck
 	if mc != nil && !mc.ObjectExists(model.ObjectName(i.Type)) {
 		return derr.ErrObjectTypeNotFound.Msg(i.Type)
 	}
@@ -67,15 +70,23 @@ func (i *SafeObject) Hash() string {
 		}
 	}
 
+	// object.Type is deprecated and replaced by object.ObjectType.
+	// During the transition both exist, object.ObjectType is authoritative
+	//nolint:staticcheck
 	if _, err := h.Write([]byte(i.GetType())); err != nil {
 		return DefaultHash
 	}
 
+	// object.Id is deprecated and replaced by object.ObjectId.
+	// During the transition both exist, object.ObjectId is authoritative
+	//nolint:staticcheck
 	if _, err := h.Write([]byte(i.GetId())); err != nil {
 		return DefaultHash
 	}
 
-	//nolint:staticcheck // GetDisplayName is deprecated.
+	// object.DisplayName is deprecated, when set will get migrated into
+	// object.Property[display_name] = GetDisplayName()
+	//nolint:staticcheck
 	if _, err := h.Write([]byte(i.GetDisplayName())); err != nil {
 		return DefaultHash
 	}
