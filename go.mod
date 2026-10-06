@@ -13,8 +13,8 @@ toolchain go1.27.1
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/aserto-dev/errors v0.34.2-0.20261006083714-760eef8e0b6c
-	github.com/aserto-dev/go-directory/aserto v0.0.0-20261006090047-347856b42182
-	github.com/aserto-dev/go-directory/pkg v0.0.0-20261006090047-347856b42182
+	github.com/aserto-dev/go-directory/aserto v0.0.0-20261006150823-e40f74f3b517
+	github.com/aserto-dev/go-directory/pkg v0.0.0-20261006150823-e40f74f3b517
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/nsf/jsondiff v0.0.0-20260207060731-8e8d90c4c0ac
@@ -30,7 +30,7 @@ require (
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
@@ -38,6 +38,6 @@ require (
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260928230214-8a89bd6388cc // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260928230214-8a89bd6388cc // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261005182115-fad411399dd8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8 // indirect
 )
