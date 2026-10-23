@@ -13,7 +13,7 @@ import (
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
 	rq "github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 func TestComputedSet(t *testing.T) {

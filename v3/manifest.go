@@ -6,7 +6,7 @@ import (
 	"github.com/aserto-dev/azm"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/hashicorp/go-multierror"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const SupportedSchemaVersion int = 3
